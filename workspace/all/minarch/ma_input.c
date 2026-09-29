@@ -1,5 +1,6 @@
 #include "ma_internal.h"
 #include "ma_input.h"
+#include "ma_ai.h"
 
 #include <string.h>
 
@@ -146,6 +147,9 @@ void input_poll_callback(void) {
 					case SHORTCUT_LOAD_STATE: Menu_loadState(); break;
 					case SHORTCUT_SCREENSHOT:
 						Menu_screenshot();
+						break;
+					case SHORTCUT_AI_TRANSLATE:
+						Menu_aiTranslate();
 						break;
 					case SHORTCUT_RESET_GAME: core.reset(); break;
 					case SHORTCUT_SAVE_QUIT:

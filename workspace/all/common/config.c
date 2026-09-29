@@ -103,6 +103,15 @@ void CFG_defaults(NextUISettings *cfg)
         .raNotificationDuration = CFG_DEFAULT_RA_NOTIFICATION_DURATION,
         .raProgressNotificationDuration = CFG_DEFAULT_RA_PROGRESS_NOTIFICATION_DURATION,
         .raAchievementSortOrder = CFG_DEFAULT_RA_ACHIEVEMENT_SORT_ORDER,
+
+        .aiEnable = CFG_DEFAULT_AI_ENABLE,
+        .aiEndpoint = CFG_DEFAULT_AI_ENDPOINT,
+        .aiModel = CFG_DEFAULT_AI_MODEL,
+        .aiApiKey = CFG_DEFAULT_AI_API_KEY,
+        .aiTargetLang = CFG_DEFAULT_AI_TARGET_LANG,
+        .aiTimeoutSecs = CFG_DEFAULT_AI_TIMEOUT_SECS,
+        .aiMaxImageWidth = CFG_DEFAULT_AI_MAX_IMAGE_WIDTH,
+        .aiHoldSecs = CFG_DEFAULT_AI_HOLD_SECS,
     };
 
     *cfg = defaults;
@@ -502,6 +511,54 @@ void CFG_init(FontLoad_callback_t cb, ColorSet_callback_t ccb)
             if (sscanf(line, "raAchievementSortOrder=%i", &temp_value) == 1)
             {
                 CFG_setRAAchievementSortOrder(temp_value);
+                continue;
+            }
+            if (sscanf(line, "aiEnable=%i", &temp_value) == 1)
+            {
+                CFG_setAIEnable((bool)temp_value);
+                continue;
+            }
+            if (strncmp(line, "aiEndpoint=", 11) == 0)
+            {
+                char *value = line + 11;
+                value[strcspn(value, "\n")] = 0;
+                CFG_setAIEndpoint(value);
+                continue;
+            }
+            if (strncmp(line, "aiModel=", 8) == 0)
+            {
+                char *value = line + 8;
+                value[strcspn(value, "\n")] = 0;
+                CFG_setAIModel(value);
+                continue;
+            }
+            if (strncmp(line, "aiApiKey=", 9) == 0)
+            {
+                char *value = line + 9;
+                value[strcspn(value, "\n")] = 0;
+                CFG_setAIApiKey(value);
+                continue;
+            }
+            if (strncmp(line, "aiTargetLang=", 13) == 0)
+            {
+                char *value = line + 13;
+                value[strcspn(value, "\n")] = 0;
+                CFG_setAITargetLang(value);
+                continue;
+            }
+            if (sscanf(line, "aiTimeoutSecs=%i", &temp_value) == 1)
+            {
+                CFG_setAITimeoutSecs(temp_value);
+                continue;
+            }
+            if (sscanf(line, "aiMaxImageWidth=%i", &temp_value) == 1)
+            {
+                CFG_setAIMaxImageWidth(temp_value);
+                continue;
+            }
+            if (sscanf(line, "aiHoldSecs=%i", &temp_value) == 1)
+            {
+                CFG_setAIHoldSecs(temp_value);
                 continue;
             }
             if (sscanf(line, "fontStyle=%i", &temp_value) == 1)
@@ -1279,6 +1336,116 @@ void CFG_setRAAchievementSortOrder(int sortOrder)
     CFG_sync();
 }
 
+/* ---- AI 画面翻译 ---- */
+
+bool CFG_getAIEnable(void)
+{
+    return settings.aiEnable;
+}
+
+void CFG_setAIEnable(bool enable)
+{
+    settings.aiEnable = enable;
+    CFG_sync();
+}
+
+const char* CFG_getAIEndpoint(void)
+{
+    return settings.aiEndpoint;
+}
+
+void CFG_setAIEndpoint(const char* url)
+{
+    if (url) {
+        strncpy(settings.aiEndpoint, url, sizeof(settings.aiEndpoint) - 1);
+        settings.aiEndpoint[sizeof(settings.aiEndpoint) - 1] = '\0';
+    } else {
+        settings.aiEndpoint[0] = '\0';
+    }
+    CFG_sync();
+}
+
+const char* CFG_getAIModel(void)
+{
+    return settings.aiModel;
+}
+
+void CFG_setAIModel(const char* model)
+{
+    if (model) {
+        strncpy(settings.aiModel, model, sizeof(settings.aiModel) - 1);
+        settings.aiModel[sizeof(settings.aiModel) - 1] = '\0';
+    } else {
+        settings.aiModel[0] = '\0';
+    }
+    CFG_sync();
+}
+
+const char* CFG_getAIApiKey(void)
+{
+    return settings.aiApiKey;
+}
+
+void CFG_setAIApiKey(const char* key)
+{
+    if (key) {
+        strncpy(settings.aiApiKey, key, sizeof(settings.aiApiKey) - 1);
+        settings.aiApiKey[sizeof(settings.aiApiKey) - 1] = '\0';
+    } else {
+        settings.aiApiKey[0] = '\0';
+    }
+    CFG_sync();
+}
+
+const char* CFG_getAITargetLang(void)
+{
+    return settings.aiTargetLang;
+}
+
+void CFG_setAITargetLang(const char* lang)
+{
+    if (lang) {
+        strncpy(settings.aiTargetLang, lang, sizeof(settings.aiTargetLang) - 1);
+        settings.aiTargetLang[sizeof(settings.aiTargetLang) - 1] = '\0';
+    } else {
+        settings.aiTargetLang[0] = '\0';
+    }
+    CFG_sync();
+}
+
+int CFG_getAITimeoutSecs(void)
+{
+    return settings.aiTimeoutSecs;
+}
+
+void CFG_setAITimeoutSecs(int secs)
+{
+    settings.aiTimeoutSecs = clamp(secs, 5, 120);
+    CFG_sync();
+}
+
+int CFG_getAIMaxImageWidth(void)
+{
+    return settings.aiMaxImageWidth;
+}
+
+int CFG_getAIHoldSecs(void)
+{
+    return settings.aiHoldSecs;
+}
+
+void CFG_setAIHoldSecs(int secs)
+{
+    settings.aiHoldSecs = clamp(secs, 0, 600);
+    CFG_sync();
+}
+
+void CFG_setAIMaxImageWidth(int w)
+{
+    settings.aiMaxImageWidth = clamp(w, 240, 1920);
+    CFG_sync();
+}
+
 int CFG_getFontStyle(void)
 {
     return settings.fontStyle;
@@ -1553,6 +1720,38 @@ void CFG_get(const char *key, char *value)
     {
         sprintf(value, "%i", CFG_getRAAchievementSortOrder());
     }
+    else if (strcmp(key, "aiEnable") == 0)
+    {
+        sprintf(value, "%i", (int)CFG_getAIEnable());
+    }
+    else if (strcmp(key, "aiEndpoint") == 0)
+    {
+        sprintf(value, "%s", CFG_getAIEndpoint());
+    }
+    else if (strcmp(key, "aiModel") == 0)
+    {
+        sprintf(value, "%s", CFG_getAIModel());
+    }
+    else if (strcmp(key, "aiApiKey") == 0)
+    {
+        sprintf(value, "%s", CFG_getAIApiKey());
+    }
+    else if (strcmp(key, "aiTargetLang") == 0)
+    {
+        sprintf(value, "%s", CFG_getAITargetLang());
+    }
+    else if (strcmp(key, "aiTimeoutSecs") == 0)
+    {
+        sprintf(value, "%i", CFG_getAITimeoutSecs());
+    }
+    else if (strcmp(key, "aiMaxImageWidth") == 0)
+    {
+        sprintf(value, "%i", CFG_getAIMaxImageWidth());
+    }
+    else if (strcmp(key, "aiHoldSecs") == 0)
+    {
+        sprintf(value, "%i", CFG_getAIHoldSecs());
+    }
     else if (strcmp(key, "fontStyle") == 0)
     {
         sprintf(value, "%i", CFG_getFontStyle());
@@ -1663,6 +1862,14 @@ void CFG_sync(void)
     fprintf(file, "raNotificationDuration=%i\n", settings.raNotificationDuration);
     fprintf(file, "raProgressNotificationDuration=%i\n", settings.raProgressNotificationDuration);
     fprintf(file, "raAchievementSortOrder=%i\n", settings.raAchievementSortOrder);
+    fprintf(file, "aiEnable=%i\n", settings.aiEnable);
+    fprintf(file, "aiEndpoint=%s\n", settings.aiEndpoint);
+    fprintf(file, "aiModel=%s\n", settings.aiModel);
+    fprintf(file, "aiApiKey=%s\n", settings.aiApiKey);
+    fprintf(file, "aiTargetLang=%s\n", settings.aiTargetLang);
+    fprintf(file, "aiTimeoutSecs=%i\n", settings.aiTimeoutSecs);
+    fprintf(file, "aiMaxImageWidth=%i\n", settings.aiMaxImageWidth);
+    fprintf(file, "aiHoldSecs=%i\n", settings.aiHoldSecs);
     fprintf(file, "fontStyle=%i\n", settings.fontStyle);
     fprintf(file, "gameSwitcherCurtain=%i\n", settings.gameSwitcherCurtain);
     fprintf(file, "inputPromptStyle=%i\n", settings.inputPromptStyle);
@@ -1736,6 +1943,14 @@ void CFG_print(void)
     printf("\t\"raNotificationDuration\": %i,\n", settings.raNotificationDuration);
     printf("\t\"raProgressNotificationDuration\": %i,\n", settings.raProgressNotificationDuration);
     printf("\t\"raAchievementSortOrder\": %i,\n", settings.raAchievementSortOrder);
+    printf("\t\"aiEnable\": %i,\n", settings.aiEnable);
+    printf("\t\"aiEndpoint\": \"%s\",\n", settings.aiEndpoint);
+    printf("\t\"aiModel\": \"%s\",\n", settings.aiModel);
+    printf("\t\"aiApiKey\": \"***\",\n");   /* 别把 key 打进日志 */
+    printf("\t\"aiTargetLang\": \"%s\",\n", settings.aiTargetLang);
+    printf("\t\"aiTimeoutSecs\": %i,\n", settings.aiTimeoutSecs);
+    printf("\t\"aiMaxImageWidth\": %i,\n", settings.aiMaxImageWidth);
+    printf("\t\"aiHoldSecs\": %i,\n", settings.aiHoldSecs);
     printf("\t\"fontStyle\": %i,\n", settings.fontStyle);
     printf("\t\"gameSwitcherCurtain\": %i,\n", settings.gameSwitcherCurtain);
     printf("\t\"inputPromptStyle\": %i,\n", settings.inputPromptStyle);

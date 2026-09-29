@@ -191,6 +191,16 @@ typedef struct
 	int raProgressNotificationDuration; // Duration for progress notifications (0-5 seconds, 0 = disabled)
 	int raAchievementSortOrder; // Sort order for achievements list (RA_SORT_* enum)
 
+	// AI 画面翻译（游戏中按热键：抓帧 -> 多模态模型翻译 -> 覆盖回原位）
+	bool aiEnable;
+	char aiEndpoint[256];      // OpenAI 兼容的 chat/completions 地址
+	char aiModel[64];          // 必须支持视觉输入
+	char aiApiKey[128];
+	char aiTargetLang[32];     // 目标语言，会写进提示词
+	int  aiTimeoutSecs;        // 单次请求超时
+	int  aiMaxImageWidth;      // 送图前缩放到这个宽度以内（越小越快越省流量）
+	int  aiHoldSecs;           // 译文停留几秒后自动渐隐（0 = 一直留到按键）
+
 } NextUISettings;
 
 // Transition mode constants
@@ -270,6 +280,20 @@ typedef struct
 #define CFG_DEFAULT_RA_NOTIFICATION_DURATION 3
 #define CFG_DEFAULT_RA_PROGRESS_NOTIFICATION_DURATION 1
 #define CFG_DEFAULT_RA_ACHIEVEMENT_SORT_ORDER RA_SORT_UNLOCKED_FIRST
+
+// AI 画面翻译
+// 默认端点用阿里云百炼（OpenAI 兼容），国内可直连；
+// 换成 DeepSeek 等其他家只要改 aiEndpoint + aiModel。
+// 注意：坐标定位必须用支持 grounding 的模型 —— 实测 qwen3-vl-plus / qwen3-vl-flash 稳定，
+// deepseek-flash 每次返回的 y 缩放系数都不一样，不能用。
+#define CFG_DEFAULT_AI_ENABLE false
+#define CFG_DEFAULT_AI_ENDPOINT "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+#define CFG_DEFAULT_AI_MODEL "qwen3-vl-plus"
+#define CFG_DEFAULT_AI_API_KEY ""
+#define CFG_DEFAULT_AI_TARGET_LANG "简体中文"
+#define CFG_DEFAULT_AI_TIMEOUT_SECS 20
+#define CFG_DEFAULT_AI_MAX_IMAGE_WIDTH 768
+#define CFG_DEFAULT_AI_HOLD_SECS 5
 
 // Transition animation parameters (fixed per mode)
 #define TRANSITION_SNAPPY_DURATION  150
@@ -475,6 +499,24 @@ int CFG_getRAProgressNotificationDuration(void);
 void CFG_setRAProgressNotificationDuration(int seconds);
 int CFG_getRAAchievementSortOrder(void);
 void CFG_setRAAchievementSortOrder(int sortOrder);
+
+// ---- AI 画面翻译 ----
+bool CFG_getAIEnable(void);
+void CFG_setAIEnable(bool enable);
+const char* CFG_getAIEndpoint(void);
+void CFG_setAIEndpoint(const char* url);
+const char* CFG_getAIModel(void);
+void CFG_setAIModel(const char* model);
+const char* CFG_getAIApiKey(void);
+void CFG_setAIApiKey(const char* key);
+const char* CFG_getAITargetLang(void);
+void CFG_setAITargetLang(const char* lang);
+int  CFG_getAITimeoutSecs(void);
+void CFG_setAITimeoutSecs(int secs);
+int  CFG_getAIMaxImageWidth(void);
+void CFG_setAIMaxImageWidth(int w);
+int  CFG_getAIHoldSecs(void);
+void CFG_setAIHoldSecs(int secs);
 
 void CFG_sync(void);
 void CFG_quit(void);

@@ -360,6 +360,14 @@ void Config_init(void) {
 		LOG_info("\tbind %s (%s) %i:%i\n", button_name, button_id, local_id, retro_id);
 		
 		// TODO: test this without a final line return
+		// core_button_mapping 是定长数组（RETRO_BUTTON_COUNT + 1，最后一格是终止符）。
+		// 原版所有 pak 的 default.cfg 里 bind 行数正好等于 RETRO_BUTTON_COUNT，
+		// 所以这里从来不越界 —— 但多写一行就会覆盖终止符，之后所有遍历
+		// core_button_mapping 的循环都会读到数组外，直接段错误。
+		if (i >= RETRO_BUTTON_COUNT) {
+			LOG_warn("default.cfg 里 bind 行超过 %i 条，忽略 '%s'\n", RETRO_BUTTON_COUNT, button_name);
+			break;
+		}
 		tmp2 = calloc(strlen(button_name)+1, sizeof(char));
 		strcpy(tmp2, button_name);
 		ButtonMapping* button = &core_button_mapping[i++];
@@ -1717,6 +1725,7 @@ struct Config config = {
 		[SHORTCUT_HOLD_REWIND]			= {"Hold Rewind",		-1, BTN_ID_NONE, 0},
 		[SHORTCUT_GAMESWITCHER]			= {"Game Switcher",		-1, BTN_ID_NONE, 0},
 		[SHORTCUT_SCREENSHOT]           = {"Screenshot",        -1, BTN_ID_NONE, 0},
+		[SHORTCUT_AI_TRANSLATE]         = {"AI Translate",      -1, BTN_ID_NONE, 0},
 		// Trimui only
 		[SHORTCUT_TOGGLE_TURBO_A]		= {"Toggle Turbo A",	-1, BTN_ID_NONE, 0},
 		[SHORTCUT_TOGGLE_TURBO_B]		= {"Toggle Turbo B",	-1, BTN_ID_NONE, 0},

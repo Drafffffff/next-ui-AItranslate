@@ -1,8 +1,8 @@
 diff --git a/workspace/all/common/config.c b/workspace/all/common/config.c
-index e1ec3ba..bddab4b 100644
+index e1ec3ba..9dcaea9 100644
 --- a/workspace/all/common/config.c
 +++ b/workspace/all/common/config.c
-@@ -103,6 +103,14 @@ void CFG_defaults(NextUISettings *cfg)
+@@ -103,6 +103,15 @@ void CFG_defaults(NextUISettings *cfg)
          .raNotificationDuration = CFG_DEFAULT_RA_NOTIFICATION_DURATION,
          .raProgressNotificationDuration = CFG_DEFAULT_RA_PROGRESS_NOTIFICATION_DURATION,
          .raAchievementSortOrder = CFG_DEFAULT_RA_ACHIEVEMENT_SORT_ORDER,
@@ -14,10 +14,11 @@ index e1ec3ba..bddab4b 100644
 +        .aiTargetLang = CFG_DEFAULT_AI_TARGET_LANG,
 +        .aiTimeoutSecs = CFG_DEFAULT_AI_TIMEOUT_SECS,
 +        .aiMaxImageWidth = CFG_DEFAULT_AI_MAX_IMAGE_WIDTH,
++        .aiHoldSecs = CFG_DEFAULT_AI_HOLD_SECS,
      };
  
      *cfg = defaults;
-@@ -504,6 +512,49 @@ void CFG_init(FontLoad_callback_t cb, ColorSet_callback_t ccb)
+@@ -504,6 +513,54 @@ void CFG_init(FontLoad_callback_t cb, ColorSet_callback_t ccb)
                  CFG_setRAAchievementSortOrder(temp_value);
                  continue;
              }
@@ -64,10 +65,15 @@ index e1ec3ba..bddab4b 100644
 +                CFG_setAIMaxImageWidth(temp_value);
 +                continue;
 +            }
++            if (sscanf(line, "aiHoldSecs=%i", &temp_value) == 1)
++            {
++                CFG_setAIHoldSecs(temp_value);
++                continue;
++            }
              if (sscanf(line, "fontStyle=%i", &temp_value) == 1)
              {
                  CFG_setFontStyle(temp_value);
-@@ -1279,6 +1330,105 @@ void CFG_setRAAchievementSortOrder(int sortOrder)
+@@ -1279,6 +1336,116 @@ void CFG_setRAAchievementSortOrder(int sortOrder)
      CFG_sync();
  }
  
@@ -164,6 +170,17 @@ index e1ec3ba..bddab4b 100644
 +    return settings.aiMaxImageWidth;
 +}
 +
++int CFG_getAIHoldSecs(void)
++{
++    return settings.aiHoldSecs;
++}
++
++void CFG_setAIHoldSecs(int secs)
++{
++    settings.aiHoldSecs = clamp(secs, 0, 600);
++    CFG_sync();
++}
++
 +void CFG_setAIMaxImageWidth(int w)
 +{
 +    settings.aiMaxImageWidth = clamp(w, 240, 1920);
@@ -173,7 +190,7 @@ index e1ec3ba..bddab4b 100644
  int CFG_getFontStyle(void)
  {
      return settings.fontStyle;
-@@ -1553,6 +1703,34 @@ void CFG_get(const char *key, char *value)
+@@ -1553,6 +1720,38 @@ void CFG_get(const char *key, char *value)
      {
          sprintf(value, "%i", CFG_getRAAchievementSortOrder());
      }
@@ -205,10 +222,14 @@ index e1ec3ba..bddab4b 100644
 +    {
 +        sprintf(value, "%i", CFG_getAIMaxImageWidth());
 +    }
++    else if (strcmp(key, "aiHoldSecs") == 0)
++    {
++        sprintf(value, "%i", CFG_getAIHoldSecs());
++    }
      else if (strcmp(key, "fontStyle") == 0)
      {
          sprintf(value, "%i", CFG_getFontStyle());
-@@ -1663,6 +1841,13 @@ void CFG_sync(void)
+@@ -1663,6 +1862,14 @@ void CFG_sync(void)
      fprintf(file, "raNotificationDuration=%i\n", settings.raNotificationDuration);
      fprintf(file, "raProgressNotificationDuration=%i\n", settings.raProgressNotificationDuration);
      fprintf(file, "raAchievementSortOrder=%i\n", settings.raAchievementSortOrder);
@@ -219,10 +240,11 @@ index e1ec3ba..bddab4b 100644
 +    fprintf(file, "aiTargetLang=%s\n", settings.aiTargetLang);
 +    fprintf(file, "aiTimeoutSecs=%i\n", settings.aiTimeoutSecs);
 +    fprintf(file, "aiMaxImageWidth=%i\n", settings.aiMaxImageWidth);
++    fprintf(file, "aiHoldSecs=%i\n", settings.aiHoldSecs);
      fprintf(file, "fontStyle=%i\n", settings.fontStyle);
      fprintf(file, "gameSwitcherCurtain=%i\n", settings.gameSwitcherCurtain);
      fprintf(file, "inputPromptStyle=%i\n", settings.inputPromptStyle);
-@@ -1736,6 +1921,13 @@ void CFG_print(void)
+@@ -1736,6 +1943,14 @@ void CFG_print(void)
      printf("\t\"raNotificationDuration\": %i,\n", settings.raNotificationDuration);
      printf("\t\"raProgressNotificationDuration\": %i,\n", settings.raProgressNotificationDuration);
      printf("\t\"raAchievementSortOrder\": %i,\n", settings.raAchievementSortOrder);
@@ -233,14 +255,15 @@ index e1ec3ba..bddab4b 100644
 +    printf("\t\"aiTargetLang\": \"%s\",\n", settings.aiTargetLang);
 +    printf("\t\"aiTimeoutSecs\": %i,\n", settings.aiTimeoutSecs);
 +    printf("\t\"aiMaxImageWidth\": %i,\n", settings.aiMaxImageWidth);
++    printf("\t\"aiHoldSecs\": %i,\n", settings.aiHoldSecs);
      printf("\t\"fontStyle\": %i,\n", settings.fontStyle);
      printf("\t\"gameSwitcherCurtain\": %i,\n", settings.gameSwitcherCurtain);
      printf("\t\"inputPromptStyle\": %i,\n", settings.inputPromptStyle);
 diff --git a/workspace/all/common/config.h b/workspace/all/common/config.h
-index cdd5778..683745a 100644
+index cdd5778..6fea1bb 100644
 --- a/workspace/all/common/config.h
 +++ b/workspace/all/common/config.h
-@@ -191,6 +191,15 @@ typedef struct
+@@ -191,6 +191,16 @@ typedef struct
  	int raProgressNotificationDuration; // Duration for progress notifications (0-5 seconds, 0 = disabled)
  	int raAchievementSortOrder; // Sort order for achievements list (RA_SORT_* enum)
  
@@ -252,11 +275,12 @@ index cdd5778..683745a 100644
 +	char aiTargetLang[32];     // 目标语言，会写进提示词
 +	int  aiTimeoutSecs;        // 单次请求超时
 +	int  aiMaxImageWidth;      // 送图前缩放到这个宽度以内（越小越快越省流量）
++	int  aiHoldSecs;           // 译文停留几秒后自动渐隐（0 = 一直留到按键）
 +
  } NextUISettings;
  
  // Transition mode constants
-@@ -271,6 +280,19 @@ typedef struct
+@@ -271,6 +281,20 @@ typedef struct
  #define CFG_DEFAULT_RA_PROGRESS_NOTIFICATION_DURATION 1
  #define CFG_DEFAULT_RA_ACHIEVEMENT_SORT_ORDER RA_SORT_UNLOCKED_FIRST
  
@@ -272,11 +296,12 @@ index cdd5778..683745a 100644
 +#define CFG_DEFAULT_AI_TARGET_LANG "简体中文"
 +#define CFG_DEFAULT_AI_TIMEOUT_SECS 20
 +#define CFG_DEFAULT_AI_MAX_IMAGE_WIDTH 768
++#define CFG_DEFAULT_AI_HOLD_SECS 5
 +
  // Transition animation parameters (fixed per mode)
  #define TRANSITION_SNAPPY_DURATION  150
  #define TRANSITION_COMFY_DURATION   250
-@@ -476,6 +498,22 @@ void CFG_setRAProgressNotificationDuration(int seconds);
+@@ -476,6 +500,24 @@ void CFG_setRAProgressNotificationDuration(int seconds);
  int CFG_getRAAchievementSortOrder(void);
  void CFG_setRAAchievementSortOrder(int sortOrder);
  
@@ -295,15 +320,32 @@ index cdd5778..683745a 100644
 +void CFG_setAITimeoutSecs(int secs);
 +int  CFG_getAIMaxImageWidth(void);
 +void CFG_setAIMaxImageWidth(int w);
++int  CFG_getAIHoldSecs(void);
++void CFG_setAIHoldSecs(int secs);
 +
  void CFG_sync(void);
  void CFG_quit(void);
  
 diff --git a/workspace/all/minarch/ma_config.c b/workspace/all/minarch/ma_config.c
-index 438a0a6..3c6f816 100644
+index 438a0a6..211099d 100644
 --- a/workspace/all/minarch/ma_config.c
 +++ b/workspace/all/minarch/ma_config.c
-@@ -1717,6 +1717,7 @@ struct Config config = {
+@@ -360,6 +360,14 @@ void Config_init(void) {
+ 		LOG_info("\tbind %s (%s) %i:%i\n", button_name, button_id, local_id, retro_id);
+ 		
+ 		// TODO: test this without a final line return
++		// core_button_mapping 是定长数组（RETRO_BUTTON_COUNT + 1，最后一格是终止符）。
++		// 原版所有 pak 的 default.cfg 里 bind 行数正好等于 RETRO_BUTTON_COUNT，
++		// 所以这里从来不越界 —— 但多写一行就会覆盖终止符，之后所有遍历
++		// core_button_mapping 的循环都会读到数组外，直接段错误。
++		if (i >= RETRO_BUTTON_COUNT) {
++			LOG_warn("default.cfg 里 bind 行超过 %i 条，忽略 '%s'\n", RETRO_BUTTON_COUNT, button_name);
++			break;
++		}
+ 		tmp2 = calloc(strlen(button_name)+1, sizeof(char));
+ 		strcpy(tmp2, button_name);
+ 		ButtonMapping* button = &core_button_mapping[i++];
+@@ -1717,6 +1725,7 @@ struct Config config = {
  		[SHORTCUT_HOLD_REWIND]			= {"Hold Rewind",		-1, BTN_ID_NONE, 0},
  		[SHORTCUT_GAMESWITCHER]			= {"Game Switcher",		-1, BTN_ID_NONE, 0},
  		[SHORTCUT_SCREENSHOT]           = {"Screenshot",        -1, BTN_ID_NONE, 0},

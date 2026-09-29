@@ -22,6 +22,7 @@
 #include "ma_video.h"
 #include "ma_frontend_opts.h"
 #include "ma_menu.h"
+#include "ma_ai.h"
 
 ///////////////////////////////
 
@@ -914,6 +915,7 @@ static MenuList options_menu = {
 		{"Save Changes",.on_confirm=OptionSaveChanges_openMenu},
 		{NULL},
 		{NULL},
+		{NULL},
 	}
 };
 
@@ -922,6 +924,10 @@ static int save_changes_index = 7;
 
 // Update options menu visibility based on RA enable state
 static void Options_updateVisibility(void) {
+	// AI Translate 始终排在最后，紧跟在 Save Changes 之后。
+	// 位置随 RA 开关变（RA 开时 Save Changes 在 7，关时在 6），
+	// 所以这里动态决定它落在哪一格，并保证下一格是终止符 —— 否则列表会被提前截断。
+	int ai_index;
 	if (CFG_getRAEnable()) {
 		// RA enabled: show Achievements at index 6, Save Changes at index 7
 		options_menu.items[6].name = "Achievements";
@@ -929,6 +935,7 @@ static void Options_updateVisibility(void) {
 		options_menu.items[7].name = "Save Changes";
 		options_menu.items[7].on_confirm = OptionSaveChanges_openMenu;
 		save_changes_index = 7;
+		ai_index = 8;
 	} else {
 		// RA disabled: hide Achievements, move Save Changes to index 6
 		options_menu.items[6].name = "Save Changes";
@@ -937,7 +944,13 @@ static void Options_updateVisibility(void) {
 		options_menu.items[7].name = NULL;
 		options_menu.items[7].on_confirm = NULL;
 		save_changes_index = 6;
+		ai_index = 7;
 	}
+	options_menu.items[ai_index].name = "AI Translate";
+	options_menu.items[ai_index].desc = NULL;
+	options_menu.items[ai_index].on_confirm = OptionAI_openMenu;
+	options_menu.items[ai_index + 1].name = NULL;
+	options_menu.items[ai_index + 1].on_confirm = NULL;
 }
 
 void OptionSaveChanges_updateDesc(void) {
