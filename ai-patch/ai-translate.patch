@@ -1,0 +1,359 @@
+diff --git a/workspace/all/common/config.c b/workspace/all/common/config.c
+index e1ec3ba..bddab4b 100644
+--- a/workspace/all/common/config.c
++++ b/workspace/all/common/config.c
+@@ -103,6 +103,14 @@ void CFG_defaults(NextUISettings *cfg)
+         .raNotificationDuration = CFG_DEFAULT_RA_NOTIFICATION_DURATION,
+         .raProgressNotificationDuration = CFG_DEFAULT_RA_PROGRESS_NOTIFICATION_DURATION,
+         .raAchievementSortOrder = CFG_DEFAULT_RA_ACHIEVEMENT_SORT_ORDER,
++
++        .aiEnable = CFG_DEFAULT_AI_ENABLE,
++        .aiEndpoint = CFG_DEFAULT_AI_ENDPOINT,
++        .aiModel = CFG_DEFAULT_AI_MODEL,
++        .aiApiKey = CFG_DEFAULT_AI_API_KEY,
++        .aiTargetLang = CFG_DEFAULT_AI_TARGET_LANG,
++        .aiTimeoutSecs = CFG_DEFAULT_AI_TIMEOUT_SECS,
++        .aiMaxImageWidth = CFG_DEFAULT_AI_MAX_IMAGE_WIDTH,
+     };
+ 
+     *cfg = defaults;
+@@ -504,6 +512,49 @@ void CFG_init(FontLoad_callback_t cb, ColorSet_callback_t ccb)
+                 CFG_setRAAchievementSortOrder(temp_value);
+                 continue;
+             }
++            if (sscanf(line, "aiEnable=%i", &temp_value) == 1)
++            {
++                CFG_setAIEnable((bool)temp_value);
++                continue;
++            }
++            if (strncmp(line, "aiEndpoint=", 11) == 0)
++            {
++                char *value = line + 11;
++                value[strcspn(value, "\n")] = 0;
++                CFG_setAIEndpoint(value);
++                continue;
++            }
++            if (strncmp(line, "aiModel=", 8) == 0)
++            {
++                char *value = line + 8;
++                value[strcspn(value, "\n")] = 0;
++                CFG_setAIModel(value);
++                continue;
++            }
++            if (strncmp(line, "aiApiKey=", 9) == 0)
++            {
++                char *value = line + 9;
++                value[strcspn(value, "\n")] = 0;
++                CFG_setAIApiKey(value);
++                continue;
++            }
++            if (strncmp(line, "aiTargetLang=", 13) == 0)
++            {
++                char *value = line + 13;
++                value[strcspn(value, "\n")] = 0;
++                CFG_setAITargetLang(value);
++                continue;
++            }
++            if (sscanf(line, "aiTimeoutSecs=%i", &temp_value) == 1)
++            {
++                CFG_setAITimeoutSecs(temp_value);
++                continue;
++            }
++            if (sscanf(line, "aiMaxImageWidth=%i", &temp_value) == 1)
++            {
++                CFG_setAIMaxImageWidth(temp_value);
++                continue;
++            }
+             if (sscanf(line, "fontStyle=%i", &temp_value) == 1)
+             {
+                 CFG_setFontStyle(temp_value);
+@@ -1279,6 +1330,105 @@ void CFG_setRAAchievementSortOrder(int sortOrder)
+     CFG_sync();
+ }
+ 
++/* ---- AI 画面翻译 ---- */
++
++bool CFG_getAIEnable(void)
++{
++    return settings.aiEnable;
++}
++
++void CFG_setAIEnable(bool enable)
++{
++    settings.aiEnable = enable;
++    CFG_sync();
++}
++
++const char* CFG_getAIEndpoint(void)
++{
++    return settings.aiEndpoint;
++}
++
++void CFG_setAIEndpoint(const char* url)
++{
++    if (url) {
++        strncpy(settings.aiEndpoint, url, sizeof(settings.aiEndpoint) - 1);
++        settings.aiEndpoint[sizeof(settings.aiEndpoint) - 1] = '\0';
++    } else {
++        settings.aiEndpoint[0] = '\0';
++    }
++    CFG_sync();
++}
++
++const char* CFG_getAIModel(void)
++{
++    return settings.aiModel;
++}
++
++void CFG_setAIModel(const char* model)
++{
++    if (model) {
++        strncpy(settings.aiModel, model, sizeof(settings.aiModel) - 1);
++        settings.aiModel[sizeof(settings.aiModel) - 1] = '\0';
++    } else {
++        settings.aiModel[0] = '\0';
++    }
++    CFG_sync();
++}
++
++const char* CFG_getAIApiKey(void)
++{
++    return settings.aiApiKey;
++}
++
++void CFG_setAIApiKey(const char* key)
++{
++    if (key) {
++        strncpy(settings.aiApiKey, key, sizeof(settings.aiApiKey) - 1);
++        settings.aiApiKey[sizeof(settings.aiApiKey) - 1] = '\0';
++    } else {
++        settings.aiApiKey[0] = '\0';
++    }
++    CFG_sync();
++}
++
++const char* CFG_getAITargetLang(void)
++{
++    return settings.aiTargetLang;
++}
++
++void CFG_setAITargetLang(const char* lang)
++{
++    if (lang) {
++        strncpy(settings.aiTargetLang, lang, sizeof(settings.aiTargetLang) - 1);
++        settings.aiTargetLang[sizeof(settings.aiTargetLang) - 1] = '\0';
++    } else {
++        settings.aiTargetLang[0] = '\0';
++    }
++    CFG_sync();
++}
++
++int CFG_getAITimeoutSecs(void)
++{
++    return settings.aiTimeoutSecs;
++}
++
++void CFG_setAITimeoutSecs(int secs)
++{
++    settings.aiTimeoutSecs = clamp(secs, 5, 120);
++    CFG_sync();
++}
++
++int CFG_getAIMaxImageWidth(void)
++{
++    return settings.aiMaxImageWidth;
++}
++
++void CFG_setAIMaxImageWidth(int w)
++{
++    settings.aiMaxImageWidth = clamp(w, 240, 1920);
++    CFG_sync();
++}
++
+ int CFG_getFontStyle(void)
+ {
+     return settings.fontStyle;
+@@ -1553,6 +1703,34 @@ void CFG_get(const char *key, char *value)
+     {
+         sprintf(value, "%i", CFG_getRAAchievementSortOrder());
+     }
++    else if (strcmp(key, "aiEnable") == 0)
++    {
++        sprintf(value, "%i", (int)CFG_getAIEnable());
++    }
++    else if (strcmp(key, "aiEndpoint") == 0)
++    {
++        sprintf(value, "%s", CFG_getAIEndpoint());
++    }
++    else if (strcmp(key, "aiModel") == 0)
++    {
++        sprintf(value, "%s", CFG_getAIModel());
++    }
++    else if (strcmp(key, "aiApiKey") == 0)
++    {
++        sprintf(value, "%s", CFG_getAIApiKey());
++    }
++    else if (strcmp(key, "aiTargetLang") == 0)
++    {
++        sprintf(value, "%s", CFG_getAITargetLang());
++    }
++    else if (strcmp(key, "aiTimeoutSecs") == 0)
++    {
++        sprintf(value, "%i", CFG_getAITimeoutSecs());
++    }
++    else if (strcmp(key, "aiMaxImageWidth") == 0)
++    {
++        sprintf(value, "%i", CFG_getAIMaxImageWidth());
++    }
+     else if (strcmp(key, "fontStyle") == 0)
+     {
+         sprintf(value, "%i", CFG_getFontStyle());
+@@ -1663,6 +1841,13 @@ void CFG_sync(void)
+     fprintf(file, "raNotificationDuration=%i\n", settings.raNotificationDuration);
+     fprintf(file, "raProgressNotificationDuration=%i\n", settings.raProgressNotificationDuration);
+     fprintf(file, "raAchievementSortOrder=%i\n", settings.raAchievementSortOrder);
++    fprintf(file, "aiEnable=%i\n", settings.aiEnable);
++    fprintf(file, "aiEndpoint=%s\n", settings.aiEndpoint);
++    fprintf(file, "aiModel=%s\n", settings.aiModel);
++    fprintf(file, "aiApiKey=%s\n", settings.aiApiKey);
++    fprintf(file, "aiTargetLang=%s\n", settings.aiTargetLang);
++    fprintf(file, "aiTimeoutSecs=%i\n", settings.aiTimeoutSecs);
++    fprintf(file, "aiMaxImageWidth=%i\n", settings.aiMaxImageWidth);
+     fprintf(file, "fontStyle=%i\n", settings.fontStyle);
+     fprintf(file, "gameSwitcherCurtain=%i\n", settings.gameSwitcherCurtain);
+     fprintf(file, "inputPromptStyle=%i\n", settings.inputPromptStyle);
+@@ -1736,6 +1921,13 @@ void CFG_print(void)
+     printf("\t\"raNotificationDuration\": %i,\n", settings.raNotificationDuration);
+     printf("\t\"raProgressNotificationDuration\": %i,\n", settings.raProgressNotificationDuration);
+     printf("\t\"raAchievementSortOrder\": %i,\n", settings.raAchievementSortOrder);
++    printf("\t\"aiEnable\": %i,\n", settings.aiEnable);
++    printf("\t\"aiEndpoint\": \"%s\",\n", settings.aiEndpoint);
++    printf("\t\"aiModel\": \"%s\",\n", settings.aiModel);
++    printf("\t\"aiApiKey\": \"***\",\n");   /* 别把 key 打进日志 */
++    printf("\t\"aiTargetLang\": \"%s\",\n", settings.aiTargetLang);
++    printf("\t\"aiTimeoutSecs\": %i,\n", settings.aiTimeoutSecs);
++    printf("\t\"aiMaxImageWidth\": %i,\n", settings.aiMaxImageWidth);
+     printf("\t\"fontStyle\": %i,\n", settings.fontStyle);
+     printf("\t\"gameSwitcherCurtain\": %i,\n", settings.gameSwitcherCurtain);
+     printf("\t\"inputPromptStyle\": %i,\n", settings.inputPromptStyle);
+diff --git a/workspace/all/common/config.h b/workspace/all/common/config.h
+index cdd5778..683745a 100644
+--- a/workspace/all/common/config.h
++++ b/workspace/all/common/config.h
+@@ -191,6 +191,15 @@ typedef struct
+ 	int raProgressNotificationDuration; // Duration for progress notifications (0-5 seconds, 0 = disabled)
+ 	int raAchievementSortOrder; // Sort order for achievements list (RA_SORT_* enum)
+ 
++	// AI 画面翻译（游戏中按热键：抓帧 -> 多模态模型翻译 -> 覆盖回原位）
++	bool aiEnable;
++	char aiEndpoint[256];      // OpenAI 兼容的 chat/completions 地址
++	char aiModel[64];          // 必须支持视觉输入
++	char aiApiKey[128];
++	char aiTargetLang[32];     // 目标语言，会写进提示词
++	int  aiTimeoutSecs;        // 单次请求超时
++	int  aiMaxImageWidth;      // 送图前缩放到这个宽度以内（越小越快越省流量）
++
+ } NextUISettings;
+ 
+ // Transition mode constants
+@@ -271,6 +280,19 @@ typedef struct
+ #define CFG_DEFAULT_RA_PROGRESS_NOTIFICATION_DURATION 1
+ #define CFG_DEFAULT_RA_ACHIEVEMENT_SORT_ORDER RA_SORT_UNLOCKED_FIRST
+ 
++// AI 画面翻译
++// 默认端点用阿里云百炼（OpenAI 兼容），国内可直连；
++// 换成 DeepSeek 等其他家只要改 aiEndpoint + aiModel。
++// 注意：坐标定位必须用支持 grounding 的模型 —— 实测 qwen3-vl-plus / qwen3-vl-flash 稳定，
++// deepseek-flash 每次返回的 y 缩放系数都不一样，不能用。
++#define CFG_DEFAULT_AI_ENABLE false
++#define CFG_DEFAULT_AI_ENDPOINT "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
++#define CFG_DEFAULT_AI_MODEL "qwen3-vl-plus"
++#define CFG_DEFAULT_AI_API_KEY ""
++#define CFG_DEFAULT_AI_TARGET_LANG "简体中文"
++#define CFG_DEFAULT_AI_TIMEOUT_SECS 20
++#define CFG_DEFAULT_AI_MAX_IMAGE_WIDTH 768
++
+ // Transition animation parameters (fixed per mode)
+ #define TRANSITION_SNAPPY_DURATION  150
+ #define TRANSITION_COMFY_DURATION   250
+@@ -476,6 +498,22 @@ void CFG_setRAProgressNotificationDuration(int seconds);
+ int CFG_getRAAchievementSortOrder(void);
+ void CFG_setRAAchievementSortOrder(int sortOrder);
+ 
++// ---- AI 画面翻译 ----
++bool CFG_getAIEnable(void);
++void CFG_setAIEnable(bool enable);
++const char* CFG_getAIEndpoint(void);
++void CFG_setAIEndpoint(const char* url);
++const char* CFG_getAIModel(void);
++void CFG_setAIModel(const char* model);
++const char* CFG_getAIApiKey(void);
++void CFG_setAIApiKey(const char* key);
++const char* CFG_getAITargetLang(void);
++void CFG_setAITargetLang(const char* lang);
++int  CFG_getAITimeoutSecs(void);
++void CFG_setAITimeoutSecs(int secs);
++int  CFG_getAIMaxImageWidth(void);
++void CFG_setAIMaxImageWidth(int w);
++
+ void CFG_sync(void);
+ void CFG_quit(void);
+ 
+diff --git a/workspace/all/minarch/ma_config.c b/workspace/all/minarch/ma_config.c
+index 438a0a6..3c6f816 100644
+--- a/workspace/all/minarch/ma_config.c
++++ b/workspace/all/minarch/ma_config.c
+@@ -1717,6 +1717,7 @@ struct Config config = {
+ 		[SHORTCUT_HOLD_REWIND]			= {"Hold Rewind",		-1, BTN_ID_NONE, 0},
+ 		[SHORTCUT_GAMESWITCHER]			= {"Game Switcher",		-1, BTN_ID_NONE, 0},
+ 		[SHORTCUT_SCREENSHOT]           = {"Screenshot",        -1, BTN_ID_NONE, 0},
++		[SHORTCUT_AI_TRANSLATE]         = {"AI Translate",      -1, BTN_ID_NONE, 0},
+ 		// Trimui only
+ 		[SHORTCUT_TOGGLE_TURBO_A]		= {"Toggle Turbo A",	-1, BTN_ID_NONE, 0},
+ 		[SHORTCUT_TOGGLE_TURBO_B]		= {"Toggle Turbo B",	-1, BTN_ID_NONE, 0},
+diff --git a/workspace/all/minarch/ma_input.c b/workspace/all/minarch/ma_input.c
+index 3233b21..c8daed9 100644
+--- a/workspace/all/minarch/ma_input.c
++++ b/workspace/all/minarch/ma_input.c
+@@ -1,5 +1,6 @@
+ #include "ma_internal.h"
+ #include "ma_input.h"
++#include "ma_ai.h"
+ 
+ #include <string.h>
+ 
+@@ -147,6 +148,9 @@ void input_poll_callback(void) {
+ 					case SHORTCUT_SCREENSHOT:
+ 						Menu_screenshot();
+ 						break;
++					case SHORTCUT_AI_TRANSLATE:
++						Menu_aiTranslate();
++						break;
+ 					case SHORTCUT_RESET_GAME: core.reset(); break;
+ 					case SHORTCUT_SAVE_QUIT:
+ 						newScreenshot = 1;
+diff --git a/workspace/all/minarch/ma_internal.h b/workspace/all/minarch/ma_internal.h
+index 49d4a89..9142ee8 100644
+--- a/workspace/all/minarch/ma_internal.h
++++ b/workspace/all/minarch/ma_internal.h
+@@ -245,6 +245,7 @@ enum {
+ 	SHORTCUT_HOLD_REWIND,
+ 	SHORTCUT_GAMESWITCHER,
+ 	SHORTCUT_SCREENSHOT,
++	SHORTCUT_AI_TRANSLATE,
+ 	// Trimui only
+ 	SHORTCUT_TOGGLE_TURBO_A,
+ 	SHORTCUT_TOGGLE_TURBO_B,
+diff --git a/workspace/all/minarch/makefile b/workspace/all/minarch/makefile
+index ae10f25..34ddf1e 100644
+--- a/workspace/all/minarch/makefile
++++ b/workspace/all/minarch/makefile
+@@ -23,7 +23,7 @@ TARGET = minarch
+ PRODUCT= build/$(PLATFORM)/$(TARGET).elf
+ INCDIR = -I. -I./libretro-common/include/ -I../common/ -I../../$(PLATFORM)/platform/
+ SOURCE = $(TARGET).c ma_cheats.c ma_rewind.c ma_audio.c ma_input.c \
+-         ma_options.c ma_frontend_opts.c ma_saves.c ma_video.c ma_core.c ma_game.c ma_environment.c ma_config.c ma_menu.c ma_runframe.c \
++         ma_options.c ma_frontend_opts.c ma_saves.c ma_video.c ma_core.c ma_game.c ma_environment.c ma_config.c ma_menu.c ma_runframe.c ma_ai.c \
+          ../common/scaler.c ../common/utils.c ../common/config.c ../common/api.c \
+          ../common/notification.c ../../$(PLATFORM)/platform/platform.c
+ 
