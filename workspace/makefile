@@ -51,6 +51,9 @@ endif
 	cd ./all/syncsettings/ && make
 	cd ./all/nextval/ && make
 	cd ./all/settings/ && make
+	# Voice AI 依赖 ALSA（麦克风采集）和 libmsettings，desktop 那套工具链没有，
+	# 所以只挂在非 desktop 分支里
+	cd ./all/voiceai/ && make
 	cd ./all/ledcontrol/ && make
 	cd ./all/bootlogo/ && make
 	cd ./all/audiomon && make all
@@ -98,5 +101,6 @@ endif
 	cd ./all/minput/ && make clean
 	cd ./all/nextval/ && make clean
 	cd ./all/settings/ && make clean
+	cd ./all/voiceai/ && make clean
 	cd ./all/audiomon/ && make clean
 	cd ./$(PLATFORM) && make clean
