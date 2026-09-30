@@ -5,6 +5,7 @@ PICO-8 默认进入 Splore，TIC-80 默认进入 Surf 图形游戏浏览器，�
 
 - PICO-8 使用用户自行购买的 Raspberry Pi 64 位运行文件，优先读取 `Emus/tg5040/PICO.pak/pico8/`，其次读取 `Bios/PICO/`。本仓库不提供商业运行文件。
 - Splore 使用已安装 PICO 游戏包中的 GNU Wget 下载 HTTPS 内容；启动器会设置专用 PATH 和 `use_wget 1`。根证书来自 [Mozilla / curl CA bundle](https://curl.se/docs/caextract.html)，存放在 `certs/cacert.pem`，保持 HTTPS 证书验证开启。
+- 在 Splore 收藏游戏后，退出 PICO-8 会将已下载的收藏复制到 `Roms/Pico-8 (PICO)/`，并添加卡带预览图。只同步收藏，跳过未完成的下载；重复退出不会重复复制或覆盖已有 ROM。取消收藏不会删除已经复制的游戏。同步日志在 `.userdata/shared/pico8-studio/favourites-sync.log`。
 - TIC-80 使用 `../tic80-brick/build.sh` 编译的原生版本，包含编辑器、Lua 和在线 Surf。联网使用 Brick 固件的 libcurl，通过同一份根证书验证 HTTPS；Surf 的 `tic80.com` 目录是在线游戏库。
 - MENU 返回 NextUI，退出前请在编辑器内保存作品。代码输入、精细编辑建议接 USB 键盘和鼠标。
 - PICO-8 作品目录：`Roms/Pico-8 (PICO)/`；配置、日志：`.userdata/shared/pico8-studio/`。
