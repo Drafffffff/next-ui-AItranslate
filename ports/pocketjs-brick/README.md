@@ -54,7 +54,9 @@ Tools/tg5040/PocketJS Smoke.pak/
 .userdata/shared/pocketjs-brick/smoke.log
 ```
 
-待真机确认：
+2026-10-01：用户已在 TrimUI Brick 真机确认显示、颜色、按键和退出正常。启动耗时、渲染耗时和内存峰值尚未读取真机日志。
+
+复测项目：
 
 - 屏幕没有旋转、拉伸、黑屏或异常颜色。
 - 方向键、A、B、MENU 正常；退出后返回 NextUI，按键不残留。
