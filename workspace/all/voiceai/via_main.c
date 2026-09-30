@@ -209,6 +209,8 @@ int via_config_load(ViaConfig* cfg) {
 	cfg->chat_max_tokens = via_cfg_get_int(&g_file, "voiceMaxTokens", 600);
 	cfg->timeout_secs    = via_cfg_get_int(&g_file, "voiceTimeoutSecs", 30);
 	cfg->history_turns   = via_cfg_get_int(&g_file, "voiceHistoryTurns", 6);
+	/* 默认 1：识别出乱码时没有样本根本没法查。卡上最多 5 次，代价很小 */
+	cfg->keep_samples    = via_cfg_get_int(&g_file, "voiceKeepSamples", 1);
 	cfg->debug           = via_cfg_get_int(&g_file, "voiceDebug", 0);
 
 	/* 越界保护：这些值会直接被拿去算缓冲和循环次数 */
@@ -234,7 +236,7 @@ static const char* g_keys[] = {
 	"voiceChatModel", "voiceChatEndpoint", "voiceChatKey",
 	"voiceMicDevice", "voiceSampleRate", "voiceSilenceMs", "voiceMinMs",
 	"voiceMaxSecs", "voiceVadThreshold", "voiceMaxTokens", "voiceTimeoutSecs",
-	"voiceHistoryTurns", "voiceSystemPrompt", "voiceDebug", NULL
+	"voiceHistoryTurns", "voiceKeepSamples", "voiceSystemPrompt", "voiceDebug", NULL
 };
 
 int via_config_save(const ViaConfig* cfg) {
@@ -244,11 +246,19 @@ int via_config_save(const ViaConfig* cfg) {
 	if (g_file.n == 0) {
 		fprintf(f,
 			"# NextUI Voice AI 配置（语音输入，文字输出）\n"
-			"# 改完存盘、卡插回设备即可生效。\n"
 			"#\n"
-			"# 只想借用 AI 画面翻译那把 key 的话，这里什么都不用写 ——\n"
-			"# 下面 voiceAsrKey / voiceChatKey 留空时会自动去读\n"
-			"# .userdata/shared/ai-translate.txt 里的 aiBailianKey / aiDeepseekKey。\n");
+			"# 说明：这个文件第一次运行时会自动补全，里面的值就是当前生效值，\n"
+			"# 直接改你要动的那几行、存盘、卡插回设备就生效，不用重装。\n"
+			"#\n"
+			"# voiceAsrKey / voiceChatKey 通常**不用自己填** —— 程序会自动去读\n"
+			"# .userdata/shared/ai-translate.txt 里的 aiBailianKey / aiDeepseekKey。\n"
+			"# 所以下面两行出现的是从那边抄过来的 key，属于正常现象；\n"
+			"# 想给语音功能单独用别的 key，直接覆盖这两行即可。\n");
+	} else if (!strstr(g_file.line[0], "首次运行")) {
+		/* 老文件：在开头补一行提示，别让用户以为 key 被写重复了 */
+		fprintf(f,
+			"# ↓ 下面 voiceAsrKey / voiceChatKey 是从 ai-translate.txt 自动抄过来的\n"
+			"#   （除非你自己改过）。这两个键留空也会走同样的自动逻辑。\n");
 	}
 
 	int written[64] = {0};
@@ -291,6 +301,7 @@ int via_config_save(const ViaConfig* cfg) {
 		else if (!strcmp(key, "voiceMaxTokens"))      snprintf(out, sizeof(out), "%d", cfg->chat_max_tokens);
 		else if (!strcmp(key, "voiceTimeoutSecs"))    snprintf(out, sizeof(out), "%d", cfg->timeout_secs);
 		else if (!strcmp(key, "voiceHistoryTurns"))   snprintf(out, sizeof(out), "%d", cfg->history_turns);
+		else if (!strcmp(key, "voiceKeepSamples"))    snprintf(out, sizeof(out), "%d", cfg->keep_samples);
 		else if (!strcmp(key, "voiceDebug"))          snprintf(out, sizeof(out), "%d", cfg->debug);
 		else snprintf(out, sizeof(out), "%s", val);
 
@@ -319,6 +330,7 @@ int via_config_save(const ViaConfig* cfg) {
 		else if (!strcmp(key, "voiceMaxTokens"))      snprintf(out, sizeof(out), "%d", cfg->chat_max_tokens);
 		else if (!strcmp(key, "voiceTimeoutSecs"))    snprintf(out, sizeof(out), "%d", cfg->timeout_secs);
 		else if (!strcmp(key, "voiceHistoryTurns"))   snprintf(out, sizeof(out), "%d", cfg->history_turns);
+		else if (!strcmp(key, "voiceKeepSamples"))    snprintf(out, sizeof(out), "%d", cfg->keep_samples);
 		else if (!strcmp(key, "voiceDebug"))          snprintf(out, sizeof(out), "%d", cfg->debug);
 		else out[0] = '\0';
 		fprintf(f, "%s=%s\n", key, out);
@@ -414,13 +426,21 @@ static void via_draw_header(const ViaConfig* cfg, ViaPipeline* pipe) {
 
 	char mic[64] = {0};
 	via_pipeline_mic_name(pipe, mic, sizeof(mic));
+	int mrate = via_pipeline_mic_rate(pipe);
+
 	char right[256];
 	int stt = SDL_AtomicGet(&pipe->stt_ms);
 	int chat = SDL_AtomicGet(&pipe->chat_ms);
-	if (stt || chat) {
-		snprintf(right, sizeof(right), "%s   %.1fs / %.1fs", mic, stt / 1000.0, chat / 1000.0);
+	/* 把麦克风实际速率显示出来 —— 识别出乱码时第一个要看的就是它 */
+	if (mrate > 0) {
+		snprintf(right, sizeof(right), "%s %dHz", mic[0] ? mic : "mic", mrate);
 	} else {
 		snprintf(right, sizeof(right), "%s", mic);
+	}
+	if (stt || chat) {
+		char tail[64];
+		snprintf(tail, sizeof(tail), "   %.1fs/%.1fs", stt / 1000.0, chat / 1000.0);
+		strncat(right, tail, sizeof(right) - strlen(right) - 1);
 	}
 	via_blit_text(font.tiny, right, W - via_text_w(font.tiny, right) - SCALE1(6), SCALE1(4), COLOR_DIM);
 }
@@ -472,6 +492,14 @@ int main(int argc, char* argv[]) {
 
 	ViaConfig cfg;
 	via_config_load(&cfg);
+
+	/*
+	 * 首次运行（或配置文件是旧的、缺新键）就把当前生效值写回去，
+	 * 目的是让用户打开文件就能看到所有可调项 —— 否则新加的键
+	 * 只存在于代码里，用户根本不知道有这么个开关。
+	 * 如果有键的值被解析成了和原文件不同的东西，会顺手打印出来。
+	 */
+	via_config_save(&cfg);
 
 	ViaPipeline pipe;
 	g_pipe = &pipe;

@@ -136,6 +136,10 @@ voiceVadThreshold=500
 
 # ---- 其它 ----
 voiceTimeoutSecs=30
+# 每次录音都在 .userdata/ai/samples/ 留一份样本（只留最近 5 次）。默认开：
+# 识别出乱码时，没有「实际发出去的音频」根本没法判断是麦克风、重采样还是接口的问题。
+# 嫌占地方就改成 0
+voiceKeepSamples=1
 voiceDebug=0
 EOF
   sync

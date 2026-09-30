@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <sys/time.h>
 
 #include "defines.h"     /* SDCARD_PATH —— 临时文件路径要用 */
@@ -74,6 +75,7 @@ void via_pipeline_ai_text(ViaPipeline* p, char* out, int cap)   { via_get_locked
 void via_pipeline_mic_name(ViaPipeline* p, char* out, int cap)  { via_get_locked(p, p->mic_name, out, cap); }
 int  via_pipeline_level(ViaPipeline* p)  { return SDL_AtomicGet(&p->level); }
 int  via_pipeline_rec_ms(ViaPipeline* p) { return SDL_AtomicGet(&p->rec_ms); }
+int  via_pipeline_mic_rate(ViaPipeline* p) { return SDL_AtomicGet(&p->mic_rate); }
 
 /* ------------------------------------------------------------------ 生命周期 */
 
@@ -211,16 +213,20 @@ static int via_record_once(ViaPipeline* p, RecBuf* rb) {
 	if (failed) return -1;
 
 	if (rb->frames < min_need) {
+		int ms = rb->frames * 1000 / rate;
 		rb->frames = 0;
 		if (manual) return 1;
-		via_set_error(p, "没听清：只录到 %dms，低于 min_ms(%d)",
-		              rb->frames * 1000 / rate, p->cfg.min_ms);
+		via_set_error(p, "没听清：只录到 %dms，低于 min_ms(%d)", ms, p->cfg.min_ms);
 		return -1;
 	}
-	/* 语音识别要 16k 的输入；设备若给了别的速率，这里按需要报出来 */
-	if (rate != 16000) {
-		via_pipeline_set_status(p, "提示：麦克风跑在 %dHz（不是 16kHz）", rate);
-	}
+
+	/*
+	 * 把硬件实际速率告诉上层 —— WAV 头必须按这个值写。
+	 * 这里是本次修复的核心：以前上层固定用 cfg.sample_rate 写 WAV 头，
+	 * 而设备实际可能跑在 48k，于是 48k 的样本被标成 16k，
+	 * 送进识别接口后音调/语速全错，出来就是乱码。
+	 */
+	SDL_AtomicSet(&p->mic_rate, rate);
 	(void)t0;
 	return 0;
 }
@@ -254,6 +260,75 @@ static void via_on_delta(void* ctx, const char* delta) {
 	via_pipeline_append_ai(p, delta);
 }
 
+/* ------------------------------------------------------------------ 留样本 */
+
+/*
+ * 写一个 16bit 单声道 PCM 到 WAV 文件。
+ * 注意用 via_wav_wrap 写**正确**的采样率 —— 这里正是最容易出错的地方，
+ * 之前就是因为 WAV 头写死 16000 而数据其实是 48k，导致识别全是乱码。
+ */
+static int via_write_wav_file(const char* path, const short* pcm, int frames, int rate) {
+	if (!path || frames <= 0 || rate <= 0) return -1;
+	int pcm_bytes = frames * 2;
+	unsigned char* wav = (unsigned char*)malloc((size_t)pcm_bytes + 64);
+	if (!wav) return -1;
+	int hdr = via_wav_wrap(wav, pcm_bytes + 64, (const unsigned char*)pcm, pcm_bytes, rate, 1);
+	if (hdr < 0) { free(wav); return -1; }
+
+	int rc = 0;
+	FILE* f = fopen(path, "wb");
+	if (!f) rc = -1;
+	else {
+		if (fwrite(wav, 1, (size_t)(hdr + pcm_bytes), f) != (size_t)(hdr + pcm_bytes)) rc = -1;
+		fclose(f);
+	}
+	free(wav);
+	return rc;
+}
+
+/* 目录里只留最近 N 个样本，其余删掉（每个样本 2 个文件） */
+static void via_prune_samples(const char* dir, int keep_files) {
+	/* 用 ls 的排序结果，按名字（前缀是时间戳）从旧到新删 */
+	char cmd[600];
+	snprintf(cmd, sizeof(cmd),
+	         "ls -1t '%s'/*.wav 2>/dev/null | tail -n +%d | while read f; do rm -f \"$f\"; done",
+	         dir, keep_files + 1);
+	if (system(cmd) != 0) { /* 清理失败不影响主流程 */ }
+}
+
+void via_keep_sample(const short* raw, int raw_frames, int raw_rate,
+                     const short* sent, int sent_frames, int sent_rate) {
+	if (raw_frames <= 0) return;
+
+	char dir[512];
+	snprintf(dir, sizeof(dir), "%s/samples", VIA_TMP_DIR);
+	mkdir(dir, 0755);
+
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	struct tm tm;
+	localtime_r(&tv.tv_sec, &tm);
+
+	char raw_path[600], sent_path[600];
+	snprintf(raw_path, sizeof(raw_path), "%s/%04d%02d%02d-%02d%02d%02d_raw.wav",
+	         dir, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+	         tm.tm_hour, tm.tm_min, tm.tm_sec);
+	snprintf(sent_path, sizeof(sent_path), "%s/%04d%02d%02d-%02d%02d%02d_sent.wav",
+	         dir, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+	         tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+	/* 原始采集：按硬件真实速率写，这样才能听出「到底录成了什么」 */
+	via_write_wav_file(raw_path, raw, raw_frames, raw_rate);
+
+	/* 真正发出去的那段 */
+	if (sent && sent_frames > 0) {
+		via_write_wav_file(sent_path, sent, sent_frames, sent_rate);
+	}
+
+	/* 留最近 5 次（=10 个文件），别把卡写满 */
+	via_prune_samples(dir, 10);
+}
+
 int via_pipeline_thread(void* arg) {
 	ViaPipeline* p = (ViaPipeline*)arg;
 	unsigned t_start = via_now_ms();
@@ -282,20 +357,61 @@ int via_pipeline_thread(void* arg) {
 
 	/* 2) 识别 */
 	{
-		int rate = 16000;
-		{
-			/* 用设备实际速率算时长和 WAV 头；mic_name 里存了设备名，
-			 * 速率这里重新问一次不值当，直接按配置值 —— 不一致时
-			 * via_record_once 已经提示过了 */
-			rate = p->cfg.sample_rate > 0 ? p->cfg.sample_rate : 16000;
+		/*
+		 * 先把音频统一到 16kHz 单声道 —— 这是 qwen3-asr-flash 要的输入格式，
+		 * 也是我们能控制的唯一格式。
+		 *
+		 * 设备实际速率用 mic_rate（录音阶段写进去的），不是配置值。
+		 */
+		int src_rate = SDL_AtomicGet(&p->mic_rate);
+		if (src_rate <= 0) src_rate = p->cfg.sample_rate > 0 ? p->cfg.sample_rate : 16000;
+		const int ASR_RATE = 16000;
+
+		short* pcm = rb.buf;
+		int    frames = rb.frames;
+		short* resampled = NULL;
+
+		if (src_rate != ASR_RATE) {
+			/*
+			 * 输出长度按比例算，再留 64 个样本余量避免边界溢出。
+			 * 最高支持到 48k -> 16k 这种常见的 3:1 降采样。
+			 */
+			int cap = (int)((long long)frames * ASR_RATE / src_rate) + 64;
+			if (cap < 1) cap = 1;
+			resampled = (short*)calloc((size_t)cap, sizeof(short));   /* calloc：函数不擦尾部 */
+			if (!resampled) {
+				via_set_error(p, "内存不足（重采样 %d -> %d）", src_rate, ASR_RATE);
+				goto done;
+			}
+			int got = via_resample_s16(rb.buf, frames, src_rate, resampled, cap, ASR_RATE);
+			if (got <= 0) {
+				free(resampled);
+				via_set_error(p, "重采样失败（%d -> %d）", src_rate, ASR_RATE);
+				goto done;
+			}
+			via_pipeline_set_status(p, "重采样 %dHz -> %dHz…", src_rate, ASR_RATE);
+			pcm = resampled;
+			frames = got;
 		}
-		if (via_save_mic_wav(rb.buf, rb.frames, rate) != 0) {
+
+		/*
+		 * 留样本：把「实际发给识别接口的东西」存下来。
+		 * 语音识别出乱码时，光看音量条是查不出来的 ——
+		 * 必须把音频拷出来听。这个目录就是干这个的。
+		 */
+		if (p->cfg.keep_samples) {
+			via_keep_sample(rb.buf, rb.frames, src_rate, pcm, frames, ASR_RATE);
+		}
+
+		if (via_save_mic_wav(pcm, frames, ASR_RATE) != 0) {
+			if (resampled) free(resampled);
 			via_set_error(p, "写不了录音文件 %s", VIA_MIC_WAV);
 			goto done;
 		}
+		if (resampled) { free(resampled); resampled = NULL; }
 
 		SDL_AtomicSet(&p->state, VIA_ST_TRANSCRIBING);
-		via_pipeline_set_status(p, "识别中…（%.1f 秒音频）", rb.frames / (double)rate);
+		via_pipeline_set_status(p, "识别中…（%.1f 秒，%dHz）", frames / (double)ASR_RATE, ASR_RATE);
 
 		int wav_len = 0;
 		unsigned char* wav = NULL;

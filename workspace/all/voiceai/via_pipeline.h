@@ -70,6 +70,14 @@ typedef struct ViaPipeline {
 	char ai_text[VIA_TURN_CHARS];   /* 边收边追加，主线程滚动显示 */
 	char mic_name[64];              /* 实际用的采集设备，显示在状态栏 */
 
+	/*
+	 * 麦克风硬件的**实际**采集速率。WAV 头必须用这个值，不能用配置里的
+	 * 目标值 —— 设备经常只支持 48k，配置写 16000 时真正收到的仍是 48k 数据。
+	 * 用错的话音频被按错速度解释（音调变尖/变慢），识别结果全是乱码，
+	 * 但音量条依旧正常（它只算 RMS），非常难查。
+	 */
+	SDL_atomic_t mic_rate;
+
 	ViaHistory hist;
 	SDL_Thread* thread;
 } ViaPipeline;
@@ -89,9 +97,26 @@ void via_pipeline_user_text(ViaPipeline* p, char* out, int cap);
 void via_pipeline_ai_text(ViaPipeline* p, char* out, int cap);
 void via_pipeline_mic_name(ViaPipeline* p, char* out, int cap);
 int  via_pipeline_level(ViaPipeline* p);      /* 实时音量 0~100 */
+int  via_pipeline_mic_rate(ViaPipeline* p);   /* 麦克风实际采集速率 */
 int  via_pipeline_rec_ms(ViaPipeline* p);     /* 已录时长（毫秒） */
 
 void via_pipeline_set_status(ViaPipeline* p, const char* fmt, ...);
 void via_pipeline_append_ai(ViaPipeline* p, const char* text);   /* 流式追加回答 */
+
+/*
+ * 把这次录到的音频存到 .userdata/ai/samples/ 里，只留最近几个。
+ *
+ * 存在的意义：语音识别出乱码时，光看界面上的音量条完全查不出来 ——
+ * 音量条只算 RMS，采样率标错、字节序错、声道错它都照样正常跳。
+ * 必须把真正发出去的音频拷到电脑上听一遍才能定位。
+ * 每次存两个文件：
+ *   <时间戳>_raw.wav   麦克风原始采集，按硬件真实速率标注 —— 先听这个
+ *   <时间戳>_sent.wav  重采样后、真正 base64 发出去的那段 —— 再听这个
+ * 两个听着都正常但识别还是乱 → 问题不在音频，在网络或接口那一层。
+ *
+ * sent 可以和 raw 是同一块内存（不需要重采样时就是同一块）。
+ */
+void via_keep_sample(const short* raw, int raw_frames, int raw_rate,
+                     const short* sent, int sent_frames, int sent_rate);
 
 #endif

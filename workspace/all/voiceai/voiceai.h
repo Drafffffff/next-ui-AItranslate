@@ -44,7 +44,21 @@ int  via_wrap_text(const char* text, int max_width, ViaMeasureFn measure, void* 
                    char*** out_lines, int* out_cap, int lines_cap);
 void via_wrap_free(char** lines, int* cap);
 
-/* ------------------------------------------------------------------ SSE */
+/* ------------------------------------------------------------------ 重采样 */
+
+/*
+ * 线性插值重采样。返回写入 out 的样本数。
+ *
+ * 为什么需要：麦克风硬件经常只支持 48kHz 之类的固定速率，而语音识别要 16kHz。
+ * 之前踩过的坑 —— 采集用设备实际速率，WAV 头却写配置里的 16000，
+ * 结果音频被按错速度解释（音调变尖/变慢），识别出来全是乱码，
+ * 但音量条是正常的（因为它只算 RMS），非常难查。
+ *
+ * out_frames 必须 >= src_frames * dst_rate / src_rate + 2，且调用方要预先清零：
+ * 函数内部不擦除尾部残留。
+ */
+int via_resample_s16(const short* in, int in_frames, int src_rate,
+                     short* out, int out_frames, int dst_rate);
 
 /* 从一行 SSE 里取出 data: 后面的正文。返回长度，0 = 这行不是 data 行 */
 int via_sse_data_line(const char* line, char* out, int out_cap);
@@ -116,6 +130,7 @@ typedef struct {
 	int  chat_max_tokens;
 	int  timeout_secs;
 	int  history_turns;    /* 带几轮上下文 */
+	int  keep_samples;     /* 是否把录音样本存到 .userdata/ai/samples/ */
 	int  debug;
 } ViaConfig;
 

@@ -20,7 +20,7 @@ command -v cc >/dev/null || { echo "✗ 找不到 cc"; exit 1; }
 [ -f "$SRC" ] || { echo "✗ 找不到 $SRC"; exit 1; }
 
 echo "编译宿主机测试（不依赖 SDL / 不依赖设备 / 不联网）…"
-cc -O1 -Wall -Wextra -Wno-unused-parameter -o "$OUT" "$TEST" "$SRC"
+cc -O1 -Wall -Wextra -Wno-unused-parameter -o "$OUT" "$TEST" "$SRC" -lm
 
 echo
 if [ -f "$SAMPLE" ]; then

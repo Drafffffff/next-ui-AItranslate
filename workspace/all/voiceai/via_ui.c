@@ -185,6 +185,43 @@ void via_wrap_free(char** lines, int* cap) {
 	free(lines);
 }
 
+/* ------------------------------------------------------------------ 重采样 */
+
+int via_resample_s16(const short* in, int in_frames, int src_rate,
+                     short* out, int out_frames, int dst_rate) {
+	if (!in || !out || in_frames <= 0 || out_frames <= 0) return 0;
+	if (src_rate <= 0 || dst_rate <= 0) return 0;
+
+	/* 速率一样就直接拷，别引入插值误差 */
+	if (src_rate == dst_rate) {
+		int n = (in_frames < out_frames) ? in_frames : out_frames;
+		memcpy(out, in, (size_t)n * sizeof(short));
+		return n;
+	}
+
+	/* 输出长度按比例算，比源长就只算到源覆盖得到的部分 */
+	double ratio = (double)dst_rate / src_rate;
+	int n_out = (int)(in_frames * ratio);
+	if (n_out > out_frames) n_out = out_frames;
+	if (n_out <= 0) return 0;
+
+	for (int i = 0; i < n_out; i++) {
+		double sp = i / ratio;                 /* 在源里的位置（浮点） */
+		int i0 = (int)sp;
+		double fr = sp - i0;
+		double v;
+		if (i0 >= in_frames - 1) {
+			v = in[in_frames - 1];             /* 尾巴上复用最后一个样本 */
+		} else {
+			v = in[i0] * (1.0 - fr) + in[i0 + 1] * fr;
+		}
+		if (v > 32767.0) v = 32767.0;
+		if (v < -32768.0) v = -32768.0;
+		out[i] = (short)v;                     /* 截断（不是四舍五入），和 TTS 那边一致 */
+	}
+	return n_out;
+}
+
 /* ------------------------------------------------------------------ SSE */
 
 int via_sse_data_line(const char* line, char* out, int out_cap) {

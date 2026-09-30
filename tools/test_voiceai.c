@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "../workspace/all/voiceai/voiceai.h"
 
@@ -172,6 +173,57 @@ int main(int argc, char** argv) {
 
 	/* 6. 恰好一个字符都放不下 */
 	dump_lines("宽度极小", "中文测试", 10);
+
+	printf("\n=== 重采样 ===\n");
+	{
+		/*
+		 * 这是本次修复的核心，必须验准。
+		 * 前情：采集用设备实际速率、WAV 头却写配置里的 16000，
+		 * 48k 的样本被标成 16k -> 音调/语速全错 -> 识别乱码，
+		 * 而音量条正常（只算 RMS），极难发现。
+		 */
+		const int N = 48000;                 /* 1 秒 @48k */
+		static short src[48000];
+		for (int i = 0; i < N; i++) {
+			/* 440Hz 正弦，幅度 3000 */
+			src[i] = (short)(3000.0 * sin(2.0 * M_PI * 440.0 * i / 48000.0));
+		}
+
+		/* 48k -> 16k：应该是 16000 个样本，仍然是 440Hz */
+		static short dst[20000];
+		int got = via_resample_s16(src, N, 48000, dst, 20000, 16000);
+		printf("  48k %d 帧 -> 16k %d 帧\n", N, got);
+		CHECK(got == 16000, "48k->16k 得到 16000 帧（1 秒不变）");
+
+		/* 数零点过零次数推频率：440Hz 在 1 秒里过零约 880 次 */
+		int zc = 0;
+		for (int i = 1; i < got; i++) {
+			if ((dst[i - 1] < 0 && dst[i] >= 0) || (dst[i - 1] >= 0 && dst[i] < 0)) zc++;
+		}
+		printf("  过零 %d 次（440Hz 期望约 880）\n", zc);
+		CHECK(zc >= 860 && zc <= 900, "频率没变（音调正确）");
+
+		/* 幅度不该被改变 */
+		int peak = 0;
+		for (int i = 0; i < got; i++) { int v = dst[i] < 0 ? -dst[i] : dst[i]; if (v > peak) peak = v; }
+		printf("  峰值 %d（期望约 3000）\n", peak);
+		CHECK(peak >= 2900 && peak <= 3100, "幅度没变（音量正确）");
+
+		/* 速率相同：应当原样拷贝 */
+		static short same[48000];
+		int n2 = via_resample_s16(src, 1000, 16000, same, 48000, 16000);
+		CHECK(n2 == 1000 && memcmp(same, src, 1000 * 2) == 0, "同速率直接拷贝，不引入误差");
+
+		/* 升采样 16k -> 48k：时长同样是 1 秒 */
+		static short up[60000];
+		int n3 = via_resample_s16(src, 16000, 16000, up, 60000, 48000);
+		CHECK(n3 == 48000, "16k->48k 得到 48000 帧");
+
+		/* 边界：0 帧、负长度、空指针都不该崩 */
+		CHECK(via_resample_s16(src, 0, 48000, dst, 20000, 16000) == 0, "0 帧返回 0");
+		CHECK(via_resample_s16(NULL, 100, 48000, dst, 20000, 16000) == 0, "空源指针返回 0");
+		CHECK(via_resample_s16(src, 100, 0, dst, 20000, 16000) == 0, "0 速率返回 0");
+	}
 
 	printf("\n=== JSON 反转义 ===\n");
 	{
