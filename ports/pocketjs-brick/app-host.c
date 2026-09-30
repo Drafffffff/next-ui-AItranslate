@@ -7,6 +7,7 @@
 #include <sys/resource.h>
 #include <time.h>
 #include "pocket_runtime.h"
+#include "brick-services.h"
 #include "pocket_spec.h"
 #define WIDTH 1024
 #define HEIGHT 768
@@ -33,13 +34,14 @@ static uint32_t key(SDL_Keycode k) {
         case SDLK_UP: return POCKET_BTN_UP; case SDLK_RIGHT: return POCKET_BTN_RIGHT;
         case SDLK_DOWN: return POCKET_BTN_DOWN; case SDLK_LEFT: return POCKET_BTN_LEFT;
         case SDLK_RETURN: case SDLK_SPACE: return POCKET_BTN_CIRCLE;
+        case SDLK_ESCAPE: case SDLK_BACKSPACE: return POCKET_BTN_CROSS;
+        case SDLK_x: return POCKET_BTN_TRIANGLE;
         default: return 0;
     }
 }
 static void event(const SDL_Event *e) {
     if (e->type == SDL_QUIT) stopped = 1;
     else if (e->type == SDL_KEYDOWN || e->type == SDL_KEYUP) {
-        if (e->type == SDL_KEYDOWN && (e->key.keysym.sym == SDLK_ESCAPE || e->key.keysym.sym == SDLK_BACKSPACE)) stopped = 1;
         uint32_t bit = key(e->key.keysym.sym);
         if (e->type == SDL_KEYDOWN) buttons |= bit; else buttons &= ~bit;
     } else if (e->type == SDL_JOYHATMOTION) {
@@ -49,16 +51,16 @@ static void event(const SDL_Event *e) {
         if (e->jhat.value & SDL_HAT_DOWN) buttons |= POCKET_BTN_DOWN;
         if (e->jhat.value & SDL_HAT_LEFT) buttons |= POCKET_BTN_LEFT;
     } else if (e->type == SDL_JOYBUTTONDOWN || e->type == SDL_JOYBUTTONUP) {
-        if (e->jbutton.button == 1) {
-            if (e->type == SDL_JOYBUTTONDOWN) buttons |= POCKET_BTN_CIRCLE;
-            else buttons &= ~POCKET_BTN_CIRCLE;
-        } else if (e->type == SDL_JOYBUTTONDOWN && (e->jbutton.button == 0 || e->jbutton.button == 8)) stopped = 1;
+        uint32_t bit = e->jbutton.button == 1 ? POCKET_BTN_CIRCLE : e->jbutton.button == 0 ? POCKET_BTN_CROSS : e->jbutton.button == 3 ? POCKET_BTN_TRIANGLE : 0;
+        if (e->type == SDL_JOYBUTTONDOWN) buttons |= bit; else buttons &= ~bit;
+        if (e->type == SDL_JOYBUTTONDOWN && e->jbutton.button == 8) stopped = 1;
     } else if (e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_FOCUS_LOST) buttons = 0;
 }
 static const uint8_t *step(uint32_t mask) {
     PocketRuntimeInput input = {0}; input.buttons = mask;
     double start = now_ms();
     if (!pocket_runtime_tick(&input)) return NULL;
+    if (!strcmp(pocket_runtime_action_name(), "app.exit")) stopped = 1;
     const uint8_t *p = pocket_runtime_render();
     double elapsed = now_ms() - start; if (elapsed > max_work_ms) max_work_ms = elapsed;
     if (!p || pocket_runtime_width() != WIDTH || pocket_runtime_height() != HEIGHT ||
@@ -74,38 +76,61 @@ static int dump_ppm(const uint8_t *p, const char *path) {
     }
     return fclose(f) == 0;
 }
+static int harness(int op) {
+    int32_t result = -999;
+    if (!pocket_runtime_harness_call(op, 0, &result)) return -999;
+    return result;
+}
+static int wait_for(int op, int expected, double timeout_ms) {
+    double deadline = now_ms() + timeout_ms;
+    while (now_ms() < deadline) {
+        if (!step(0)) return 0;
+        if (harness(op) == expected) return 1;
+        SDL_Delay(1);
+    }
+    return 0;
+}
 static int self_test(const char *dump) {
+    if (!pocket_runtime_harness_bind("__brickAcceptance") || !wait_for(0, 1, 3000)) return 1;
     const uint8_t *p = step(0); if (!p) return 1;
     uint32_t color; memcpy(&color, p + (210 * WIDTH + 50) * 4, 4);
-    if (color != 0xff344d2eU) { fprintf(stderr, "Selected row is not highlighted: %08x\n", color); return 1; }
-    if (dump && !dump_ppm(p, dump)) return 1;
-    /* Exercise actual SDL -> portable input -> guest -> virtual-list behavior. */
+    if (color != 0xff344d2eU) return 1;
     SDL_Event e; memset(&e, 0, sizeof(e)); e.type = SDL_JOYHATMOTION;
-    for (int i = 0; i < 7; i++) {
-        e.jhat.value = SDL_HAT_DOWN; event(&e); if (!step(buttons)) return 1;
-        e.jhat.value = SDL_HAT_CENTERED; event(&e);
-        for (int j = 0; j < 30; j++) if (!step(buttons)) return 1;
-    }
-    if (strcmp(pocket_runtime_action_name(), "list.state") || pocket_runtime_action_value() / 10000 != 7 ||
-        pocket_runtime_action_value() % 10000 <= 0) { fprintf(stderr, "List navigation/scroll failed: %s %d\n", pocket_runtime_action_name(), pocket_runtime_action_value()); return 1; }
-    p = step(0); if (dump && (!p || !dump_ppm(p, dump))) return 1;
-    e.type = SDL_JOYBUTTONDOWN; e.jbutton.button = 1; event(&e);
-    if (!step(buttons) || strcmp(pocket_runtime_action_name(), "list.activate") || pocket_runtime_action_value() != 7) return 1;
-    unsigned long sequence = pocket_runtime_action_sequence();
-    for (int i = 0; i < 5; i++) if (!step(buttons)) return 1;
-    if (pocket_runtime_action_sequence() != sequence) return 1; /* held A is one press */
-    e.type = SDL_JOYBUTTONUP; event(&e); if (!step(buttons)) return 1;
-    e.type = SDL_JOYBUTTONDOWN; event(&e); if (!step(buttons) || pocket_runtime_action_sequence() != sequence + 1) return 1;
-    e.type = SDL_JOYBUTTONUP; event(&e); if (!step(buttons)) return 1;
-    e.type = SDL_JOYHATMOTION; e.jhat.value = SDL_HAT_DOWN; event(&e);
+    e.jhat.value = SDL_HAT_DOWN; event(&e);
     for (int i = 0; i < 160; i++) if (!step(buttons)) return 1;
-    if (pocket_runtime_action_value() / 10000 != 11 || pocket_runtime_action_value() % 10000 > 560) return 1;
+    if (harness(6) != 12) return 1;
     e.jhat.value = SDL_HAT_UP; event(&e);
     for (int i = 0; i < 180; i++) if (!step(buttons)) return 1;
-    if (pocket_runtime_action_value() != 0) return 1;
+    if (harness(6) != 1) return 1;
+    e.jhat.value = SDL_HAT_CENTERED; event(&e); if (!step(buttons)) return 1;
+    if (harness(2) != 1) return 1;
+    /* Move the actual app while a delayed worker request is outstanding. */
+    e.jhat.value = SDL_HAT_DOWN; event(&e);
+    for (int i = 0; i < 10; i++) { if (!step(buttons)) return 1; SDL_Delay(1); }
+    e.jhat.value = SDL_HAT_CENTERED; event(&e);
+    if (!wait_for(1, 1, 10000)) { harness(10); fprintf(stderr, "Acceptance did not finish: %s\n", pocket_runtime_error()); return 1; }
+    p = step(0); if (!p || (dump && !dump_ppm(p, dump))) return 1;
+    if (harness(4) != 2) return 1;
+    e.type = SDL_JOYBUTTONDOWN; e.jbutton.button = 0; event(&e);
+    if (!step(buttons) || harness(9) != 1 || stopped) return 1;
+    e.type = SDL_JOYBUTTONUP; event(&e); if (!step(buttons)) return 1;
+    if (harness(11) != 1 || !step(0) || !step(0)) return 1;
+    e.type = SDL_JOYBUTTONDOWN; e.jbutton.button = 1; event(&e);
+    for (int i = 0; i < 5; i++) if (!step(buttons)) return 1;
+    if (harness(13) != 1) return 1;
+    if (dump) { char path[1200]; snprintf(path, sizeof(path), "%s.keyboard.ppm", dump); if (!dump_ppm(step(0), path)) return 1; }
+    e.type = SDL_JOYBUTTONUP; event(&e); if (!step(buttons)) return 1;
+    e.type = SDL_JOYBUTTONDOWN; e.jbutton.button = 0; event(&e); if (!step(buttons)) return 1;
+    e.type = SDL_JOYBUTTONUP; event(&e); if (!step(buttons) || harness(9) != 1) return 1;
+    if (harness(12) != 1 || !step(0) || !step(0)) return 1;
+    if (dump) { char path[1200]; snprintf(path, sizeof(path), "%s.confirm.ppm", dump); if (!dump_ppm(step(0), path)) return 1; }
+    e.type = SDL_JOYBUTTONDOWN; e.jbutton.button = 1; event(&e); if (!step(buttons)) return 1;
+    e.type = SDL_JOYBUTTONUP; event(&e);
+    if (!step(buttons) || harness(9) != 1 || harness(4) != 2) return 1;
+    if (harness(8) != 1) return 1;
+    for (int i = 0; i < 10; i++) { if (!step(0)) return 1; SDL_Delay(1); }
     e.type = SDL_JOYBUTTONDOWN; e.jbutton.button = 8; event(&e); if (!stopped) return 1;
-    stopped = 0; e.jbutton.button = 0; event(&e); if (!stopped) return 1;
-    puts("PASS: QuickJS boot, Chinese atlas, guest navigation, virtual-list scrolling, visible selection, A edges, held navigation/clamped bounds, B/MENU exit");
+    puts("PASS: full app navigation, background file/network/font jobs, timeout, cancellation, body limits, chat, persisted history, dynamic Chinese, keyboard A edge, clear confirmation cancel");
     return 0;
 }
 int main(int argc, char **argv) {
@@ -122,6 +147,7 @@ int main(int argc, char **argv) {
             limit = (int)n;
         } else return 2;
     }
+    if (test) setenv("POCKETJS_TEST", "1", 1);
     double boot = now_ms(); size_t js_size = 0, pack_size = 0;
     char *js = read_file("brick-app.js", &js_size);
     uint8_t *pack = read_file("brick-app.pak", &pack_size);
@@ -131,10 +157,13 @@ int main(int argc, char **argv) {
     if (test) {
         result = self_test(dump);
         if (!result) {
-            pocket_runtime_shutdown(); buttons = 0; stopped = 0;
-            if (!pocket_runtime_boot(js, js_size, pack, pack_size, WIDTH, HEIGHT) || !step(0) ||
-                strcmp(pocket_runtime_action_name(), "list.state") || pocket_runtime_action_value() != 0) result = 1;
-            else puts("PASS: guest shutdown/restart resets list state");
+            double shutdown_start = now_ms(); pocket_runtime_shutdown();
+            double shutdown_time = now_ms() - shutdown_start;
+            printf("active_request_shutdown_ms=%.3f\n", shutdown_time);
+            if (shutdown_time > 1000) { result = 1; goto done; }
+            buttons = 0; stopped = 0;
+            if (!pocket_runtime_boot(js, js_size, pack, pack_size, WIDTH, HEIGHT) || !pocket_runtime_harness_bind("__brickAcceptance") || !wait_for(0, 1, 3000) || harness(4) != 2) result = 1;
+            else puts("PASS: guest shutdown/restart restores saved history");
         }
         goto done;
     }

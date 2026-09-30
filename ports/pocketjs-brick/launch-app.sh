@@ -9,5 +9,8 @@ fi
 SYSTEM_ROOT="${SYSTEM_PATH:-/mnt/SDCARD/.system/tg5040}"
 export LD_LIBRARY_PATH="$SYSTEM_ROOT/lib:/usr/trimui/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 LOG_DIR="${SHARED_USERDATA_PATH:-/mnt/SDCARD/.userdata/shared}/pocketjs-brick"
-mkdir -p "$LOG_DIR"
+mkdir -p "$LOG_DIR/app"
+export POCKETJS_DATA="$LOG_DIR/app"
+export POCKETJS_FONT="${RES_PATH:-/mnt/SDCARD/.system/res}/font1.ttf"
+export POCKETJS_CA="$PWD/ca-bundle.crt"
 exec ./pocketjs-app.elf > "$LOG_DIR/app.log" 2>&1

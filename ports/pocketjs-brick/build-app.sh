@@ -42,5 +42,9 @@ test "$("$BUN" --version)" = "$BUN_VERSION"
     --framework=solid --no-config --density=1 --hz=60 \
     --font-regular="$TASK_ROOT/fonts/font1.ttf" --font-bold="$TASK_ROOT/fonts/font1.ttf" \
     --project-root="$TASK_ROOT" --outdir="$OUTPUT/app-bundle"
+CA_SOURCE="${POCKETJS_CA_SOURCE:-/etc/ssl/cert.pem}"
+if [ ! -f "$CA_SOURCE" ]; then CA_SOURCE=/etc/ssl/certs/ca-certificates.crt; fi
+test -f "$CA_SOURCE"
+cp "$CA_SOURCE" "$OUTPUT/ca-bundle.crt"
 docker run --rm --platform linux/arm64 -v "$TASK_ROOT:/work" "$TOOLCHAIN_IMAGE" \
     /bin/bash /work/ports/pocketjs-brick/container-build-app.sh
