@@ -30,6 +30,10 @@ aiDeepseekKey=填入你的DeepSeekAPIKey
 
 安全弹出 SD 卡，插回掌机并开机。连接 Wi-Fi，进入游戏，**按住 MENU，再按 X** 即可翻译。
 
+### 中文字体
+
+如果中文显示不全或出现方框，下载 **[我们合并的中文字体 font1.ttf](https://github.com/Drafffffff/next-ui-AItranslate/raw/refs/heads/main/fonts/font1.ttf)**，备份后覆盖 SD 卡上的 `.system/res/font1.ttf`，重启生效。保留原版英文字形，汉字使用圆体。
+
 ### 真机展示
 
 TrimUI Brick 实拍，已裁切屏幕区域并统一为 4:3 比例。点击图片可查看大图。
