@@ -1,0 +1,13 @@
+diff --git a/src/studio/system.h b/src/studio/system.h
+index 31f9c31..5033cdb 100644
+--- a/src/studio/system.h
++++ b/src/studio/system.h
+@@ -39,7 +39,7 @@
+ // A dev snapshot talks to the dev site — it runs the same code from the
+ // same branch, its data is disposable, and testing there cannot touch the
+ // real catalogue. A release talks to production.
+-#if TIC_VERSION_IS_RELEASE
++#if TIC_VERSION_IS_RELEASE || defined(TIC80_BRICK_BUILD)
+     #define TIC_HOST "tic80.com"
+ #else
+     #define TIC_HOST "dev.tic80.com"

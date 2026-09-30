@@ -11,6 +11,8 @@ docker run --rm --platform linux/arm64 -v "$TASK_ROOT:/work" "$TOOLCHAIN_IMAGE" 
 '
 cp "$TASK_OUT/PICO-8.pak/menu-exit.elf" "$TASK_OUT/TIC-80.pak/menu-exit.elf"
 cp "$TASK_OUT/PICO-8.pak/sdl-nosensor.so" "$TASK_OUT/TIC-80.pak/sdl-nosensor.so"
+mkdir -p "$TASK_OUT/TIC-80.pak/certs"
+cp "$TASK_SOURCE/certs/cacert.pem" "$TASK_OUT/TIC-80.pak/certs/"
 cp "$TASK_SOURCE/pico8-launch.sh" "$TASK_OUT/PICO-8.pak/launch.sh"
 cp "$TASK_SOURCE/pico8-config.txt" "$TASK_OUT/PICO-8.pak/config.txt"
 cp "$TASK_SOURCE/pico8-controllers.txt" "$TASK_OUT/PICO-8.pak/sdl_controllers.txt"

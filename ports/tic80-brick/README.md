@@ -9,6 +9,8 @@
 
 先准备 PocketJS 的 tg5040 固定工具链及 Docker；运行 `./ports/tic80-brick/build.sh`。产物为 `build/creative-lab/TIC-80 Lab.pak/`，复制到卡的 `Tools/tg5040/`。启动脚本将配置与日志隔离到 `.userdata/shared/tic80-brick/`。
 
-仅启用 Lua、SDL 和文本工程读取（TIC-80 画面由 CPU 生成，Brick 优先使用 Mali SDL 呈现，失败则尝试软件呈现）；没有接入在线商店/浏览功能或 GPU 3D/CRT 着色器。上游补丁为 `brick-input.patch`：TRIMUI 原始手柄映射、MENU 退出、SDL 呈现回退及有限帧截图测试入口。打包附带上游与参与编译的依赖许可说明。
+启用 Lua、SDL、文本工程读取及 Surf（TIC-80 画面由 CPU 生成，Brick 优先使用 Mali SDL 呈现，失败则尝试软件呈现）；不包含 GPU 3D/CRT 着色器。上游补丁为 `brick-input.patch`：TRIMUI 原始手柄映射、MENU 退出、SDL 呈现回退及有限帧截图测试入口。打包附带上游与参与编译的依赖许可说明。
+
+Tools 的原生 Surf 安装包请使用 `../native-consoles/build.sh`，安装 `TIC-80.pak`，不要安装这里的旧沙盒入口。编译 Surf 网络模块时，`prepare-network.sh` 会读取通过 SSH `nextui-brick` 连接的 Brick 固件 libcurl 作为链接输入，并下载匹配版本头文件；这些系统库不会打包分发。`public-site.patch` 让此开发快照读取正式站点目录，`naett-ca.patch` 配置 HTTPS 根证书、请求超时并修复 ARM64 上 HTTP 状态码的 long/int 类型不匹配。
 
 自动测试以真实 ARM64 程序和桌面 SDL dummy 驱动运行沙盒；该结果不等于 Brick 的 Mali 显示及实际手柄操作已验收。
