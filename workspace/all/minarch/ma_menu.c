@@ -1658,9 +1658,15 @@ void Menu_screenshot(void) {
 		Notification_push(NOTIFICATION_SETTING, "Screenshot saved", NULL);
 	}
 }
-void Menu_saveState(void) {
+int Menu_saveState(void) {
 	// LOG_info("Menu_saveState\n");
 	Menu_updateState();
+	state_slot = menu.slot;
+	int success = State_write();
+	if (!success) {
+		Notification_push(NOTIFICATION_SAVE_STATE, "Save failed", NULL);
+		return 0;
+	}
 	
 	if (menu.total_discs) {
 		char* disc_path = menu.disc_paths[menu.disc];
@@ -1681,21 +1687,50 @@ void Menu_saveState(void) {
 		newScreenshot = 0;
 	} else {
 		SDL_RWops* rw = SDL_RWFromFile(menu.bmp_path, "wb");
-		IMG_SavePNG_RW(menu.bitmap, rw,1);
+		if (rw) IMG_SavePNG_RW(menu.bitmap, rw,1);
 		LOG_info("saved screenshot\n");
 	}
 	
-	state_slot = menu.slot;
 	putInt(menu.slot_path, menu.slot);
-	int success = State_write();
 	
 	// Show notification if enabled
-	if (CFG_getNotifyManualSave()) {
+	if (menu.slot < 8 && CFG_getNotifyManualSave()) {
 		char msg[NOTIFICATION_MAX_MESSAGE];
 		// User-facing slots are 1-8 (internal 0-7)
 		snprintf(msg, sizeof(msg), success ? "State Saved - Slot %d" : "Save Failed - Slot %d", menu.slot + 1);
 		Notification_push(NOTIFICATION_SAVE_STATE, msg, NULL);
 	}
+	return 1;
+}
+
+/* Slot 8 is the launcher's hidden default state; slots 0-7 remain manual. */
+static int Menu_saveOnQuit(void) {
+	int previous_slot = menu.slot;
+	int previous_state_slot = state_slot;
+	menu.slot = 8;
+	int saved = Menu_saveState();
+	menu.slot = previous_slot;
+	state_slot = previous_state_slot;
+	Menu_updateState();
+	if (saved) return 1;
+
+	/* Unsupported cores and Hardcore mode must still have an explicit exit. */
+	GFX_setMode(MODE_MAIN);
+	int leave = 0;
+	while (1) {
+		GFX_startFrame();
+		PAD_poll();
+		if (PAD_justPressed(BTN_B)) break;
+		if (PAD_justPressed(BTN_A)) { leave = 1; break; }
+		GFX_clear(screen);
+		GFX_blitMessage(font.medium, "Auto-save failed or is unavailable.\nReturn to the game, or quit without saving?", screen,
+			&(SDL_Rect){SCALE1(PADDING), SCALE1(PADDING), screen->w-SCALE1(2*PADDING), screen->h-SCALE1(PILL_SIZE+PADDING)});
+		GFX_blitButtonGroup((char*[]){"B", "BACK", "A", "QUIT ANYWAY", NULL}, 0, screen, 1);
+		GFX_flip(screen);
+		hdmimon();
+	}
+	GFX_setMode(MODE_MENU);
+	return leave;
 }
 void Menu_loadState(void) {
 	Menu_updateState();
@@ -1902,6 +1937,7 @@ void Menu_loop(void) {
 				}
 				break;
 				case ITEM_QUIT:
+					if (!Menu_saveOnQuit()) { dirty = 1; break; }
 					status = STATUS_QUIT;
 					show_menu = 0;
 					quit = 1; // TODO: tmp?

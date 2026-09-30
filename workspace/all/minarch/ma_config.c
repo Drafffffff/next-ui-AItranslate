@@ -702,8 +702,9 @@ void Config_restore(void) {
 	}
 	for (int i=0; config.shortcuts[i].name; i++) {
 		ButtonMapping* mapping = &config.shortcuts[i];
-		mapping->local = BTN_ID_NONE;
-		mapping->mod = 0;
+		/* Restore the built-in MENU+X default before applying saved bindings. */
+		mapping->local = (i == SHORTCUT_AI_TRANSLATE) ? BTN_ID_X : BTN_ID_NONE;
+		mapping->mod = (i == SHORTCUT_AI_TRANSLATE);
 	}
 	
 	Config_load();
@@ -1725,7 +1726,8 @@ struct Config config = {
 		[SHORTCUT_HOLD_REWIND]			= {"Hold Rewind",		-1, BTN_ID_NONE, 0},
 		[SHORTCUT_GAMESWITCHER]			= {"Game Switcher",		-1, BTN_ID_NONE, 0},
 		[SHORTCUT_SCREENSHOT]           = {"Screenshot",        -1, BTN_ID_NONE, 0},
-		[SHORTCUT_AI_TRANSLATE]         = {"AI Translate",      -1, BTN_ID_NONE, 0},
+		[SHORTCUT_AI_TRANSLATE]         = {"AI Translate",      -1, BTN_ID_X, 1},
+		[SHORTCUT_AI_AUTOPLAY]          = {"AI Auto Play",      -1, BTN_ID_NONE, 0},
 		// Trimui only
 		[SHORTCUT_TOGGLE_TURBO_A]		= {"Toggle Turbo A",	-1, BTN_ID_NONE, 0},
 		[SHORTCUT_TOGGLE_TURBO_B]		= {"Toggle Turbo B",	-1, BTN_ID_NONE, 0},

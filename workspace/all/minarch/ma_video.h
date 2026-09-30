@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <SDL2/SDL.h>
 
 void drawRect(int x, int y, int w, int h, uint32_t c, uint32_t *data, int stride);
 void fillRect(int x, int y, int w, int h, uint32_t c, uint32_t *data, int stride);
@@ -9,4 +10,6 @@ void drawGauge(int x, int y, float percent, int width, int height, uint32_t *dat
 void applyFadeIn(uint32_t **data, size_t pitch, unsigned width, unsigned height, int *frame_counter, int max_frames);
 void selectScaler(int src_w, int src_h, int src_p);
 void video_refresh_callback(const void* data, unsigned width, unsigned height, size_t pitch);
+/* Owned clean core-frame snapshot, positioned like the displayed game. */
+SDL_Surface* Video_captureGameFrame(int width, int height, Uint32 format);
 void Video_cleanup(void);

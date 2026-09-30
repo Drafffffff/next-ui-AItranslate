@@ -1,139 +1,37 @@
-<h1>This project is currently undergoing a license transition. See [#765](https://github.com/LoveRetro/NextUI/issues/765) for details.</h1>
+# next-ui-AItranslate
 
-<div align="center">
+按 **MENU+X**，把游戏画面上的文字翻译成中文。
 
-  <img width=128px src="github/logo_outline.png">
+**仅适用于运行 NextUI 的 TrimUI Brick。** 当前编译版对应 NextUI v6.14.0（20260719），平台目录为 `tg5040`。
 
-</div>
+### 1. 下载并复制
 
-<hr>
+前往 **[Releases 下载编译好的文件](https://github.com/Drafffffff/next-ui-AItranslate/releases/latest)**，下载 `minarch.elf`。
 
-<h4 align="center">
-  <a href="https://nextui.loveretro.games/usage/#getting-started" target="_blank">Installation Guide</a>
-  ·
-  <a href="https://nextui.loveretro.games/docs/" target="_blank">Documentation</a>
-  ·
-  <a href="https://discord.gg/HKd7wqZk3h" target="_blank">Discord</a>
-</h4>
+关机后取出 SD 卡，先备份原文件，再把下载的文件复制到 SD 卡的以下位置并覆盖：
 
-<div align="center"><p>
-    <a href="https://github.com/LoveRetro/NextUI/releases/latest">
-      <img alt="Latest release" src="https://img.shields.io/github/v/release/LoveRetro/NextUI?style=for-the-badge&logo=starship&include_prerelease=false&color=C9CBFF&logoColor=D9E0EE&labelColor=302D41&sort=semver" />
-    </a>
-    <a href="https://github.com/LoveRetro/NextUI/pulse">
-      <img alt="Last commit" src="https://img.shields.io/github/last-commit/LoveRetro/NextUI?style=for-the-badge&logo=starship&color=8bd5ca&logoColor=D9E0EE&labelColor=302D41"/>
-    </a>
-    <a href="https://github.com/LoveRetro/NextUI/blob/main/LICENSE">
-      <img alt="License" src="https://img.shields.io/github/license/LoveRetro/NextUI?style=for-the-badge&logo=starship&color=ee999f&logoColor=D9E0EE&labelColor=302D41" />
-    </a>
-    <a href="https://github.com/LoveRetro/NextUI/stargazers">
-      <img alt="Stars" src="https://img.shields.io/github/stars/LoveRetro/NextUI?style=for-the-badge&logo=starship&color=c69ff5&logoColor=D9E0EE&labelColor=302D41" />
-    </a>
-    <a href="https://github.com/LoveRetro/NextUI/issues">
-      <img alt="Issues" src="https://img.shields.io/github/issues/LoveRetro/NextUI?style=for-the-badge&logo=bilibili&color=F5E0DC&logoColor=D9E0EE&labelColor=302D41" />
-    </a>
-</div>
+```text
+.system/tg5040/bin/minarch.elf
+```
+
+如果看不到 `.system` 文件夹，请开启“显示隐藏文件”。
+
+### 2. 填入 API Key
+
+在 SD 卡上创建或编辑 `.userdata/shared/ai-translate.txt`，写入以下内容（默认使用 DeepSeek）：
+
+```ini
+aiEnable=1
+aiProvider=1
+aiDeepseekKey=填入你的DeepSeekAPIKey
+```
+
+### 3. 开始翻译
+
+安全弹出 SD 卡，插回掌机并开机。连接 Wi-Fi，进入游戏，**按住 MENU，再按 X** 即可翻译。
 
 ---
 
-A CFW based of MinUI with a rebuild emulation engine and tons of added features for the TrimUI Brick and Smart Pro. 
+需要从源码构建？查看 **[完整编译教程](docs/BUILD.md)**。
 
-For other devices we recommend checking out [MinUI](https://github.com/shauninman/MinUI)
-
-- Fixed both screen tearing and sync stutter problems of MinUI by rebuilding the emulator engine core
-- Game switcher menu (Onion OS style) by [@frysee](https://github.com/frysee)
-- High audio quality, due to advanced resampling engine using [libsamplerate](https://github.com/libsndfile/libsamplerate) (with quality/performance setting per emulator)
-- Much lower latency (average 20ms, 1 frame of 60fps)
-- Shaders!
-- Fully OpenGL/GPU based for faster performance!
-- native WiFi support
-- Game art/media support
-- Game time tracker!
-- Cheats support
-- Integrated WiFi
-- Bluetooth Audio
-- Overlays support!
-- Dynamic cpu speed scaling (keeps your device cool and extends battery life, but gives the performance right when needed)
-- Fully GPU OpenGL based for faster performance
-- Custom bootlogos contributed by [@SolvalouArt](https://bsky.app/profile/solvalouart.bsky.social)
-- Color and font settings to customize the NextUI interface
-- Menu animations
-- LED control, change colors, effects, brightness
-- LED indicators, low battery, stand by, charging (brightness can be set seperately)
-- Haptic feedback in the menu by [@ExonakiDev](https://github.com/exonakidev)
-- Ambient LED mode, the LEDS act like Ambient light TV's for extra immersion, configurable per emulator
-- Display controls (color temperature, brightness, contrast, saturation, exposure)
-- Support for automatic NTP time synchronization with timezones and realtime clock (RTC)
-- Deep Sleep mode, gives instant ON and avoids the overheat bug on the Brick by [@zhaofengli](https://github.com/zhaofengli)
-- Battery Monitoring including history graph and time left prediction
-- Scrolling animated titles for longer game names
-- Updated and optimized build emulation cores
-- Rumble strength fixed and is now variable as used by the games
-- FBNeo Arcade screen rotation
-- PAL Mode
-- Next font supports CJK for JP/CN etc rom names
-- Lot of other smaller fixes and optimizations
-
----
-
-## Currently supported devices:
-- Trimui Brick
-- Trimui Smart Pro
-- Trimui Smart Pro S
-
----
-
-## Installing
-
-Follow our [installation guide](https://nextui.loveretro.games/usage/#getting-started).
-
----
-
-## How to use
-
-While in menu:
-
-- Hold `start` and press `volume up` or `volume down` to adjust brighness
-- Hold `select` and press `volume up` or `volume down` to adjust color temperature
-- Short press `select` to open the game switcher
-
-While in game:
-
-- `Menu` opens in game options menu, adjusting controls, scaling and what not
-- Hold `menu` and `select` at same time to open up the game switcher
-
-Deep sleep:
-
-When the device is left idle it will enter light sleep. Light sleep turns the screen off and pulses the leds 5 times.
-
-After two minutes the device will go into deep sleep. The leds will turn completely off.
-
----
-
-## What about X feature?
-
-NextUI supports a variety of optional extras called Paks that are maintained by community members.
-
-Our wiki has a [list of all available Paks](https://nextui.loveretro.games/pak-store/) that can be downloaded from our Pak Store straight on your device.
-
----
-
-## Credits
-
-- [josegonzalez](https://github.com/josegonzalez) for [minui-keyboard](https://github.com/josegonzalez/minui-keyboard)
-- [knulli-cfw](https://github.com/knulli-cfw)/[Mikhailzrick](https://github.com/Mikhailzrick) for [fan-control-daemon](https://github.com/knulli-cfw/knulli-linux/commit/5c1b4724330b59cbe8af79d0a7f1dac86f1c221a)
-- [Kenney](www.kenney.nl) for [Input Prompts](https://kenney.nl/assets/input-prompts)
-
----
-
-## Play Retro's review of NextUI
-
-[![image](https://github.com/user-attachments/assets/43217a30-e052-4f67-88a9-c4361f82e72f)](https://www.youtube.com/watch?v=m_7ObMHAFK4)
-
-##  Retro Handhelds' coverage of NextUI
-
-[![image](https://github.com/user-attachments/assets/5fd538ea-285b-46e9-add4-1ef99b2ee9e5)](https://www.youtube.com/watch?v=KlYVmtYDqRI)
-
----
-
-## For all other info visit our website: [nextui.loveretro.games](https://nextui.loveretro.games)
+基于 [NextUI](https://github.com/LoveRetro/NextUI)。[详细说明](README-AI翻译.md) · [许可证](LICENSE)

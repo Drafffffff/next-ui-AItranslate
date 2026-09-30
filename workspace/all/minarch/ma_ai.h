@@ -18,4 +18,16 @@ void Menu_aiTranslate(void);
 struct MenuList;
 int OptionAI_openMenu(struct MenuList* list, int i);
 
+
+/* ---- AI 帮你玩（自动操作） ----
+ * 开一个后台线程反复「抓帧 -> 问模型按哪个键 -> 注入按键」，直到用户按任意键。
+ * 主循环每帧调 AI_playTick()，画面翻转前调 AI_playDrawBadge() 画状态角标。
+ */
+void Menu_aiAutoPlay(void);          /* 热键入口：开始 / 停止 */
+void AI_playTick(void);              /* 主循环每帧调用 */
+void AI_playDrawBadge(SDL_Surface* dst); /* 在 screen_flip 之前调用 */
+int  AI_playInjectMask(void);        /* 核心输入回调里取要注入的按键位 */
+int  AI_playIsActive(void);
+void AI_playStopFor(const char* why); /* 由别的功能抢用临时文件时先把它停掉 */
+
 #endif

@@ -151,6 +151,9 @@ void input_poll_callback(void) {
 					case SHORTCUT_AI_TRANSLATE:
 						Menu_aiTranslate();
 						break;
+					case SHORTCUT_AI_AUTOPLAY:
+						Menu_aiAutoPlay();
+						break;
 					case SHORTCUT_RESET_GAME: core.reset(); break;
 					case SHORTCUT_SAVE_QUIT:
 						newScreenshot = 1;
@@ -220,6 +223,9 @@ void input_poll_callback(void) {
 		//  && !PWR_ignoreSettingInput(btn, show_setting)
 	}
 
+	/* "AI 帮你玩" 注入的按键：直接并进给核心的位掩码。
+	 * 走这里而不是伪造 PAD 状态，用户自己的按键不会被影响，PAD_anyPressed 也照样能用来喊停。 */
+	buttons |= AI_playInjectMask();
 }
 int16_t input_state_callback(unsigned port, unsigned device, unsigned index, unsigned id) {
 	if (port==0 && device==RETRO_DEVICE_JOYPAD && index==0) {

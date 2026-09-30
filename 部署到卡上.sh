@@ -1,5 +1,5 @@
 #!/bin/bash
-# 把带 AI 翻译功能的 minarch.elf 装到 SD 卡上
+# 把带 AI 翻译功能的 minarch.elf 装到 NextUI SD 卡上（仅适用于运行 NextUI 的 TrimUI Brick）
 #
 #   ./部署到卡上.sh                # 自动找卡
 #   ./部署到卡上.sh /Volumes/NEXTUI  # 指定卡
@@ -31,6 +31,10 @@ fi
 
 DST="$CARD/.system/tg5040/bin/minarch.elf"
 echo "目标卡  : $CARD"
+if ! grep -q '^NextUI' "$CARD/.system/version.txt" 2>/dev/null; then
+  echo "✗ 本功能仅适配 NextUI，未在目标卡上识别到 NextUI 版本信息。"
+  exit 1
+fi
 
 # 1) 备份
 if [ ! -f "$DST.装AI前" ]; then
@@ -53,11 +57,6 @@ echo "✔ minarch.elf 已替换，逐字节校验通过"
 #    因为卡上的启动器不认识 ai* 键，每次开机都会把那些行重写掉）
 T="$CARD/.userdata/shared/ai-translate.txt"
 if [ ! -f "$T" ]; then
-  KEY=$(grep -oE 'DASHSCOPE_API_KEY\s*=\s*["'"'"']?[^"'"'"'[:space:]]+' ~/.zshrc 2>/dev/null | head -1 | sed -E 's/.*=\s*["'"'"']?//')
-  if [ -z "$KEY" ]; then
-    echo "⚠ 没在 ~/.zshrc 里读到 DASHSCOPE_API_KEY，配置文件没建。请手动创建 $T"
-    KEY="把你的key填这里"
-  fi
   cat > "$T" <<EOF
 # NextUI AI 画面翻译配置。改完存盘、卡插回设备即可生效。
 #
@@ -65,13 +64,14 @@ if [ ! -f "$T" ]; then
 #   Menu -> Options -> AI Translate
 #
 # 服务商：0=百炼 Qwen3-VL   1=DeepSeek   2=自定义(用下面的 aiEndpoint/aiModel)
-# 注意 DeepSeek 的坐标定位不准，贴回原位会歪，一般只建议百炼。
-aiProvider=0
+# 默认使用 DeepSeek。
+aiEnable=1
+aiProvider=1
 
 # 两家的 key 分开写，切服务商时自动用对应的那个。
 # 只写了 aiApiKey 的话两家共用它。
-aiBailianKey=$KEY
-aiDeepseekKey=
+aiBailianKey=
+aiDeepseekKey=填入你的DeepSeekAPIKey
 
 # 通用兜底 key
 aiApiKey=
@@ -87,7 +87,7 @@ aiTimeoutSecs=20
 aiDebug=0
 EOF
   sync
-  echo "✔ 已创建 AI 配置文件（key 长度 ${#KEY}）"
+  echo "✔ 已创建 AI 配置文件，请在 $T 中填写 aiDeepseekKey"
 else
   echo "· AI 配置文件已存在，保留你现有的设置"
   if ! grep -q "^aiDebug=" "$T" 2>/dev/null; then
@@ -103,9 +103,10 @@ echo "================================================================"
 echo "完成。下一步："
 echo "  1) 弹出卡（不要直接拔）"
 echo "  2) 关机状态下插回设备，开机"
-echo "  3) 进游戏后按 Menu -> Options -> Shortcuts -> \"AI Translate\""
-echo "     按一个键绑定（建议 MENU+X），然后回 Options 选 Save Changes -> Saved for console"
-echo "     ⚠ 不要往 pak 的 default.cfg 里加 bind 行 —— 会撑破 core_button_mapping 导致闪退"
+echo "  3) 连网并填写 API Key 后，进游戏按住 MENU，再按 X，即可翻译"
+echo "     MENU+X 已内置为默认绑定，无需逐个机种设置。"
+echo "     如已保存过其他绑定或 NONE，可在 Options -> Shortcuts -> AI Translate 修改。"
+echo "     本功能仅适用于运行 NextUI 的 TrimUI Brick；请确认教程中的兼容版本。"
 echo
 echo "还原方法：把 .system/tg5040/bin/minarch.elf.装AI前 覆盖回 minarch.elf"
 echo "================================================================"

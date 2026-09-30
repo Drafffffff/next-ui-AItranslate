@@ -18,6 +18,7 @@
 #include "ma_game.h"
 #include "ma_environment.h"
 #include "ma_config.h"
+#include "ma_ai.h"
 #include "ma_runframe.h"
 
 ///////////////////////////////////////
@@ -256,6 +257,7 @@ int main(int argc , char* argv[]) {
 
 	while (!quit) {
 		GFX_startFrame();
+		AI_playTick();   /* AI 帮你玩：抓帧/注入按键的状态机，没开就是空转 */
 
 		run_frame();
 		

@@ -715,6 +715,7 @@ void PLAT_scrollTextTexture(
 void PLAT_vsync(int remaining);
 scaler_t PLAT_getScaler(GFX_Renderer* renderer);
 void PLAT_blitRenderer(GFX_Renderer* renderer);
+void PLAT_getGameRect(const GFX_Renderer* renderer, SDL_Rect* rect, int width, int height);
 void PLAT_flip(SDL_Surface* screen, int sync);
 void PLAT_GL_Swap();
 void GFX_GL_Swap();

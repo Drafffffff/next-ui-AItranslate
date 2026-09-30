@@ -1572,33 +1572,35 @@ scaler_t PLAT_getScaler(GFX_Renderer* renderer) {
 	return scale1x1_c16;
 }
 
-void setRectToAspectRatio(SDL_Rect* dst_rect) {
-    int x = vid.blit->src_x;
-    int y = vid.blit->src_y;
-    int w = vid.blit->src_w;
-    int h = vid.blit->src_h;
+void PLAT_getGameRect(const GFX_Renderer* renderer, SDL_Rect* dst_rect, int width, int height) {
+    if (!renderer || device_width <= 0 || device_height <= 0 || width <= 0 || height <= 0) {
+        *dst_rect = (SDL_Rect){0, 0, 0, 0};
+        return;
+    }
+    int w = renderer->src_w;
+    int h = renderer->src_h;
 
-    if (vid.blit->aspect == 0) {
-        w = vid.blit->src_w * vid.blit->scale;
-        h = vid.blit->src_h * vid.blit->scale;
+    if (renderer->aspect == 0) {
+        w = renderer->src_w * renderer->scale;
+        h = renderer->src_h * renderer->scale;
         dst_rect->x = (device_width - w) / 2 + screenx;
         dst_rect->y = (device_height - h) / 2 + screeny;
         dst_rect->w = w;
         dst_rect->h = h;
-    } else if (vid.blit->aspect > 0) {
+    } else if (renderer->aspect > 0) {
         if (should_rotate) {
             h = device_width;
-            w = h * vid.blit->aspect;
+            w = h * renderer->aspect;
             if (w > device_height) {
                 w = device_height;
-                h = w / vid.blit->aspect;
+                h = w / renderer->aspect;
             }
         } else {
             h = device_height;
-            w = h * vid.blit->aspect;
+            w = h * renderer->aspect;
             if (w > device_width) {
                 w = device_width;
-                h = w / vid.blit->aspect;
+                h = w / renderer->aspect;
             }
         }
         dst_rect->x = (device_width - w) / 2 + screenx;
@@ -1611,6 +1613,15 @@ void setRectToAspectRatio(SDL_Rect* dst_rect) {
         dst_rect->w = should_rotate ? device_height : device_width;
         dst_rect->h = should_rotate ? device_width : device_height;
     }
+    /* AI captures use the same game rectangle on a software canvas. */
+    dst_rect->x = (int)((long long)dst_rect->x * width / device_width);
+    dst_rect->y = (int)((long long)dst_rect->y * height / device_height);
+    dst_rect->w = (int)((long long)dst_rect->w * width / device_width);
+    dst_rect->h = (int)((long long)dst_rect->h * height / device_height);
+}
+
+void setRectToAspectRatio(SDL_Rect* dst_rect) {
+    PLAT_getGameRect(vid.blit, dst_rect, device_width, device_height);
 }
 
 void PLAT_blitRenderer(GFX_Renderer* renderer) {

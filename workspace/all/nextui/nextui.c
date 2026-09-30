@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include <limits.h>
+#include "pinyin.h"
 
 ///////////////////////////////////////
 
@@ -132,6 +133,7 @@ typedef struct Entry {
 	char* path;
 	char* name;
 	char* unique;
+	char* sort_key; // cached transliteration of the display name
 	int type;
 	int alpha; // index in parent Directory's alphas Array, which points to the index of an Entry in its entries Array :sweat_smile:
 } Entry;
@@ -143,6 +145,7 @@ static Entry* Entry_new(char* path, int type) {
 	self->path = strdup(path);
 	self->name = strdup(display_name);
 	self->unique = NULL;
+	self->sort_key = NULL;
 	self->type = type;
 	self->alpha = 0;
 	return self;
@@ -150,6 +153,7 @@ static Entry* Entry_new(char* path, int type) {
 
 static Entry* Entry_newNamed(char* path, int type, char* displayName) {
 	Entry *self = Entry_new(path, type);
+	free(self->name);
 	self->name = strdup(displayName);
 	return self;
 }
@@ -157,6 +161,7 @@ static Entry* Entry_newNamed(char* path, int type, char* displayName) {
 static void Entry_free(Entry* self) {
 	free(self->path);
 	free(self->name);
+	free(self->sort_key);
 	if (self->unique) free(self->unique);
 	free(self);
 }
@@ -171,9 +176,17 @@ static int EntryArray_indexOf(Array* self, char* path) {
 static int EntryArray_sortEntry(const void* a, const void* b) {
 	Entry* item1 = *(Entry**)a;
 	Entry* item2 = *(Entry**)b;
-	return strcasecmp(item1->name, item2->name);
+	int order = strcmp(item1->sort_key ? item1->sort_key : item1->name,
+	                   item2->sort_key ? item2->sort_key : item2->name);
+	if (!order) order = strcmp(item1->name, item2->name);
+	return order ? order : strcmp(item1->path, item2->path);
 }
 static void EntryArray_sort(Array* self) {
+	for (int i=0; i<self->count; i++) {
+		Entry* entry = self->items[i];
+		free(entry->sort_key);
+		entry->sort_key = Pinyin_key(entry->name);
+	}
 	qsort(self->items, self->count, sizeof(void*), EntryArray_sortEntry);
 }
 
@@ -217,12 +230,6 @@ typedef struct Directory {
 	int end;
 } Directory;
 
-static int getIndexChar(char* str) {
-	char i = 0;
-	char c = tolower(str[0]);
-	if (c>='a' && c<='z') i = (c-'a')+1;
-	return i;
-}
 
 static void getUniqueName(Entry* entry, char* out_name) {
 	char* filename = strrchr(entry->path, '/')+1;
@@ -335,7 +342,8 @@ static void Directory_index(Directory* self) {
         }
 
         if (!skip_index) {
-            int a = getIndexChar(entry->name);
+            if (!entry->sort_key) entry->sort_key = Pinyin_key(entry->name);
+            int a = Pinyin_initial(entry->sort_key ? entry->sort_key : entry->name);
             if (a != alpha) {
                 index = self->alphas->count;
                 IntArray_push(self->alphas, i);
@@ -1283,34 +1291,27 @@ static void openRom(char* path, char* last) {
 	char emu_name[256];
 	getEmuName(sd_path, emu_name);
 
-	if (should_resume) {
-		char slot[16];
-		getFile(slot_path, slot, 16);
-		putFile(RESUME_SLOT_PATH, slot);
-		should_resume = 0;
-
-		if (has_m3u) {
-			char rom_file[256];
-			strcpy(rom_file, strrchr(m3u_path, '/') + 1);
-
-			// get disc for state
-			char disc_path_path[256];
-			sprintf(disc_path_path, "%s/.minui/%s/%s.%s.txt", SHARED_USERDATA_PATH, emu_name, rom_file, slot); // /.userdata/arm-480/.minui/<EMU>/<romname>.ext.0.txt
-
-			if (exists(disc_path_path)) {
-				// switch to disc path
-				char disc_path[256];
-				getFile(disc_path_path, disc_path, 256);
-				if (disc_path[0]=='/') strcpy(sd_path, disc_path); // absolute
-				else { // relative
-					strcpy(sd_path, m3u_path);
-					char* tmp = strrchr(sd_path, '/') + 1;
-					strcpy(tmp, disc_path);
-				}
+	/* Normal launch resumes the hidden quit state; explicit Resume uses the
+	 * last recorded slot. Both must restore the matching disc in an m3u set. */
+	char slot[16] = "8";
+	if (should_resume) getFile(slot_path, slot, sizeof(slot));
+	putFile(RESUME_SLOT_PATH, slot);
+	should_resume = 0;
+	if (has_m3u) {
+		char rom_file[256];
+		strcpy(rom_file, strrchr(m3u_path, '/') + 1);
+		char disc_path_path[256];
+		sprintf(disc_path_path, "%s/.minui/%s/%s.%s.txt", SHARED_USERDATA_PATH, emu_name, rom_file, slot);
+		if (exists(disc_path_path)) {
+			char disc_path[256];
+			getFile(disc_path_path, disc_path, sizeof(disc_path));
+			if (disc_path[0]=='/') strcpy(sd_path, disc_path);
+			else {
+				strcpy(sd_path, m3u_path);
+				strcpy(strrchr(sd_path, '/') + 1, disc_path);
 			}
 		}
 	}
-	else putInt(RESUME_SLOT_PATH,8); // resume hidden default state
 
 	char emu_path[256];
 	getEmuPath(emu_name, emu_path);

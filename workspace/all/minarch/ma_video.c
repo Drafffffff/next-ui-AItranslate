@@ -1,9 +1,11 @@
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 
 #include "ma_internal.h"
 #include "scaler.h"
 #include "ma_video.h"
+#include "ma_ai.h"
 
 
 static const char* bitmap_font[] = {
@@ -784,6 +786,7 @@ static void video_refresh_callback_main(const void *data, unsigned width, unsign
 	renderer.src = (void*)data;
 	renderer.dst = screen->pixels;
 	GFX_blitRenderer(&renderer);
+	AI_playDrawBadge(screen);   /* 画在 flip 之前才显示得出来 */
 
 	screen_flip(screen);
 	last_flip_time = SDL_GetTicks();
@@ -792,6 +795,9 @@ static void video_refresh_callback_main(const void *data, unsigned width, unsign
 const void* lastframe = NULL;
 static Uint32* rgbaData = NULL;
 static size_t rgbaDataSize = 0;
+static unsigned game_frame_w = 0, game_frame_h = 0;
+static Uint32* debugData = NULL;
+static size_t debugDataSize = 0;
 
 // ARM NEON SIMD optimization for pixel format conversion
 #if defined(__ARM_NEON) || defined(__aarch64__)
@@ -950,31 +956,39 @@ void video_refresh_callback(const void* data, unsigned width, unsigned height, s
 	// Early exit if quitting to avoid rendering stale frames
 	if (quit) return;
 
-	// Allocate RGBA buffer if needed
-	if (!rgbaData || rgbaDataSize != width * height) {
-		if (rgbaData) free(rgbaData);
-		rgbaDataSize = width * height;
-		rgbaData = (Uint32*)malloc(rgbaDataSize * sizeof(Uint32));
-		if (!rgbaData) {
-			printf("Failed to allocate memory for RGBA data.\n");
-			return;
-		}
-	}
-
-	// Handle NULL data by reusing last frame
+	/* Keep the owned core frame separate from every display overlay. A NULL
+	 * callback repeats the previous frame without reallocating its backing buffer. */
 	if (!data) {
-		data = lastframe;
-		if (!data) return;
-	} else {
-		// Convert pixel format to RGBA
-		if (fmt == RETRO_PIXEL_FORMAT_XRGB8888) {
-			convert_xrgb8888_to_rgba(data, rgbaData, width, height, pitch);
-		} else {
-			convert_rgb565_to_rgba(data, rgbaData, width, height, pitch);
-		}
-		
+		if (!lastframe || !rgbaData || !game_frame_w || !game_frame_h) return;
+		width = game_frame_w; height = game_frame_h;
 		data = rgbaData;
-		lastframe = data;
+	} else {
+		if (!width || !height || width > INT_MAX / 4 ||
+			(size_t)height > SIZE_MAX / ((size_t)width * sizeof(Uint32)) ||
+			pitch < (size_t)width * (fmt == RETRO_PIXEL_FORMAT_XRGB8888 ? 4 : 2)) return;
+		size_t pixels = (size_t)width * height;
+		if (!rgbaData || rgbaDataSize != pixels) {
+			Uint32* next = malloc(pixels * sizeof(Uint32));
+			if (!next) return;
+			free(rgbaData); rgbaData = next; rgbaDataSize = pixels;
+		}
+		if (fmt == RETRO_PIXEL_FORMAT_XRGB8888)
+			convert_xrgb8888_to_rgba(data, rgbaData, width, height, pitch);
+		else
+			convert_rgb565_to_rgba(data, rgbaData, width, height, pitch);
+		game_frame_w = width; game_frame_h = height;
+		lastframe = rgbaData; data = rgbaData;
+	}
+	/* The debug HUD writes into its input. Copy only when that HUD is enabled,
+	 * so ordinary gameplay and AI capture add no per-frame allocation/copy. */
+	if (show_debug) {
+		if (debugDataSize != rgbaDataSize) {
+			Uint32* next = realloc(debugData, rgbaDataSize * sizeof(Uint32));
+			if (!next) return;
+			debugData = next; debugDataSize = rgbaDataSize;
+		}
+		memcpy(debugData, rgbaData, rgbaDataSize * sizeof(Uint32));
+		data = debugData;
 	}
 	pitch = width * sizeof(Uint32);
 
@@ -988,9 +1002,32 @@ void video_refresh_callback(const void* data, unsigned width, unsigned height, s
 	video_refresh_callback_main(data, width, height, pitch);
 }
 
-void Video_cleanup(void) {
-	if (rgbaData) {
-		free(rgbaData);
-		rgbaData = NULL;
+SDL_Surface* Video_captureGameFrame(int width, int height, Uint32 format) {
+	if (!rgbaData || !game_frame_w || !game_frame_h || width <= 0 || height <= 0) return NULL;
+	/* Stale geometry after a mode change must never access outside the core frame. */
+	SDL_Rect src = {renderer.src_x, renderer.src_y, renderer.src_w, renderer.src_h};
+	if (src.x < 0 || src.y < 0 || src.w <= 0 || src.h <= 0 ||
+		(long long)src.x + src.w > game_frame_w || (long long)src.y + src.h > game_frame_h) return NULL;
+	SDL_Surface* raw = SDL_CreateRGBSurfaceWithFormatFrom(rgbaData, game_frame_w,
+		game_frame_h, 32, game_frame_w * 4, SDL_PIXELFORMAT_ABGR8888);
+	if (!raw) return NULL;
+	SDL_Surface* out = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, format);
+	if (out) {
+		SDL_Rect dst;
+		PLAT_getGameRect(&renderer, &dst, width, height);
+		SDL_SetSurfaceBlendMode(raw, SDL_BLENDMODE_NONE);
+		if (dst.w <= 0 || dst.h <= 0 ||
+			SDL_FillRect(out, NULL, SDL_MapRGBA(out->format, 0, 0, 0, 255)) != 0 ||
+			SDL_BlitScaled(raw, &src, out, &dst) != 0) {
+			SDL_FreeSurface(out); out = NULL;
+		}
 	}
+	SDL_FreeSurface(raw);
+	return out;
+}
+
+void Video_cleanup(void) {
+	free(rgbaData); rgbaData = NULL; rgbaDataSize = 0;
+	free(debugData); debugData = NULL; debugDataSize = 0;
+	game_frame_w = game_frame_h = 0; lastframe = NULL;
 }

@@ -8,7 +8,7 @@ void Menu_beforeSleep(void);
 void Menu_afterSleep(void);
 int  Menu_options(MenuList* list);
 void Menu_screenshot(void);
-void Menu_saveState(void);
+int  Menu_saveState(void);
 void Menu_loadState(void);
 void OptionSaveChanges_updateDesc(void);
 void OptionAchievements_updateDesc(void);

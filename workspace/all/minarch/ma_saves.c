@@ -302,67 +302,52 @@ error:
 }
 
 int State_write(void) { // from picoarch
-	// Block save states in RetroAchievements hardcore mode
 	if (RA_isHardcoreModeActive()) {
-		LOG_info("State save blocked - hardcore mode active\n");
 		Notification_push(NOTIFICATION_ACHIEVEMENT, "Save states disabled in Hardcore mode", NULL);
 		return 0;
 	}
-
-	int success = 0;
 	size_t state_size = core.serialize_size();
 	if (!state_size) return 0;
-
+	int success = 0;
 	int was_ff = fast_forward;
 	fast_forward = 0;
-
-	void *state = calloc(1, state_size);
-	if (!state) {
-		LOG_error("Couldn't allocate memory for state\n");
-		goto error;
-	}
-
-	if (!core.serialize(state, state_size)) {
-		LOG_error("Error serializing save state\n");
-		goto error;
-	}
-
-	char filename[MAX_PATH];
+	char filename[MAX_PATH], temporary[MAX_PATH + 5];
 	State_getPath(filename);
+	snprintf(temporary, sizeof(temporary), "%s.tmp", filename);
+	void *state = calloc(1, state_size);
+	if (!state || !core.serialize(state, state_size)) {
+		LOG_error("Couldn't serialize save state\n");
+		goto done;
+	}
 #ifdef HAS_SRM
-	if (CFG_getStateFormat() == STATE_FORMAT_SRM || CFG_getStateFormat() == STATE_FORMAT_SRM_EXTRADOT) {
-		if(!rzipstream_write_file(filename, state, state_size)) {
-			LOG_error("rzipstream: Error writing state data to file: %s\n", filename);
-			goto error;
-		}
-		success = 1;
-	}
-	else {
-		if(!filestream_write_file(filename, state, state_size)) {
-			LOG_error("filestream: Error writing state data to file: %s\n", filename);
-			goto error;
-		}
-		success = 1;
-	}
-
-error:
-	if (state) free(state);
+	if (CFG_getStateFormat() == STATE_FORMAT_SRM || CFG_getStateFormat() == STATE_FORMAT_SRM_EXTRADOT)
+		success = rzipstream_write_file(temporary, state, state_size);
+	else
+		success = filestream_write_file(temporary, state, state_size);
 #else
-	FILE *state_file = fopen(filename, "w");
-	if (!state_file) {
-		LOG_error("Error opening state file: %s (%s)\n", filename, strerror(errno));
-		goto error;
+	FILE *file = fopen(temporary, "wb");
+	if (file) {
+		success = fwrite(state, 1, state_size, file) == state_size;
+		if (fflush(file) != 0) success = 0;
+		if (fclose(file) != 0) success = 0;
 	}
-	if (state_size != fwrite(state, 1, state_size, state_file)) {
-		LOG_error("Error writing state data to file: %s (%s)\n", filename, strerror(errno));
-		goto error;
-	}
-	success = 1;
-	error:
-	if (state) free(state);
-	if (state_file) fclose(state_file);
 #endif
-
+	/* A failed exit save must not destroy the previous resumable state. */
+	if (success) {
+		FILE *written = fopen(temporary, "rb");
+		if (!written) success = 0;
+		else {
+			if (fsync(fileno(written)) != 0) success = 0;
+			if (fclose(written) != 0) success = 0;
+		}
+		if (success && rename(temporary, filename) != 0) success = 0;
+	}
+	done:
+	if (!success) {
+		unlink(temporary);
+		LOG_error("State save failed; previous state retained\n");
+	}
+	free(state);
 	sync();
 	fast_forward = was_ff;
 	return success;
