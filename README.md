@@ -18,6 +18,8 @@
 
 ### 2. 填入 API Key
 
+前往 **[DeepSeek 平台获取 API Key](https://platform.deepseek.com/api_keys)**，登录后创建并复制 Key。
+
 在 SD 卡上创建或编辑 `.userdata/shared/ai-translate.txt`，写入以下内容（默认使用 DeepSeek）：
 
 ```ini
@@ -36,7 +38,7 @@ aiDeepseekKey=填入你的DeepSeekAPIKey
 
 ### 真机展示
 
-TrimUI Brick 实拍，已裁切屏幕区域并统一为 4:3 比例。点击图片可查看大图。
+点击图片可查看大图。
 
 <table>
   <tr>
