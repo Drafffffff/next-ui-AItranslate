@@ -11,19 +11,26 @@ fi
 TASK_LOCK="$TASK_DATA/.favourites-sync"
 if ! mkdir "$TASK_LOCK" 2>/dev/null; then exit 0; fi
 trap 'rm -rf "$TASK_LOCK"' EXIT HUP INT TERM
-# Modern records contain metadata separated by pipes. Only take a cartridge
-# path, never a title or author that happens to match another cached game.
+# 0.2.7 online favourites store a cart ID in field 2, without a path. Older
+# and local records store a path. Never interpret titles or authors as IDs.
 awk -F '|' '
+    function trim(text) {sub(/^[[:space:]]+/, "", text); sub(/[[:space:]]+$/, "", text); return text}
     {
         sub(/\r$/, "")
-        for (i=1; i<=NF; i++) {
-            value=$i; sub(/^[[:space:]]+/, "", value); sub(/[[:space:]]+$/, "", value)
-            if (value ~ /\.p8\.png$/ || (NF==1 && value ~ /^[A-Za-z0-9_-]+$/)) {
-                sub(/^.*\//, "", value)
-                if (value !~ /\.p8\.png$/) value=value ".p8.png"
-                if (value !~ /^temp-/ && !seen[value]++) print value
-                break
+        value=""
+        id=trim($2)
+        if (NF>1 && trim($1)=="" && id ~ /^[A-Za-z0-9_-]+$/) value=id
+        else if (NF==1 && trim($1) ~ /^[A-Za-z0-9_-]+$/) value=trim($1)
+        else {
+            for (i=1; i<=NF; i++) {
+                token=trim($i)
+                if (token ~ /\.p8\.png$/) {value=token; break}
             }
+        }
+        if (value!="") {
+            sub(/^.*\//, "", value)
+            if (value !~ /\.p8\.png$/) value=value ".p8.png"
+            if (value !~ /^temp-/ && !seen[value]++) print value
         }
     }
 ' "$TASK_FAV" > "$TASK_LOCK/wanted"
