@@ -6,12 +6,16 @@ import os
 from pathlib import Path
 import ssl
 import subprocess
+import sys
 import tempfile
 import threading
 import time
 
-output = Path('/work/build/pocketjs-port')
-package = output / 'PocketJS App.pak'
+task_root = Path(__file__).resolve().parents[2]
+output = task_root / 'build/pocketjs-port'
+is_mac = sys.platform == 'darwin'
+package = output / ('mac-preview' if is_mac else 'PocketJS App.pak')
+prefix = 'mac-chat' if is_mac else 'chat'
 validation = output / 'validation'
 validation.mkdir(exist_ok=True)
 request_count = 0
@@ -67,15 +71,17 @@ with tempfile.TemporaryDirectory(prefix='chat-', dir=validation) as root:
     threading.Thread(target=tls.serve_forever, daemon=True).start()
     url = f'http://127.0.0.1:{server.server_port}'
     (root/'config.json').write_text(json.dumps({'version': 1, 'key': 'TEST"KEY\\ONLY', 'baseUrl': url, 'model': 'deepseek-flash', 'timeoutMs': 2000, 'savedCount': 0}))
-    environment = dict(os.environ, POCKETJS_DATA=str(root), POCKETJS_FONT='/work/fonts/font1.ttf', POCKETJS_CA=str(package/'ca-bundle.crt'), POCKETJS_TEST_URL=url, POCKETJS_TEST_TLS_URL=f'https://127.0.0.1:{tls.server_port}')
+    environment = dict(os.environ, POCKETJS_DATA=str(root), POCKETJS_FONT=str(task_root/'fonts/font1.ttf'), POCKETJS_CA='/etc/ssl/cert.pem' if is_mac else str(package/'ca-bundle.crt'), POCKETJS_TEST_URL=url, POCKETJS_TEST_TLS_URL=f'https://127.0.0.1:{tls.server_port}')
     sysroot = '/opt/aarch64-nextui-linux-gnu/aarch64-nextui-linux-gnu/libc'
     loader = f'{sysroot}/lib/ld-linux-aarch64.so.1'
     args = [loader, '--library-path', f'{sysroot}/lib:{sysroot}/usr/lib', './pocketjs-app.elf', '--self-test', '--dump', str(validation/'chat-reading.ppm')]
+    if is_mac:
+        args = ['./pocketjs-app', '--self-test', '--dump', str(validation/(prefix+'-reading.ppm'))]
     result = subprocess.run(args, cwd=package, env=environment, capture_output=True, text=True, timeout=20)
     print(result.stdout, end='')
     print(result.stderr, end='')
-    (validation/'chat-acceptance.log').write_text(result.stdout + result.stderr)
-    assert result.returncode == 0, 'ARM64 app acceptance failed'
+    (validation/(prefix+'-acceptance.log')).write_text(result.stdout + result.stderr)
+    assert result.returncode == 0, 'Native app acceptance failed'
     assert request_count == 1
     assert len(json.loads((root/'history.json').read_text())) == 2
     assert not list(root.glob('.*.tmp'))

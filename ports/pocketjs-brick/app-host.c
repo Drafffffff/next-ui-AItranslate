@@ -12,7 +12,10 @@
 #define WIDTH 1024
 #define HEIGHT 768
 static volatile sig_atomic_t stopped;
-static uint32_t buttons;
+static uint32_t buttons, pressed;
+static uint32_t frame_buttons(void) {
+    uint32_t mask = buttons | pressed; pressed = 0; return mask;
+}
 static double max_work_ms;
 static void stop(int sig) { (void)sig; stopped = 1; }
 static double now_ms(void) {
@@ -43,7 +46,7 @@ static void event(const SDL_Event *e) {
     if (e->type == SDL_QUIT) stopped = 1;
     else if (e->type == SDL_KEYDOWN || e->type == SDL_KEYUP) {
         uint32_t bit = key(e->key.keysym.sym);
-        if (e->type == SDL_KEYDOWN) buttons |= bit; else buttons &= ~bit;
+        if (e->type == SDL_KEYDOWN) { buttons |= bit; if (!e->key.repeat) pressed |= bit; } else buttons &= ~bit;
     } else if (e->type == SDL_JOYHATMOTION) {
         buttons &= ~0xf0U;
         if (e->jhat.value & SDL_HAT_UP) buttons |= POCKET_BTN_UP;
@@ -52,9 +55,9 @@ static void event(const SDL_Event *e) {
         if (e->jhat.value & SDL_HAT_LEFT) buttons |= POCKET_BTN_LEFT;
     } else if (e->type == SDL_JOYBUTTONDOWN || e->type == SDL_JOYBUTTONUP) {
         uint32_t bit = e->jbutton.button == 1 ? POCKET_BTN_CIRCLE : e->jbutton.button == 0 ? POCKET_BTN_CROSS : e->jbutton.button == 3 ? POCKET_BTN_TRIANGLE : 0;
-        if (e->type == SDL_JOYBUTTONDOWN) buttons |= bit; else buttons &= ~bit;
+        if (e->type == SDL_JOYBUTTONDOWN) { buttons |= bit; pressed |= bit; } else buttons &= ~bit;
         if (e->type == SDL_JOYBUTTONDOWN && e->jbutton.button == 8) stopped = 1;
-    } else if (e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_FOCUS_LOST) buttons = 0;
+    } else if (e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_FOCUS_LOST) buttons = pressed = 0;
 }
 static const uint8_t *step(uint32_t mask) {
     PocketRuntimeInput input = {0}; input.buttons = mask;
@@ -95,7 +98,14 @@ static int self_test(const char *dump) {
     const uint8_t *p = step(0); if (!p) return 1;
     uint32_t color; memcpy(&color, p + (210 * WIDTH + 50) * 4, 4);
     if (color != 0xff344d2eU) return 1;
-    SDL_Event e; memset(&e, 0, sizeof(e)); e.type = SDL_JOYHATMOTION;
+    SDL_Event e; memset(&e, 0, sizeof(e));
+    e.type = SDL_KEYDOWN; e.key.keysym.sym = SDLK_DOWN; event(&e);
+    e.type = SDL_KEYUP; event(&e);
+    if (!step(frame_buttons()) || !step(frame_buttons()) || harness(6) != 2) return 1;
+    e.type = SDL_KEYDOWN; e.key.keysym.sym = SDLK_UP; event(&e);
+    e.type = SDL_KEYUP; event(&e);
+    if (!step(frame_buttons()) || !step(frame_buttons()) || harness(6) != 1) return 1;
+    e.type = SDL_JOYHATMOTION;
     e.jhat.value = SDL_HAT_DOWN; event(&e);
     for (int i = 0; i < 160; i++) if (!step(buttons)) return 1;
     if (harness(6) != 12) return 1;
@@ -171,8 +181,16 @@ int main(int argc, char **argv) {
     if (dummy && !limit) limit = 4;
     signal(SIGINT, stop); signal(SIGTERM, stop);
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER)) goto done;
+#ifndef __APPLE__
     SDL_ShowCursor(SDL_DISABLE);
-    SDL_Window *window = SDL_CreateWindow("PocketJS Brick App", 0, 0, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
+#endif
+    SDL_Window *window = SDL_CreateWindow("PocketJS Brick App", 0, 0, WIDTH, HEIGHT, SDL_WINDOW_SHOWN |
+#ifdef __APPLE__
+        SDL_WINDOW_RESIZABLE
+#else
+        SDL_WINDOW_FULLSCREEN_DESKTOP
+#endif
+    );
     SDL_Renderer *renderer = window ? SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) : NULL;
     if (!renderer && window) renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     SDL_Texture *texture = renderer ? SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT) : NULL;
@@ -185,7 +203,7 @@ int main(int argc, char **argv) {
         double start = now_ms(); SDL_Event e;
         while (SDL_PollEvent(&e)) event(&e);
         if (stopped) break;
-        const uint8_t *p = step(buttons);
+        const uint8_t *p = step(frame_buttons());
         if (!p || SDL_UpdateTexture(texture, NULL, p, WIDTH * 4) || SDL_RenderClear(renderer) || SDL_RenderCopy(renderer, texture, NULL, NULL)) goto sdl_done;
         SDL_RenderPresent(renderer); frames++;
         if (frames == 1) {
@@ -208,6 +226,12 @@ done:
     if (result) fprintf(stderr, "Runtime: %s\n", pocket_runtime_error());
     pocket_runtime_shutdown(); free(pack); free(js);
     struct rusage usage; getrusage(RUSAGE_SELF, &usage);
-    printf("guest_tick_raster_max_ms=%.3f peak_rss_kib=%ld exit=%d\n", max_work_ms, usage.ru_maxrss, result);
+    printf("guest_tick_raster_max_ms=%.3f peak_rss_kib=%ld exit=%d\n", max_work_ms,
+#ifdef __APPLE__
+        usage.ru_maxrss / 1024,
+#else
+        usage.ru_maxrss,
+#endif
+        result);
     return result;
 }

@@ -51,3 +51,30 @@
 宿主仍为实验性的 `brick-experimental` ABI 1、密度 1，使用自定义宿主编译入口。源码中的导航示例保留在 `app/navigation-smoke.tsx`。按 60 Hz 虚拟时间推进不代表已经验证真机达到 60 FPS。
 
 自动检查运行真实 ARM64 ELF、目标 sysroot、QuickJS 和应用包；本地 HTTP 服务覆盖 POST 请求、转义、错误码、超时、取消、响应限制、证书拒绝、动态中文、持久化和重启。不会调用外部付费 API。桌面 SDL dummy 检查只验证呈现代码；完整应用的 Wi-Fi、真实 DeepSeek 响应、设备字形、长回复与响应时间集中做一次真机验收。
+
+## Mac UI 开发环境
+
+首次准备源码与构建工具后安装本地显示依赖：
+
+```bash
+brew install sdl2_ttf pkgconf
+```
+
+构建并打开原生窗口：
+
+```bash
+./ports/pocketjs-brick/build-mac.sh
+python3 ports/pocketjs-brick/preview-mac.py
+```
+
+首次构建需要已运行过 `build-app.sh` 下载固定版本源码和 Bun。Mac Rust 工具链独立保存在被忽略的构建目录，不修改全局 Rust 环境。修改应用后重新执行这两个命令。
+
+复用同一份应用 TS、QuickJS、PocketJS 软件渲染、字体和后台服务。窗口使用 1024×768 的逻辑尺寸，可缩放；方向键移动，Enter / 空格对应 A，Esc / Backspace 对应 B，X 取消，关闭窗口退出。默认连接本地模拟服务，提供延迟的中文长回复，不需要真实 Key、不调用付费 API。
+
+预览配置和记录独立放在 `build/pocketjs-port/mac-preview/data/`，不读取 SD 卡设置；模拟聊天记录可跨重启保存。模拟服务只监听随机端口的 `127.0.0.1`，窗口退出后关闭服务。Mac 自动验收：
+
+```bash
+python3 ports/pocketjs-brick/verify-chat.py
+```
+
+2026-10-01：原生 Cocoa 窗口实际验证了菜单、模拟聊天、中文长回复、滚动、返回和屏幕键盘；Mac 自动验收及 Brick 目标构建自动验收通过。修复了同一帧内按下并松开可能漏掉输入的问题，添加快速按键检查。Mac 预览用于 UI 开发，设备显示驱动、实际 Wi-Fi 和真实 API 响应仍需在 Brick 集中验收。

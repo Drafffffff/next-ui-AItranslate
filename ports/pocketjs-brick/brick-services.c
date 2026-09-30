@@ -241,21 +241,31 @@ static void http(Job *j) {
     if (j->headers) fputs(j->headers, config);
     FILE *body = NULL; char body_path[64];
     if (j->input && *j->input) {
-        /* Anonymous descriptor passed as /proc/self/fd/3, never a secret argv. */
+        /* Anonymous descriptor, never a secret argv. */
         body = tmpfile();
         if (!body || fwrite(j->input, 1, strlen(j->input), body) != strlen(j->input)) { fail(j, "无法准备请求内容"); goto cleanup; }
         fflush(body); rewind(body);
-        snprintf(body_path, sizeof(body_path), "/proc/self/fd/3");
+#ifdef __APPLE__
+        snprintf(body_path, sizeof(body_path), "@/dev/fd/3");
+#else
+        snprintf(body_path, sizeof(body_path), "@/proc/self/fd/3");
+#endif
     }
     fflush(config); rewind(config);
+#ifdef __APPLE__
+    if (pipe(output)) { fail(j, "无法创建网络管道"); goto cleanup; }
+    fcntl(output[0], F_SETFD, FD_CLOEXEC);
+    fcntl(output[1], F_SETFD, FD_CLOEXEC);
+#else
     if (pipe2(output, O_CLOEXEC)) { fail(j, "无法创建网络管道"); goto cleanup; }
+#endif
     char seconds[24]; snprintf(seconds, sizeof(seconds), "%.3f", j->timeout_ms/1000.0);
     const char *ca = getenv("POCKETJS_CA");
     char *args[32] = {"curl", "--silent", "--show-error", "--connect-timeout", "5", "--max-time", seconds,
         "--proto", "=http,https", "--proto-redir", "=https", "--max-redirs", "3", "--location",
         "--config", "-", "--write-out", "\n%{http_code}", NULL};
     int count = 18;
-    if (body) { args[count++] = "--data-binary"; args[count++] = "@/proc/self/fd/3"; }
+    if (body) { args[count++] = "--data-binary"; args[count++] = body_path; }
     if (ca && *ca) { args[count++] = "--cacert"; args[count++] = (char *)ca; }
     args[count] = NULL;
     posix_spawn_file_actions_t actions; posix_spawn_file_actions_init(&actions);
