@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "brick-services.h"
+#include "brick-hardware.h"
 #include "pocketjs_symbian_extension.h"
 #include "pocket_ui_cabi.h"
 #include "quickjs.h"
@@ -70,7 +71,7 @@ static void release(Job *j) {
     free(j->lines); memset(j, 0, sizeof(*j));
 }
 static int allowed_file(const char *name) {
-    return !strcmp(name, "config.json") || !strcmp(name, "history.json") || !strcmp(name, "prompt.txt");
+    return !strcmp(name, "config.json") || !strcmp(name, "history.json") || !strcmp(name, "prompt.txt") || !strcmp(name, "pixel-project.json") || !strcmp(name, "pixel-export.svg");
 }
 static void disk(Job *j) {
     char path[1100], temp[1120]; snprintf(path, sizeof(path), "%s/%s", data_root, j->name);
@@ -449,10 +450,11 @@ static int32_t boot_services(JSContext *ctx, const uint8_t *pak, size_t size, in
     JS_SetPropertyStr(ctx, bridge, "start", JS_NewCFunction(ctx, start_job, "start", 1));
     JS_SetPropertyStr(ctx, bridge, "cancel", JS_NewCFunction(ctx, cancel_job, "cancel", 1));
     JS_SetPropertyStr(ctx, bridge, "poll", JS_NewCFunction(ctx, poll_jobs, "poll", 0));
+    if (!brick_hardware_boot(ctx, bridge)) { JS_FreeValue(ctx, bridge); JS_FreeValue(ctx, global); return 0; }
     int ok = JS_SetPropertyStr(ctx, global, "brick", bridge) >= 0; JS_FreeValue(ctx, global); return ok;
 }
 static void shutdown_services(int32_t gl) {
-    (void)gl; pthread_mutex_lock(&lock); stopping = 1;
+    (void)gl; brick_hardware_shutdown(); pthread_mutex_lock(&lock); stopping = 1;
     for (int i = 0; i < JOBS; i++) { jobs[i].cancelled = 1; if (jobs[i].pid > 0) kill(jobs[i].pid, SIGKILL); }
     pthread_cond_broadcast(&ready); pthread_mutex_unlock(&lock);
     for (int i = 0; i < started; i++) pthread_join(threads[i], NULL);

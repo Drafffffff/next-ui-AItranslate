@@ -8,6 +8,7 @@
 #include <time.h>
 #include "pocket_runtime.h"
 #include "brick-services.h"
+#include "brick-hardware.h"
 #include "pocket_spec.h"
 #define WIDTH 1024
 #define HEIGHT 768
@@ -38,7 +39,9 @@ static uint32_t key(SDL_Keycode k) {
         case SDLK_DOWN: return POCKET_BTN_DOWN; case SDLK_LEFT: return POCKET_BTN_LEFT;
         case SDLK_RETURN: case SDLK_SPACE: return POCKET_BTN_CIRCLE;
         case SDLK_ESCAPE: case SDLK_BACKSPACE: return POCKET_BTN_CROSS;
-        case SDLK_x: return POCKET_BTN_TRIANGLE;
+        case SDLK_x: return POCKET_BTN_TRIANGLE; case SDLK_z: return POCKET_BTN_SQUARE;
+        case SDLK_q: return POCKET_BTN_LTRIGGER; case SDLK_e: return POCKET_BTN_RTRIGGER;
+        case SDLK_TAB: return POCKET_BTN_SELECT; case SDLK_p: return POCKET_BTN_START;
         default: return 0;
     }
 }
@@ -54,7 +57,8 @@ static void event(const SDL_Event *e) {
         if (e->jhat.value & SDL_HAT_DOWN) buttons |= POCKET_BTN_DOWN;
         if (e->jhat.value & SDL_HAT_LEFT) buttons |= POCKET_BTN_LEFT;
     } else if (e->type == SDL_JOYBUTTONDOWN || e->type == SDL_JOYBUTTONUP) {
-        uint32_t bit = e->jbutton.button == 1 ? POCKET_BTN_CIRCLE : e->jbutton.button == 0 ? POCKET_BTN_CROSS : e->jbutton.button == 3 ? POCKET_BTN_TRIANGLE : 0;
+        static const uint32_t map[]={POCKET_BTN_CROSS,POCKET_BTN_CIRCLE,POCKET_BTN_SQUARE,POCKET_BTN_TRIANGLE,POCKET_BTN_LTRIGGER,POCKET_BTN_RTRIGGER,POCKET_BTN_SELECT,POCKET_BTN_START};
+        uint32_t bit = e->jbutton.button < 8 ? map[e->jbutton.button] : 0;
         if (e->type == SDL_JOYBUTTONDOWN) { buttons |= bit; pressed |= bit; } else buttons &= ~bit;
         if (e->type == SDL_JOYBUTTONDOWN && e->jbutton.button == 8) stopped = 1;
     } else if (e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_FOCUS_LOST) buttons = pressed = 0;
@@ -64,7 +68,7 @@ static const uint8_t *step(uint32_t mask) {
     double start = now_ms();
     if (!pocket_runtime_tick(&input)) return NULL;
     if (!strcmp(pocket_runtime_action_name(), "app.exit")) stopped = 1;
-    const uint8_t *p = pocket_runtime_render();
+    const uint8_t *p = brick_canvas_render(pocket_runtime_render());
     double elapsed = now_ms() - start; if (elapsed > max_work_ms) max_work_ms = elapsed;
     if (!p || pocket_runtime_width() != WIDTH || pocket_runtime_height() != HEIGHT ||
         pocket_runtime_stride() != WIDTH * 4 || pocket_runtime_length() != WIDTH * HEIGHT * 4) return NULL;
@@ -145,10 +149,13 @@ static int self_test(const char *dump) {
 }
 int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IOLBF, 0);
-    int test = 0, dummy = 0, limit = 0, result = 1;
+    int test = 0, creative_test = 0, creative_bench = 0, hardware_test = 0, dummy = 0, limit = 0, result = 1;
     const char *dump = NULL;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--self-test")) test = 1;
+        else if (!strcmp(argv[i], "--creative-test")) creative_test = 1;
+        else if (!strcmp(argv[i], "--creative-benchmark")) creative_bench = 1;
+        else if (!strcmp(argv[i], "--hardware-test")) hardware_test = 1;
         else if (!strcmp(argv[i], "--dummy-video")) dummy = 1;
         else if (!strcmp(argv[i], "--dump") && i + 1 < argc) dump = argv[++i];
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) {
@@ -164,6 +171,41 @@ int main(int argc, char **argv) {
     if (!js || !pack) { fprintf(stderr, "Cannot read brick-app.js / brick-app.pak\n"); goto done; }
     if (!pocket_runtime_boot(js, js_size, pack, pack_size, WIDTH, HEIGHT)) goto done;
     printf("PocketJS Brick app / Solid + QuickJS\nupstream=%s guest_boot_ms=%.3f\n", POCKETJS_REV, now_ms() - boot);
+    if (creative_bench || hardware_test) {
+        if (!pocket_runtime_harness_bind("__creativeAcceptance") || !wait_for(0,1,3000)) goto done;
+        if (hardware_test) {
+            if(harness(16)!=1) goto done;
+            SDL_Delay(1100);
+            if(harness(17)!=1){fputs("FAIL: hardware feedback or telemetry\n",stderr);goto done;}
+            puts("PASS: LED frame write, bounded motor request, battery and temperature interfaces");
+        } else {
+            const char *scenes[]={"64","256","1024","4096","3D"};
+            for(int scene=0;scene<5;scene++){
+                if(harness(11+scene)!=1) goto done;
+                for(int j=0;j<10;j++)if(!step(0))goto done;
+                double sum=0,peak=0;
+                for(int j=0;j<240;j++){double t=now_ms();if(!step(0))goto done;double dt=now_ms()-t;sum+=dt;if(dt>peak)peak=dt;}
+                printf("scene=%s dynamic_tick_raster_mean_ms=%.3f peak_ms=%.3f frames=240 no_sdl_present=1\n",scenes[scene],sum/240,peak);
+            }
+        }
+        result=0;goto done;
+    }
+    if (creative_test) {
+        if (!pocket_runtime_harness_bind("__creativeAcceptance") || !wait_for(0, 1, 3000)) goto done;
+        if (harness(4) != 0 || harness(1) != 1 || harness(4) != 3 || harness(5) != 0 || harness(1) != 1) goto done;
+        if (harness(2) != 1 || !wait_for(3, 1, 3000) || harness(8) != 1 || !wait_for(3, 1, 3000)) goto done;
+        const uint8_t *canvas = step(0);
+        if (!canvas || (dump && !dump_ppm(canvas, dump))) goto done;
+        if (harness(6) != 1) goto done;
+        for (int i = 0; i < 30; i++) if (!step(0)) goto done;
+        if (dump) { char path[1200]; snprintf(path,sizeof(path),"%s.stress.ppm",dump); if (!dump_ppm(step(0),path)) goto done; }
+        if (harness(7) != 1) goto done;
+        for (int i = 0; i < 30; i++) if (!step(0)) goto done;
+        if (dump) { char path[1200]; snprintf(path,sizeof(path),"%s.3d.ppm",dump); if (!dump_ppm(step(0),path)) goto done; }
+        pocket_runtime_shutdown();
+        if (!pocket_runtime_boot(js,js_size,pack,pack_size,WIDTH,HEIGHT) || !pocket_runtime_harness_bind("__creativeAcceptance") || !wait_for(0,1,3000) || harness(4)!=3) goto done;
+        result=0; puts("PASS: creative fill, undo, save, SVG export, 1024 nodes, 3D scene and restart recovery"); goto done;
+    }
     if (test) {
         result = self_test(dump);
         if (!result) {
@@ -205,7 +247,8 @@ int main(int argc, char **argv) {
         if (stopped) break;
         const uint8_t *p = step(frame_buttons());
         if (!p || SDL_UpdateTexture(texture, NULL, p, WIDTH * 4) || SDL_RenderClear(renderer) || SDL_RenderCopy(renderer, texture, NULL, NULL)) goto sdl_done;
-        SDL_RenderPresent(renderer); frames++;
+        double before_present = now_ms(); SDL_RenderPresent(renderer);
+        brick_hardware_frame(before_present - start, now_ms() - before_present); frames++;
         if (frames == 1) {
             printf("first_present_ms=%.3f video=%s\n", now_ms() - boot, SDL_GetCurrentVideoDriver());
             if (dump && !dump_ppm(p, dump)) goto sdl_done;
