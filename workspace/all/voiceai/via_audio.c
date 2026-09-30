@@ -67,7 +67,13 @@ int via_mic_open(ViaMic* m, const char* device, int rate) {
 			m->rate = (int)got;
 		}
 
-		/* 缓冲给足 200ms，避免 SD 卡或调度抖动导致采集丢样 */
+		/*
+		 * 缓冲给足 200ms，避免 SD 卡或调度抖动导致采集丢样。
+		 * 这是「尽力而为」：某些 codec 的周期/缓冲约束很死，
+		 * set_buffer_size_near 失败不该导致整个打开流程失败 ——
+		 * 之前没管返回值就把 rc 留着，一旦这里失败会走到 fail，
+		 * 用户看到的是「打不开麦克风」，其实设备是好的。
+		 */
 		{
 			snd_pcm_uframes_t bufsz = (snd_pcm_uframes_t)(m->rate / 5);
 			snd_pcm_hw_params_set_buffer_size_near(pcm, hw, &bufsz);
