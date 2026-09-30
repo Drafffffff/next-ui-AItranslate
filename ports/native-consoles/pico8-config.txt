@@ -59,7 +59,7 @@ mix_buffer_size 1024
 map_scancodes 
 
 
-use_wget 0 // (Linux) 1 to use wget for downloads instead of libcurl (must be installed)
+use_wget 1 // use the HTTPS-capable downloader packaged with the Tools launcher
 
 
 
@@ -159,4 +159,3 @@ gfx_grid_lines 16
 // file naming for screenshot / gif / wav captures
 // 0 sequential (foo_0.png, foo_1.png)    1 timestamp (foo_20240115_120823.png)
 capture_timestamps 0
-
