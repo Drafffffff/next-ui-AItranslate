@@ -9,7 +9,7 @@
 | 阶段 | 工作 | 验收标准 | 状态 |
 | --- | --- | --- | --- |
 | 1. 底层可行性 | 固定上游版本；检查 Rust、QuickJS、交叉编译与系统库；接入显示输出 | Brick 能启动、显示测试画面、正常退出 | 真机验收通过 |
-| 2. 最小应用 | 接入方向键、A/B、MENU；中文列表、按钮、滚动；Tools `.pak` 打包 | 从 NextUI 启动，操作正常，退出返回主界面 | 待开始 |
+| 2. 最小应用 | 接入方向键、A/B、MENU；中文列表、按钮、滚动；Tools `.pak` 打包 | 从 NextUI 启动，操作正常，退出返回主界面 | 开发与自动验证完成，待真机验收 |
 | 3. 应用能力 | 中文字体、文件与配置、异步网络、加载及错误反馈 | 中文无缺字，配置持久化，网络请求不阻塞操作 | 待开始 |
 | 4. 实际应用 | 用 TypeScript 开发 AI 聊天工具 | 配置 Key、请求回复、阅读长文本、保存记录 | 待开始 |
 | 5. 优化与开放 | 测量启动、内存、滚动；示例、构建、安装文档 | 其他开发者可照教程构建和安装应用 | 待开始 |
@@ -40,7 +40,12 @@
 - 目标 sysroot 内的真实核心检查通过：1024×768 帧缓冲、RGB 顺序、增量更新、方向键/A/MENU、120 次状态更新与退出后重新初始化。
 - 同一 ARM64 程序在桌面 SDL dummy 驱动下完成窗口创建、纹理上传、呈现与正常退出。目标 SDL 不提供 dummy 驱动，该结果不证明 Brick 显示后端通过。
 - **2026-10-01：阶段 1 真机验收通过。** 测试包安装到 NextUI SD 卡并逐文件校验后，用户在 TrimUI Brick 上确认显示、颜色、方向键、A、B/MENU 和退出均正常。
-- TypeScript/QuickJS 尚未接入；下一步进入阶段 2，完成真正由 TypeScript 驱动的中文列表、按钮和滚动应用。已读取真机 `smoke.log`，并核对卡上 ELF 的 SHA-256 与本地构建一致。
+- 已读取第一阶段真机 `smoke.log`，并核对卡上 ELF 的 SHA-256 与本地构建一致。
+- **阶段 2 在 `codex/pocketjs-brick-app` 分支开发。** 已接入上游便携 C QuickJS 运行器，应用使用 Solid TypeScript。中文由 PocketJS 字体图集渲染，标题 54 px、正文 36 px、辅助文字 24 px。
+- 完成 12 项中文虚拟列表、可见选中状态、自动滚动、A 选择及计数、方向键长按重复与边界限制、B/MENU 退出。
+- 自动验证使用真实 ARM64 ELF、目标 sysroot、QuickJS 和编译后的应用包；另用桌面 SDL dummy 验证呈现。真机验收待进行。
+- 第二阶段测试包已安装到 NextUI SD 卡的 `Tools/tg5040/PocketJS App.pak/`，9 个文件逐一核对 SHA-256 与本地相同；真机运行结果待用户确认。
+- 后续配置、动态中文和异步网络待第二阶段真机通过后进入阶段 3。
 
 上游：[PocketJS](https://github.com/pocket-nexus/pocketjs)。
 
@@ -70,3 +75,16 @@
 测试包含静止界面和按键操作，增量渲染会复用未变化的帧。累计耗时不能代表每帧完整重绘成本；核心计时不包含 SDL 纹理上传与呈现。首次呈现计时不包含 NextUI 启动脚本到程序入口之前的耗时。
 
 这些数据验证原生核心测试程序，不是 TypeScript/QuickJS、中文列表或网络应用的性能结论。第二阶段沿用相同计时口径，并补充连续滚动和输入响应测量。
+
+## 第二阶段构建与验收
+
+```bash
+./ports/pocketjs-brick/build-app.sh
+./ports/pocketjs-brick/verify-app.sh
+```
+
+产物：`build/pocketjs-port/PocketJS App.pak/`，与第一阶段测试包并存。安装到 `Tools/tg5040/`；[应用安装说明](../ports/pocketjs-brick/APP.md)。
+
+真机检查：中文没有缺字，选中项高亮清晰；连续上下移动和长按可滚动至首尾；A 触发一次、松开再按可再次触发；B/MENU 返回 NextUI。重新插卡后读取 `.userdata/shared/pocketjs-brick/app.log`，记录启动、guest tick + 软件渲染最大耗时及 RSS。此计时不包含 SDL 上传与呈现，不能由其推断帧率或整机输入延迟。
+
+使用自定义宿主编译入口，未向上游注册 Brick 的正式 build plan。当前只烘焙应用源码所用字符，任意动态中文属于第三阶段。
