@@ -30,6 +30,28 @@ aiDeepseekKey=填入你的DeepSeekAPIKey
 
 安全弹出 SD 卡，插回掌机并开机。连接 Wi-Fi，进入游戏，**按住 MENU，再按 X** 即可翻译。
 
+### 真机展示
+
+TrimUI Brick 实拍。点击图片可查看大图。
+
+<table>
+  <tr>
+    <td width="33%" align="center"><a href="docs/images/brick-7856.jpg"><img src="docs/images/brick-7856.jpg" alt="TrimUI Brick 标题翻译：46亿年物语" width="100%"></a><br><sub>标题翻译</sub></td>
+    <td width="33%" align="center"><a href="docs/images/brick-7857.jpg"><img src="docs/images/brick-7857.jpg" alt="TrimUI Brick 人物对话翻译：初次见面" width="100%"></a><br><sub>人物对话</sub></td>
+    <td width="33%" align="center"><a href="docs/images/brick-7855.jpg"><img src="docs/images/brick-7855.jpg" alt="TrimUI Brick 剧情文字中文翻译" width="100%"></a><br><sub>剧情文本</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/images/brick-7854.jpg"><img src="docs/images/brick-7854.jpg" alt="TrimUI Brick 原版游戏标题画面" width="100%"></a><br><sub>原版标题画面</sub></td>
+    <td align="center"><a href="docs/images/brick-7852.jpg"><img src="docs/images/brick-7852.jpg" alt="TrimUI Brick 多行叙事文字翻译叠加" width="100%"></a><br><sub>多行叙事翻译</sub></td>
+    <td align="center"><a href="docs/images/brick-7853.jpg"><img src="docs/images/brick-7853.jpg" alt="TrimUI Brick 叙事文字翻译实拍" width="100%"></a><br><sub>叙事阅读效果</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="docs/images/brick-7858.jpg"><img src="docs/images/brick-7858.jpg" alt="游戏菜单中的 AI Translate 入口" width="100%"></a><br><sub>菜单入口</sub></td>
+    <td align="center"><a href="docs/images/brick-7859.jpg"><img src="docs/images/brick-7859.jpg" alt="AI 翻译设置：DeepSeek、译文停留、上下文" width="100%"></a><br><sub>翻译设置</sub></td>
+    <td align="center"><a href="docs/images/brick-7860.jpg"><img src="docs/images/brick-7860.jpg" alt="AI Translate 快捷键设置为 MENU+X" width="100%"></a><br><sub>MENU+X 快捷键</sub></td>
+  </tr>
+</table>
+
 ---
 
 需要从源码构建？查看 **[完整编译教程](docs/BUILD.md)**。
