@@ -54,7 +54,7 @@ Tools/tg5040/PocketJS Smoke.pak/
 .userdata/shared/pocketjs-brick/smoke.log
 ```
 
-2026-10-01：用户已在 TrimUI Brick 真机确认显示、颜色、按键和退出正常。启动耗时、渲染耗时和内存峰值尚未读取真机日志。
+2026-10-01：用户已在 TrimUI Brick 真机确认显示、颜色、按键和退出正常。随后读取日志：进程内首次呈现 327.374 ms，核心 tick + 软件渲染单次最大耗时 7.654 ms，RSS 峰值 16,020 KiB（约 15.6 MiB），正常退出。核心计时不包含 SDL 上传与呈现；这些数值仅适用于当前原生测试界面。
 
 复测项目：
 

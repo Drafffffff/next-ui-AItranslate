@@ -35,12 +35,12 @@
 
 - 2026-10-01：保存阶段计划，开始上游源码及工具链检查。
 - 固定 PocketJS 提交 `ed2d84af39fc0adc6a688cf0a1bef801a3084e26`，采用其 `engine/ui-cabi` 的 C 接口与软件渲染。上游桌面宿主不是本次移植的基础。
-- 原生核心已用 tg5040 GCC 和上游固定 Rust nightly 构建成 ARM64 ELF。直接 GLIBC 符号要求为 2.17，依赖 NextUI 已使用的 SDL2 / SDL2_ttf 及系统库；卡上已成功启动；性能数据尚未读取真机日志。
+- 原生核心已用 tg5040 GCC 和上游固定 Rust nightly 构建成 ARM64 ELF。直接 GLIBC 符号要求为 2.17，依赖 NextUI 已使用的 SDL2 / SDL2_ttf 及系统库；卡上已成功启动；真机性能基线已读取并记录在下方。
 - 已实现 `ports/pocketjs-brick/`：固定版本构建、色块测试界面、Brick 按键映射、退出清理、性能日志和 Tools 启动包。
 - 目标 sysroot 内的真实核心检查通过：1024×768 帧缓冲、RGB 顺序、增量更新、方向键/A/MENU、120 次状态更新与退出后重新初始化。
 - 同一 ARM64 程序在桌面 SDL dummy 驱动下完成窗口创建、纹理上传、呈现与正常退出。目标 SDL 不提供 dummy 驱动，该结果不证明 Brick 显示后端通过。
 - **2026-10-01：阶段 1 真机验收通过。** 测试包安装到 NextUI SD 卡并逐文件校验后，用户在 TrimUI Brick 上确认显示、颜色、方向键、A、B/MENU 和退出均正常。
-- TypeScript/QuickJS 尚未接入；下一步进入阶段 2，完成真正由 TypeScript 驱动的中文列表、按钮和滚动应用。启动耗时、渲染耗时及内存峰值等待读取真机 `smoke.log`，不以“全部正常”的反馈代替性能测量。
+- TypeScript/QuickJS 尚未接入；下一步进入阶段 2，完成真正由 TypeScript 驱动的中文列表、按钮和滚动应用。已读取真机 `smoke.log`，并核对卡上 ELF 的 SHA-256 与本地构建一致。
 
 上游：[PocketJS](https://github.com/pocket-nexus/pocketjs)。
 
@@ -54,3 +54,19 @@
 生成 `build/pocketjs-port/PocketJS Smoke.pak/`。将整个目录复制到卡上的 `Tools/tg5040/`；详细步骤见 [适配目录说明](../ports/pocketjs-brick/README.md)。
 
 原始构建、验证日志和截图保留在被忽略的 `build/pocketjs-port/`，不作为源码提交。
+
+## 第一阶段真机基线（2026-10-01）
+
+来源：TrimUI Brick 上的原生测试程序日志；SDL 视频驱动为 `mali`，分辨率为 1024×768，退出状态为 0。
+
+| 指标 | 实测 |
+| --- | --- |
+| 进程内开始初始化到首次呈现 | 327.374 ms |
+| 已呈现帧数 | 3,130 |
+| 核心 tick + 软件渲染累计耗时 | 189.343 ms |
+| 核心 tick + 软件渲染单次最大耗时 | 7.654 ms |
+| 进程内存峰值（RSS） | 16,020 KiB，约 15.6 MiB |
+
+测试包含静止界面和按键操作，增量渲染会复用未变化的帧。累计耗时不能代表每帧完整重绘成本；核心计时不包含 SDL 纹理上传与呈现。首次呈现计时不包含 NextUI 启动脚本到程序入口之前的耗时。
+
+这些数据验证原生核心测试程序，不是 TypeScript/QuickJS、中文列表或网络应用的性能结论。第二阶段沿用相同计时口径，并补充连续滚动和输入响应测量。
