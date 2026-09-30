@@ -9,6 +9,6 @@
 
 先准备 PocketJS 的 tg5040 固定工具链及 Docker；运行 `./ports/tic80-brick/build.sh`。产物为 `build/creative-lab/TIC-80 Lab.pak/`，复制到卡的 `Tools/tg5040/`。启动脚本将配置与日志隔离到 `.userdata/shared/tic80-brick/`。
 
-仅启用 Lua、软件 SDL 和文本工程读取；没有接入在线商店/浏览功能或 GPU 渲染。上游补丁为 `brick-input.patch`：TRIMUI 原始手柄映射、MENU 退出及有限帧截图测试入口。打包附带上游与参与编译的依赖许可说明。
+仅启用 Lua、SDL 和文本工程读取（TIC-80 画面由 CPU 生成，Brick 优先使用 Mali SDL 呈现，失败则尝试软件呈现）；没有接入在线商店/浏览功能或 GPU 3D/CRT 着色器。上游补丁为 `brick-input.patch`：TRIMUI 原始手柄映射、MENU 退出、SDL 呈现回退及有限帧截图测试入口。打包附带上游与参与编译的依赖许可说明。
 
 自动测试以真实 ARM64 程序和桌面 SDL dummy 驱动运行沙盒；该结果不等于 Brick 的 Mali 显示及实际手柄操作已验收。
