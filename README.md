@@ -32,7 +32,7 @@ aiDeepseekKey=填入你的DeepSeekAPIKey
 
 ### 真机展示
 
-TrimUI Brick 实拍。点击图片可查看大图。
+TrimUI Brick 实拍，已裁切屏幕区域并统一为 4:3 比例。点击图片可查看大图。
 
 <table>
   <tr>
