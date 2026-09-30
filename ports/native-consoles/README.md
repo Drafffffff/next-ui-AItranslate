@@ -1,7 +1,7 @@
 # 原生创作工具
 
 TrimUI Brick + NextUI 的 Tools 菜单入口：PICO-8、TIC-80。
-启动本体控制台和编辑器；现有 Emus 游戏启动器继续保留。
+PICO-8 默认进入 Splore 图形游戏浏览器，可用方向键和 A/B 浏览、下载和运行游戏；TIC-80 启动本体控制台和编辑器。现有 Emus 游戏启动器继续保留。
 
 - PICO-8 使用用户自行购买的 Raspberry Pi 64 位运行文件，优先读取 `Emus/tg5040/PICO.pak/pico8/`，其次读取 `Bios/PICO/`。本仓库不提供商业运行文件。
 - TIC-80 使用 `../tic80-brick/build.sh` 编译的原生版本，包含编辑器和 Lua，不包含在线 Surf。
