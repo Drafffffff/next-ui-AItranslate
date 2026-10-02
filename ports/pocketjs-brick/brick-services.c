@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "brick-services.h"
 #include "brick-hardware.h"
+#include "../../workspace/all/common/ai_credentials.h"
 #include "pocketjs_symbian_extension.h"
 #include "pocket_ui_cabi.h"
 #include "quickjs.h"
@@ -27,15 +28,18 @@ extern char **environ;
 #define MAX_TEXT (64 * 1024)
 #define MAX_GLYPHS 4096
 #define DYNAMIC_SLOT 20
+#ifndef DYNAMIC_PX
 #define DYNAMIC_PX 36
+#endif
 
 enum { EMPTY, QUEUED, RUNNING, DONE };
-enum { READ, WRITE, TEXT, HTTP };
+enum { READ, WRITE, TEXT, HTTP, CREDENTIALS };
 typedef struct {
     int state, type, id, cancelled, timeout_ms, http_status;
     pid_t pid;
     char name[24], url[2048], method[8];
-    char *input, *headers, *output;
+    char auth[512];
+    char *input, *output;
     size_t output_size;
     char error[192];
     uint8_t *atlas;
@@ -66,7 +70,7 @@ static double millis(void) {
     return t.tv_sec * 1000.0 + t.tv_nsec / 1000000.0;
 }
 static void release(Job *j) {
-    free(j->input); free(j->headers); free(j->output); free(j->atlas);
+    free(j->input); free(j->output); free(j->atlas);
     for (int i = 0; i < j->line_count; i++) free(j->lines[i]);
     free(j->lines); memset(j, 0, sizeof(*j));
 }
@@ -234,12 +238,20 @@ static char *quote(const char *text) {
     *p++ = '"'; *p = 0; return out;
 }
 static void http(Job *j) {
+    char shared[512];
+    const char *provider = nextui_ai_provider_for_url(j->url);
+    int common = provider ? nextui_ai_read_key(provider, shared, sizeof(shared)) : 0;
+    if (common < 0) { fail(j, "公共 Key 配置格式无效，请检查 ai-keys.txt"); return; }
+    const char *auth = common ? shared : j->auth;
     int output[2] = {-1,-1};
     FILE *config = tmpfile();
     if (!config) { fail(j, "无法准备请求"); return; }
     char *q = quote(j->url); if (!q) { fclose(config); fail(j, "内存不足"); return; }
     fprintf(config, "url = %s\nrequest = \"%s\"\n", q, j->method); free(q);
-    if (j->headers) fputs(j->headers, config);
+    char header[640]; snprintf(header, sizeof(header), "Authorization: Bearer %s", auth);
+    q = quote(header);
+    if (!q) { fclose(config); fail(j, "内存不足"); return; }
+    fprintf(config, "header = \"Content-Type: application/json\"\nheader = %s\n", q); free(q);
     FILE *body = NULL; char body_path[64];
     if (j->input && *j->input) {
         /* Anonymous descriptor, never a secret argv. */
@@ -266,6 +278,7 @@ static void http(Job *j) {
         "--proto", "=http,https", "--proto-redir", "=https", "--max-redirs", "3", "--location",
         "--config", "-", "--write-out", "\n%{http_code}", NULL};
     int count = 18;
+    if (common) { args[count++] = "--max-redirs"; args[count++] = "0"; }
     if (body) { args[count++] = "--data-binary"; args[count++] = body_path; }
     if (ca && *ca) { args[count++] = "--cacert"; args[count++] = (char *)ca; }
     args[count] = NULL;
@@ -334,6 +347,12 @@ static void *worker(void *arg) {
         if (!cancelled(j)) {
             if (j->type == HTTP) http(j);
             else if (j->type == TEXT) prepare_text(j);
+            else if (j->type == CREDENTIALS) {
+                char key[512]; const char *provider = nextui_ai_provider_for_url(j->url);
+                int available = provider ? nextui_ai_read_key(provider, key, sizeof(key)) : 0;
+                if (available < 0) fail(j, "公共 Key 配置格式无效，请检查 ai-keys.txt");
+                else { j->output = strdup(available ? "yes" : "no"); if (j->output) j->output_size = strlen(j->output); else fail(j, "内存不足"); }
+            }
             else disk(j);
         }
         pthread_mutex_lock(&lock); j->state = DONE; pthread_mutex_unlock(&lock);
@@ -359,6 +378,14 @@ static JSValue start_job(JSContext *ctx, JSValueConst self, int argc, JSValueCon
         if (name) JS_FreeCString(ctx, name);
         JS_FreeValue(ctx, value);
     } else if (op && !strcmp(op, "text")) local.type = TEXT;
+    else if (op && !strcmp(op, "credentials")) {
+        local.type = CREDENTIALS;
+        JSValue value; const char *url = property(ctx, request, "url", &value);
+        if (!url || strlen(url) >= sizeof(local.url)) valid = 0;
+        else snprintf(local.url, sizeof(local.url), "%s", url);
+        if (url) JS_FreeCString(ctx, url);
+        JS_FreeValue(ctx, value);
+    }
     else if (op && !strcmp(op, "http")) {
         local.type = HTTP;
         JSValue value; const char *url = property(ctx, request, "url", &value);
@@ -376,14 +403,11 @@ static JSValue start_job(JSContext *ctx, JSValueConst self, int argc, JSValueCon
         if (local.timeout_ms < 100 || local.timeout_ms > 120000) valid = 0;
         const char *auth = property(ctx, request, "key", &value);
         if (auth && strlen(auth) < 512 && !strpbrk(auth, "\r\n")) {
-            char header[640]; snprintf(header, sizeof(header), "Authorization: Bearer %s", auth);
-            char *escaped = quote(header);
-            if (escaped) { size_t n = strlen(escaped) + 100; local.headers = malloc(n); if (local.headers) snprintf(local.headers, n, "header = \"Content-Type: application/json\"\nheader = %s\n", escaped); free(escaped); }
+            snprintf(local.auth, sizeof(local.auth), "%s", auth);
         } else valid = 0;
         if (auth) JS_FreeCString(ctx, auth);
         JS_FreeValue(ctx, value);
     } else valid = 0;
-    if (local.type == HTTP && !local.headers) valid = 0;
     if (local.type == WRITE || local.type == TEXT || local.type == HTTP) {
         JSValue value; const char *text = property(ctx, request, "text", &value);
         if (!text || strlen(text) > (local.type == TEXT ? MAX_TEXT : MAX_BODY)) valid = 0;
@@ -432,7 +456,7 @@ static JSValue poll_jobs(JSContext *ctx, JSValueConst self, int argc, JSValueCon
     }
     return results;
 }
-static int32_t boot_services(JSContext *ctx, const uint8_t *pak, size_t size, int32_t w, int32_t h) {
+int32_t brick_services_boot(JSContext *ctx, const uint8_t *pak, size_t size, int32_t w, int32_t h) {
     (void)pak; (void)size; (void)w; (void)h;
     const char *root = getenv("POCKETJS_DATA"), *path = getenv("POCKETJS_FONT");
     if (!root || strlen(root) >= sizeof(data_root) || !path || strlen(path) >= sizeof(font_path)) return 0;
@@ -453,7 +477,7 @@ static int32_t boot_services(JSContext *ctx, const uint8_t *pak, size_t size, in
     if (!brick_hardware_boot(ctx, bridge)) { JS_FreeValue(ctx, bridge); JS_FreeValue(ctx, global); return 0; }
     int ok = JS_SetPropertyStr(ctx, global, "brick", bridge) >= 0; JS_FreeValue(ctx, global); return ok;
 }
-static void shutdown_services(int32_t gl) {
+void brick_services_shutdown(int32_t gl) {
     (void)gl; brick_hardware_shutdown(); pthread_mutex_lock(&lock); stopping = 1;
     for (int i = 0; i < JOBS; i++) { jobs[i].cancelled = 1; if (jobs[i].pid > 0) kill(jobs[i].pid, SIGKILL); }
     pthread_cond_broadcast(&ready); pthread_mutex_unlock(&lock);
@@ -470,7 +494,9 @@ int brick_services_pending(void) {
     for (int i = 0; i < JOBS; i++) if (jobs[i].state) count++;
     pthread_mutex_unlock(&lock); return count;
 }
+#ifndef POCKETJS_CUSTOM_EXTENSION
 static const PocketJsSymbianExtensionV1 extension = {
-    1, sizeof(PocketJsSymbianExtensionV1), 0, boot_services, shutdown_services, NULL, NULL, NULL, NULL
+    1, sizeof(PocketJsSymbianExtensionV1), 0, brick_services_boot, brick_services_shutdown, NULL, NULL, NULL, NULL
 };
 const PocketJsSymbianExtensionV1 *pocketjs_symbian_extension_v1(void) { return &extension; }
+#endif

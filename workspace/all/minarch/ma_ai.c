@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <ctype.h>
 #include <strings.h>
 #include <sys/stat.h>
@@ -19,6 +20,7 @@
 #include "ma_menu.h"
 #include "ma_ai.h"
 #include "ma_video.h"
+#include "ai_credentials.h"
 
 /* 临时文件放 SD 卡：设备上的 /tmp 不保证可写、也未必装得下这几百 KB */
 #define AI_TMP_DIR   SDCARD_PATH "/.userdata/ai"
@@ -57,7 +59,7 @@ typedef struct {
 /* ------------------------------------------------------------------ 配置读取 */
 
 /*
- * 配置以 .userdata/shared/ai-translate.txt 为唯一权威来源（本文件直接解析）。
+ * 配置以 .userdata/shared/ai-translate.txt 为翻译设置来源（本文件直接解析）。
  * common/config.c 里也有一套 CFG_getAI* 字段，那是早期接进配置系统的遗留，
  * 现在已经没有任何引用 —— 保留是因为它不影响任何行为，删了要动 6 个插入点、
  * 反而有回归风险。真要清理请连 config.{c,h} 一起处理。
@@ -271,11 +273,36 @@ static const char* ai_model(void) {
 
 static const char* ai_key(void) {
 	ai_cfg_load();
+	static char shared_key[512];
+	const char *provider = ai_c_provider == AI_PROVIDER_DEEPSEEK ? "deepseek" :
+		ai_c_provider == AI_PROVIDER_BAILIAN ? "bailian" : "custom";
+	int shared = nextui_ai_read_key(provider, shared_key, sizeof(shared_key));
+	if (shared != 0) return shared_key; /* Invalid public config fails closed. */
 	const char* k = NULL;
 	if (ai_c_provider == AI_PROVIDER_DEEPSEEK)   k = ai_c_dkey;
 	else if (ai_c_provider == AI_PROVIDER_BAILIAN) k = ai_c_bkey;
 	if (k && k[0]) return k;
 	return ai_c_key;             /* 没写专用 key 就用通用的 */
+}
+
+int AI_credentialsStatus(void) {
+	ai_cfg_load();
+	int saved = ai_c_provider, invalid = 0;
+	printf("AI Translate enabled=%s selected_provider=%d\n", ai_c_enable > 0 ? "yes" : "no", saved);
+	const int providers[] = {AI_PROVIDER_DEEPSEEK, AI_PROVIDER_BAILIAN};
+	const char* names[] = {"deepseek", "bailian"};
+	for (unsigned i = 0; i < sizeof(providers)/sizeof(providers[0]); i++) {
+		ai_c_provider = providers[i];
+		char shared[512];
+		int status = nextui_ai_read_key(names[i], shared, sizeof(shared));
+		const char* actual = ai_key(); /* Same function used by screenshot translation. */
+		int matches = status > 0 && actual[0] && !strcmp(actual, shared);
+		printf("AI Translate %s: configured=%s source=%s shared_matches=%s\n", names[i],
+			actual[0] ? "yes" : "no", status > 0 ? "shared" : status < 0 ? "invalid" : "legacy", matches ? "yes" : "no");
+		if (status < 0 || (status > 0 && !matches)) invalid = 1;
+	}
+	ai_c_provider = saved;
+	return invalid;
 }
 
 /* ------------------------------------------------------------------ 错误提示 */
@@ -800,8 +827,8 @@ static long     ai_net_up, ai_net_down;
 /* 用 curl 子进程发请求。http.c 的 HTTP_post 把 body 直接塞进命令行，
  * 我们的 body 有几百 KB，4KB 的 cmd 缓冲装不下，所以这里写成 @文件 的形式。
  * curl 是厂商 rootfs 里的（NextUI 的 RetroAchievements 也靠它），
- * 但为了在缺失时能给出人话的错误，这里先探测一次，并让 wget 兜底。
- * 返回值：>0 = HTTP 状态码；-1 = 网络/传输失败；-2 = curl 和 wget 都没有 */
+ * 缺失时给出明确错误。授权从匿名文件描述符读取，不放入命令行。
+ * 返回值：>0 = HTTP 状态码；-1 = 网络/传输失败；-2 = curl 不存在 */
 static int ai_have_cmd(const char* name) {
 	char c[64];
 	snprintf(c, sizeof(c), "command -v %s >/dev/null 2>&1", name);
@@ -813,28 +840,34 @@ static int ai_http_post(const char* url, const char* body_path, int timeout_secs
 	err[0] = '\0';
 
 	if (!ai_have_cmd("curl")) {
-		if (ai_have_cmd("wget")) {
-			snprintf(cmd, sizeof(cmd),
-				"wget -q -O %s --header='Content-Type: application/json' "
-				"--header='Authorization: Bearer %s' --post-file=%s %s 2>%s/stderr.err",
-				AI_RESP_PATH, ai_key(), body_path, url, AI_TMP_DIR);
-			int rc = system(cmd);
-			(void)rc;
-			/* wget 不返回状态码，只能看响应体是不是 JSON */
-			size_t n = 0;
-			unsigned char* r = ai_read_file(AI_RESP_PATH, &n);
-			if (r) { free(r); if (n > 2) return 200; }
-			snprintf(err, err_cap, "wget 没拿到响应");
-			return -1;
-		}
-		snprintf(err, err_cap, "设备上找不到 curl 也没有 wget");
+		snprintf(err, err_cap, "设备上找不到 curl");
 		return -2;
 	}
+	/* Anonymous config descriptor: keys are literal data, never shell text or argv. */
+	FILE* auth = tmpfile();
+	if (!auth) { snprintf(err, err_cap, "无法准备请求授权"); return -1; }
+	fputs("header = \"Authorization: Bearer ", auth);
+	const char* key = ai_key();
+	for (const unsigned char* p = (const unsigned char*)key; *p; p++) {
+		if (*p < 33 || *p > 126) { fclose(auth); snprintf(err, err_cap, "Key 格式无效"); return -1; }
+		if (*p == '\\' || *p == '"') fputc('\\', auth);
+		fputc(*p, auth);
+	}
+	fputs("\"\n", auth);
+	if (fflush(auth) || ferror(auth) || fcntl(fileno(auth), F_SETFD, 0)) {
+		fclose(auth); snprintf(err, err_cap, "无法准备请求授权"); return -1;
+	}
+	rewind(auth);
+#ifdef __APPLE__
+	const char* fd_root = "/dev/fd";
+#else
+	const char* fd_root = "/proc/self/fd";
+#endif
 
 	snprintf(cmd, sizeof(cmd),
-		"curl -sS -k -L --connect-timeout %d -m %d "
+		"curl -sS -k --max-redirs 0 --connect-timeout %d -m %d "
 		"-H 'Content-Type: application/json' "
-		"-H 'Authorization: Bearer %s' "
+		"--config %s/%d "
 		"--data-binary @%s -o %s "
 		"-H 'Expect:' "                       /* 关掉 100-continue：否则 curl 会把
 		                                         "100 Continue" 当成首字节，计时失真 */
@@ -843,17 +876,19 @@ static int ai_http_post(const char* url, const char* body_path, int timeout_secs
 		"%%{size_upload} %%{size_download} %%{speed_upload}' "
 		"%s 2>%s/stderr.err",
 		timeout_secs, timeout_secs * 3,
-		ai_key(), body_path, AI_RESP_PATH, url, AI_TMP_DIR);
+		fd_root, fileno(auth), body_path, AI_RESP_PATH, url, AI_TMP_DIR);
 
 	FILE* pipe = popen(cmd, "r");
 	if (!pipe) {
 		snprintf(err, err_cap, "起不了 curl 进程");
+		fclose(auth);
 		return -1;
 	}
 	char status[256] = {0};
 	size_t n = fread(status, 1, sizeof(status) - 1, pipe);
 	status[n] = '\0';
 	int rc = pclose(pipe);
+	fclose(auth);
 	int code = 0;
 	sscanf(status, "%d %lf %lf %lf %lf %lf %lf %ld %ld %lf", &code,
 		&ai_net_dns, &ai_net_conn, &ai_net_tls, &ai_net_pre, &ai_net_first,
@@ -1736,7 +1771,7 @@ void Menu_aiTranslate(void) {
 
 	if (!ai_on() || !ai_key()[0]) {
 		ai_notify(screen, "AI Translate 未配置",
-			"请在 .userdata/shared/ai-translate.txt 里写 aiEnable=1 和 aiApiKey=你的key");
+			"ai-translate.txt 开启 aiEnable=1，ai-keys.txt 配置 Key");
 		ai_wait_dismiss(screen, AI_WAIT_SECS);
 		return;
 	}
@@ -1978,7 +2013,7 @@ static int AI_menu_reset_context(MenuList* list, int i) {
 
 static MenuList AI_menu = {
 	.type = MENU_VAR,
-	.desc = "API key 在 .userdata/shared/ai-translate.txt 里改。",
+	.desc = "API Key 在 .userdata/shared/ai-keys.txt 里改。",
 	.on_change = AI_menu_changed,
 	.items = (MenuItem[]) {
 		{ .name = "AI 翻译",  .desc = "在游戏里按热键翻译画面。",       .values = ai_onoff_labels,    .id = 0 },
@@ -2299,7 +2334,7 @@ void AI_playStopFor(const char* why) { ai_play_stop(why); }
 void Menu_aiAutoPlay(void) {
 	if (!ai_on() || !ai_key()[0]) {
 		ai_notify(screen, "AI Translate 未配置",
-			"请在 .userdata/shared/ai-translate.txt 里写 aiEnable=1 和 key");
+			"ai-translate.txt 开启 aiEnable=1，ai-keys.txt 配置 Key");
 		ai_wait_dismiss(screen, AI_WAIT_SECS);
 		return;
 	}

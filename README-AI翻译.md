@@ -97,16 +97,20 @@ python3 tools/预览翻译.py 原图.png 缓存响应.json 字体.ttf 输出.png
 
 ### 2. 填 API key
 
-**AI 的配置单独放一个文件**：卡上 `.userdata/shared/ai-translate.txt`
+**Key 放在公共文件**：卡上 `.userdata/shared/ai-keys.txt`。
+
+```ini
+DEEPSEEK_API_KEY=你的DeepSeekKey
+DASHSCOPE_API_KEY=你的百炼Key
+```
+
+两项可并存；请求时优先读取对应公共 Key，没有填写时兼容旧 `aiDeepseekKey`、`aiBailianKey`、`aiApiKey`。修改公共文件后，下次请求生效。
+
+**翻译设置**仍在 `.userdata/shared/ai-translate.txt`：
 
 ```
 # 服务商：0=百炼 Qwen3-VL   1=DeepSeek(默认)   2=自定义
 aiProvider=1
-
-# 两家的 key 分开写，切服务商时自动用对应那个。只写 aiApiKey 则两家共用。
-aiBailianKey=sk-你的百炼key
-aiDeepseekKey=
-aiApiKey=
 
 # 仅 aiProvider=2 时用到
 aiEndpoint=https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions

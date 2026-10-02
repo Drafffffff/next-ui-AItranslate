@@ -11,7 +11,7 @@
    .userdata/shared/pocketjs-brick/app/config.json
    ```
 
-3. 把 `key` 的空字符串改为你的 [DeepSeek API Key](https://platform.deepseek.com/api_keys)，其他设置保持默认。Key 保存在卡上，不写入日志或编译包。
+3. 在 SD 卡 `.userdata/shared/ai-keys.txt` 填入 `DEEPSEEK_API_KEY=你的Key`（[获取 Key](https://platform.deepseek.com/api_keys)），其他设置保持默认。与 AI 翻译共用；已有公共配置无需重复填写。旧 `config.json` 的 `key` 仅作兼容回退。Key 不写入日志或编译包。
 4. 连上 Wi-Fi，再打开应用。选择快捷问题，或者在 `prompt.txt` 中写好中文问题后选择“发送 prompt.txt”。文件与设置位于同一目录。
 
 默认使用 `deepseek-flash`，关闭思考模式并限制回复长度，降低等待时间。接口参数见 [DeepSeek 官方文档](https://api-docs.deepseek.com/api/create-chat-completion/)。

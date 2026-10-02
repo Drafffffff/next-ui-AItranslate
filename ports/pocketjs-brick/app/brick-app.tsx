@@ -5,7 +5,7 @@ import { VirtualList, type VirtualListHandle } from "@pocketjs/framework/virtual
 import { onFrame, onButtonPress } from "@pocketjs/framework/solid/lifecycle";
 import { BTN } from "@pocketjs/framework/input";
 import { reportAppAction } from "@pocketjs/framework/host";
-import { installServices, read, write, prepare, request, native } from "./services.ts";
+import { installServices, read, write, prepare, request, native, hasSharedCredential } from "./services.ts";
 import { installAcceptance } from "./acceptance.ts";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -13,7 +13,7 @@ type Config = { version: number; key: string; baseUrl: string; model: string; ti
 const defaults: Config = { version: 1, key: "", baseUrl: "https://api.deepseek.com", model: "deepseek-flash", timeoutMs: 30000, savedCount: 0 };
 const entries = ["聊一聊游戏", "接着上一段聊", "输入英文问题", "发送 prompt.txt", "阅读最近回复", "阅读聊天记录", "测试网络连接", "保存设置", "取消当前请求", "阅读 prompt.txt", "清空聊天记录", "使用说明"];
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,?!-".split("").concat(["删除", "发送", "返回"]);
-const help = "在 SD 卡的 .userdata/shared/pocketjs-brick/app/config.json 填入 DeepSeek key。首次启动会创建该文件。可在 prompt.txt 写入任意中文问题，或使用英文屏幕键盘。\n\n上下移动，A 选择；X 返回菜单或取消请求，B 返回上一页，MENU 退出。请求期间仍可浏览，取消后不会把未完成回复加入记录。\n\n聊天记录自动保存。完整中文字体使用卡上的 .system/res/font1.ttf。当前不支持中文输入法，表情和超出字体范围的字符可能需要替换。";
+const help = "在 SD 卡的 .userdata/shared/ai-keys.txt 填入 DEEPSEEK_API_KEY，翻译和聊天共用。旧 config.json 的 key 仍兼容。可在 prompt.txt 写入任意中文问题，或使用英文屏幕键盘。\n\n上下移动，A 选择；X 返回菜单或取消请求，B 返回上一页，MENU 退出。请求期间仍可浏览，取消后不会把未完成回复加入记录。\n\n聊天记录自动保存。完整中文字体使用卡上的 .system/res/font1.ttf。当前不支持中文输入法，表情和超出字体范围的字符可能需要替换。";
 
 function App() {
   installServices();
@@ -42,10 +42,11 @@ function App() {
   const send = async (text: string) => {
     if (!ready() || busy()) return;
     text = text.trim(); if (!text) { setStatus("请先输入问题"); return; }
-    if (!config.key) { setStatus("请在 config.json 填入 key"); return; }
     const mine = ++generation;
     setBusy(true); setStatus("正在请求，可以继续浏览…");
     try {
+      if (!config.key && !await hasSharedCredential(config.baseUrl)) { setStatus("请在 ai-keys.txt 填入 DEEPSEEK_API_KEY"); return; }
+      if (mine !== generation) return;
       const context = messages.slice(-8);
       while (context.length && context.reduce((n, m) => n + m.content.length, 0) > 6000) context.shift();
       currentRequest = request(config.baseUrl.replace(/\/$/, "") + "/chat/completions", config.key, JSON.stringify({
@@ -141,7 +142,8 @@ function App() {
         if (!Array.isArray(parsed) || parsed.length > 100 || parsed.some(m => !m || !["user", "assistant"].includes(m.role) || typeof m.content !== "string")) throw new Error("聊天记录格式无效");
         messages = parsed;
       }
-      setReady(true); setStatus(config.key ? "准备就绪" : "先在 config.json 填入 Key"); reportAppAction("app.ready", messages.length);
+      const available = config.key || await hasSharedCredential(config.baseUrl);
+      setReady(true); setStatus(available ? "准备就绪" : "先在 ai-keys.txt 填入 Key"); reportAppAction("app.ready", messages.length);
     } catch (e) { error(e); }
   })();
   installAcceptance({ send, activate, home, showText, ready, busy, position, screen, status, draft, messages: () => messages.length });
