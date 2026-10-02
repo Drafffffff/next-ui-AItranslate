@@ -20,12 +20,20 @@
 
 前往 **[DeepSeek 平台获取 API Key](https://platform.deepseek.com/api_keys)**，登录后创建并复制 Key。
 
-在 SD 卡上创建或编辑 `.userdata/shared/ai-translate.txt`，写入以下内容（默认使用 DeepSeek）：
+在 SD 卡上创建或编辑 `.userdata/shared/ai-keys.txt`，填入 Key：
+
+```ini
+DEEPSEEK_API_KEY=填入你的DeepSeekAPIKey
+DASHSCOPE_API_KEY=
+```
+
+这是掌机 AI 应用共用的配置；百炼 Key 填在 `DASHSCOPE_API_KEY`，两项可同时保留。
+
+再在 `.userdata/shared/ai-translate.txt` 启用翻译（默认使用 DeepSeek）：
 
 ```ini
 aiEnable=1
 aiProvider=1
-aiDeepseekKey=填入你的DeepSeekAPIKey
 ```
 
 ### 3. 开始翻译
@@ -35,6 +43,14 @@ aiDeepseekKey=填入你的DeepSeekAPIKey
 ### 中文字体
 
 如果中文显示不全或出现方框，下载 **[我们合并的中文字体 font1.ttf](https://github.com/Drafffffff/next-ui-AItranslate/raw/refs/heads/main/fonts/font1.ttf)**，备份后覆盖 SD 卡上的 `.system/res/font1.ttf`，重启生效。保留原版英文字形，汉字使用圆体。
+
+### Brick Mic 语音输入
+
+在同一 [Release](https://github.com/Drafffffff/next-ui-AItranslate/releases/latest) 下载 `Brick-Mic-TrimUI-Brick.zip`，解压后把 `Brick Mic.pak` 复制到 SD 卡 `Tools/tg5040/`。电脑端选择 Mac 安装包或 Linux 接收端；用百炼 Key 配置语音识别。
+
+首次连接：打开掌机 **工具 → Brick Mic**，同时按 **L1+R1**，选择「查找电脑」，再选中自己的电脑。**按住 A 说话，松开出字**；以后记住上次选择的电脑。
+
+[Mac 安装和按键说明](ports/brick-mic/README.md) · [Bazzite / Linux 安装](docs/BRICK-MIC-LINUX.md)
 
 ### 真机展示
 

@@ -46,3 +46,7 @@ workspace/.container_runtime
 AGENTS.md
 CLAUDE.md
 .worktrees/
+**/ai-keys.txt
+**/ai-key-backups/
+__pycache__/
+*.py[cod]

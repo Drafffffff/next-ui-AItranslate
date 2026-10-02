@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Brick Mic · 交互原型</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="page-head">
+    <div><p class="eyebrow">NEXTUI / TRIMUI BRICK</p><h1>Brick Mic <span>交互原型</span></h1></div>
+    <div class="page-actions"><span class="prototype-label">模拟演示 · 不操作真实设备</span><button id="theme" class="quiet">切换深色</button></div>
+  </header>
+  <main class="workspace">
+    <section class="brick-section" aria-label="Brick 掌机交互">
+      <div class="section-label"><span>01 / 掌机</span><span>直接说话，按键编辑 Mac</span></div>
+      <div class="device" id="device">
+        <div class="led-track"><div id="led" aria-label="任务灯光"></div></div>
+        <div class="screen-frame">
+          <div class="screen" id="screen">
+            <div class="screen-top"><span class="brand">Brick Mic</span><div class="screen-status"><span id="connection">● 已连接</span><span class="battery-wrap"><span class="battery-icon" aria-hidden="true"><span id="battery-fill"></span></span><span id="battery-text">95%</span></span></div></div>
+            <div class="target-line"><span id="mode">普通输入</span><span id="target">备忘录</span><button id="unread" class="unread" hidden></button></div>
+            <div id="content" class="screen-content" aria-live="polite"></div>
+            <div id="screen-note" class="screen-note" aria-live="polite"></div>
+            <div id="footer" class="screen-footer"></div>
+          </div>
+          <div class="sleep-cover" id="sleep-cover" hidden><div><span class="sleep-glyph">◡</span><p id="sleep-title">已息屏</p><small id="sleep-note">蓝牙保持连接</small></div></div>
+        </div>
+        <div class="hardware">
+          <div class="shoulders"><button data-action="L" aria-pressed="false">L · 选字</button><span id="haptic" role="status">TRIMUI BRICK</span><button data-action="R" aria-pressed="false">R · 选字</button></div>
+          <div class="main-buttons">
+            <div class="dpad" aria-label="十字键"><button class="up" data-hold="up" aria-label="向上">↑</button><button class="left" data-hold="left" aria-label="向左">←</button><span class="dpad-center"></span><button class="right" data-hold="right" aria-label="向右">→</button><button class="down" data-hold="down" aria-label="向下">↓</button></div>
+            <div class="face-buttons"><button class="y" data-action="Y" aria-label="Y 任务">Y</button><button class="x" data-action="X" aria-label="X 发送">X</button><button class="b" data-hold="B" aria-label="B 删除或返回">B</button><button class="a" data-hold="A" aria-label="按住 A 说话">A</button></div>
+          </div>
+          <div class="utility-buttons"><button data-action="SELECT">SELECT</button><button data-action="START">START</button><button data-action="MENU">MENU</button><button data-action="POWER" id="power">电源 · 息屏</button></div>
+        </div>
+      </div>
+      <p class="control-help">按住 A 模拟说话；长按十字键连续移动。鼠标点 L / R 可锁定选字，实机需按住肩键。</p>
+      <details class="keyboard-help"><summary>键盘操作</summary><p>点击掌机空白处后：空格＝A，方向键＝十字键，Shift＝肩键，Backspace＝B，Enter＝X，S＝START，T＝Y，E＝SELECT。直接在右侧输入框打字时保持原生编辑。</p></details>
+    </section>
+    <section class="mac-section" aria-label="Mac 输入目标模拟">
+      <div class="section-label"><span>02 / Mac 当前窗口</span><span id="mac-device-battery">Brick · 95%</span></div>
+      <div class="mac-window">
+        <div class="mac-titlebar"><div class="traffic" aria-hidden="true"><i></i><i></i><i></i></div><span id="mac-app-title">备忘录</span><span class="mac-window-label">模拟窗口</span></div>
+        <div class="app-tabs"><button id="notes-tab" class="active">备忘录</button><button id="codex-tab">Codex</button><span id="focus-status">已选择输入框</span></div>
+        <div class="mac-body">
+          <p class="eyebrow" id="editor-eyebrow">普通输入目标</p>
+          <h2 id="editor-title">随手记</h2>
+          <p id="editor-subtitle" class="editor-subtitle">普通模式下，由你选择 Mac 的输入框。</p>
+          <label for="mac-editor" class="editor-label">输入框 <span id="selection-status">光标 0</span></label>
+          <textarea id="mac-editor" spellcheck="false" placeholder="点击这里选择输入位置，再按住掌机 A 说话。"></textarea>
+          <div class="editor-bottom"><span id="editor-hint">文字会填入，不会自动发送</span><button id="mac-send" hidden>发送（模拟 Mac 操作）</button></div>
+          <div id="messages" class="messages" aria-live="polite"></div>
+        </div>
+        <div class="last-action"><span>最近动作</span><strong id="last-action">普通输入就绪</strong></div>
+      </div>
+      <div class="demo-controls">
+        <label for="speech">示例口述 <span>松开 A 后填入这段文字</span></label>
+        <input id="speech" value="帮我优化一下这个界面的阅读体验，保留现在的主题配色。">
+        <details open><summary>场景测试</summary>
+          <div class="scenario-grid">
+            <label class="toggle"><input type="checkbox" id="codex-running" checked>Codex 已打开</label>
+            <label class="toggle"><input type="checkbox" id="connected" checked>蓝牙已连接</label>
+            <label class="battery-control">电量 <input type="range" id="battery" min="0" max="100" value="95"><output id="battery-output">95%</output></label>
+            <label class="charge-control">电源状态 <select id="charge"><option value="discharging">放电</option><option value="charging">充电</option><option value="full">已充满</option><option value="unknown">未知</option></select></label>
+            <label>通知任务 <select id="event-task"></select></label>
+            <label>任务事件 <select id="event-kind"><option value="completed">本轮回复完成</option><option value="waiting">需要你回应</option><option value="failed">执行失败</option></select></label>
+          </div>
+          <div class="scenario-actions"><button id="notify">模拟任务通知</button><button id="restart" class="quiet">重开应用</button><span id="queue-status">通知也可在息屏时接收</span></div>
+        </details>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

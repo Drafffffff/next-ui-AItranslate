@@ -1,0 +1,14 @@
+[Unit]
+Description=Brick Mic Bluetooth voice receiver
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/brick-mic/venv/bin/python %h/.local/share/brick-mic/linux/receiver.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

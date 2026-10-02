@@ -1,0 +1,72 @@
+import {strict as assert} from 'node:assert';
+import {initialHostIndex,receiverName,hostEntries,reuseEntries,reuseActionRows,replyRevision,replyReaderKey,hubEntries,backPage,readRow,windowStart,edits} from './navigation.ts';
+import {statusMessage,type MicState} from './model.ts';
+const s:MicState={state:'ready',connected:true,control:{mode:'codex',remoteAllowed:true,codexAvailable:true,target:'任务',tasks:[{id:'task-a',title:'开发',status:'completed',unread:7},{id:'task-b',title:'测试',status:'running',unread:0}],unread:7,controlHint:'',replyAvailable:true,approval:{id:'approval',task:'task',title:'任务',tool:'Bash',summary:'test',expiresAt:9999999999,allowAvailable:true}}};
+assert.deepEqual(hubEntries(s).map(x=>x.id),['approval','task-a','task-b']);
+assert.equal(edits[0].id,'all');
+assert(!edits.some(x=>['approval','reply','tasks','alerts'].includes(x.id)));
+assert.equal(backPage('approval'),'hub');assert.equal(backPage('hub'),'main');assert.equal(backPage('read'),'edit');
+assert.equal(readRow(0,1,7),0);assert.equal(readRow(8,1,15),8);assert.equal(readRow(0,-1,25),0);
+assert.equal(windowStart(11,12),7);assert.equal(windowStart(1,3),0);
+s.control!.remoteAllowed=false;assert.deepEqual(hubEntries(s),[]);
+s.control!.remoteAllowed=true;s.control!.mode='ordinary';s.control!.codexAvailable=false;s.control!.unread=0;s.control!.approval=null;assert.deepEqual(hubEntries(s),[]);
+console.log('PASS: task priority, separate editing, consistent back, seven-line reading, list bounds and hidden unavailable controls');
+
+const initial=[{id:'tasks',label:'切换任务'},{id:'ordinary',label:'返回普通输入'}];
+let stable=initial;
+for(let i=0;i<100;i++)stable=reuseEntries(JSON.parse(JSON.stringify(initial)),stable);
+assert.equal(stable,initial);assert.equal(stable[0],initial[0]);
+const changed=reuseEntries([{id:'tasks',label:'选择任务'},initial[1]],initial);
+assert.notEqual(changed[0],initial[0]);assert.equal(changed[1],initial[1]);
+const moved=reuseEntries([initial[1],initial[0]],initial);assert.equal(moved[0],initial[1]);
+const actions:[string,string][][]=[[['A','说话'],['B','删除']],[['Y','Codex'],['SELECT','编辑']]];
+assert.equal(reuseActionRows(JSON.parse(JSON.stringify(actions)),actions),actions);
+const secondary=reuseActionRows([actions[0],[['Y','任务'],['SELECT','编辑']]],actions);
+assert.equal(secondary[0],actions[0]);assert.notEqual(secondary[1],actions[1]);
+console.log('PASS: 100 IPC refreshes keep list/footer identity; only changed rows update, reordered IDs retain entries');
+
+const tasks=hubEntries(s);
+assert.equal(tasks.length,0); // Ordinary mode has no task center.
+s.control!.mode='codex';s.control!.codexAvailable=true;
+const rows=hubEntries(s);assert.equal(rows[0].unread,7);
+let stableTasks=rows;
+for(let i=0;i<100;i++)stableTasks=reuseEntries(hubEntries(JSON.parse(JSON.stringify(s))),stableTasks);
+assert.equal(stableTasks,rows);
+s.control!.tasks[0].unread=8;
+const newRows=reuseEntries(hubEntries(s),rows);
+assert.notEqual(newRows[0],rows[0]);assert.equal(newRows[1],rows[1]);
+assert(!newRows.some(x=>['tasks','alerts'].includes(x.id)));
+const reply={task:'task-a',title:'开发',text:'相同回复',page:0,pages:2,truncated:false,revision:'turn-1'};
+assert.equal(replyRevision({...reply,page:1}),replyRevision(reply));
+assert.notEqual(replyReaderKey({...reply,page:1}),replyReaderKey(reply));
+assert.notEqual(replyRevision({...reply,revision:'turn-2'}),replyRevision(reply));
+console.log('PASS: flattened task rows, full unread counts, stable identities and identical-text reply revisions');
+s.control!.mode='ordinary';
+
+assert.equal(statusMessage('Codex 已关闭 · START 普通输入'),'Codex 已关闭');
+assert.equal(statusMessage('任务不可用 · ST 返回普通输入'),'任务不可用');
+assert.equal(statusMessage('任务不可用 · SR 返回普通输入'),'任务不可用');
+assert.equal(statusMessage('蓝牙服务暂时不可用，请按 A 重试。'),'蓝牙服务暂时不可用');
+assert.equal(statusMessage('按 Y 选择任务'),'未选择任务');
+assert.equal(statusMessage('需要 Mac 审核'),'需要 Mac 审核');
+console.log('PASS: app statuses omit duplicate key instructions and keep failure information');
+
+s.control!.codexAvailable=true;
+assert.deepEqual(hubEntries(s),[]);
+s.control!.mode='codex';
+assert.equal(hubEntries(s)[0].id,'task-a');
+assert(!hubEntries(s).some(x=>['ordinary','codex'].includes(x.id)));
+s.control!.mode='ordinary';s.control!.unread=1;s.control!.approval={id:'approval',task:'task',title:'任务',tool:'Bash',summary:'test',expiresAt:9999999999,allowAvailable:true};
+assert.deepEqual(hubEntries(s),[]);
+console.log('PASS: Y is unavailable in ordinary mode, including pending approvals/alerts; SR enters Codex');
+
+const hosts:MicState={state:'disconnected',connected:false,hosts:{selected:'linux-host-123',active:'mac-host-123',discovering:false,known:[{id:'mac-host-123',name:'Mac mini'},{id:'linux-host-123',name:'bazzite'}]}};
+assert.equal(hostEntries(hosts)[initialHostIndex(hosts)].targetID,'linux-host-123');
+assert.equal(receiverName(hosts),'bazzite');
+hosts.hosts!.selected='mac-host-123';hosts.hosts!.active='';
+assert.equal(hostEntries(hosts)[initialHostIndex(hosts)].targetID,'mac-host-123');
+assert.equal(receiverName(hosts),'Mac mini');
+hosts.hosts!.known.reverse();
+assert.equal(hostEntries(hosts)[initialHostIndex(hosts)].targetID,'mac-host-123');
+assert.equal(initialHostIndex({state:'disconnected'}),0);
+console.log('PASS: connection menu selects the saved computer by ID; offline labels retain the chosen target across reorder');

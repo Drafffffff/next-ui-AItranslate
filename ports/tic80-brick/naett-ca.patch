@@ -1,0 +1,30 @@
+diff --git a/naett.c b/naett.c
+index a6783b3..8aac4d4 100644
+--- a/naett.c
++++ b/naett.c
+@@ -841,7 +841,13 @@ static void* curlWorker(void* data) {
+             CURL* handle = message->easy_handle;
+             InternalResponse* res = NULL;
+             curl_easy_getinfo(handle, CURLINFO_PRIVATE, (char**)&res);
+-            curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &res->code);
++            long http_code = 0;
++            curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &http_code);
++            res->code = (int)http_code;
++            if (message->data.result != CURLE_OK) {
++                res->code = -(int)message->data.result;
++                fprintf(stderr, "TIC-80 download: %s\n", curl_easy_strerror(message->data.result));
++            }
+             res->complete = 1;
+             curl_easy_cleanup(handle);
+         }
+@@ -958,6 +964,10 @@ void naettPlatformMakeRequest(InternalResponse* res) {
+
+     CURL* c = curl_easy_init();
+     curl_easy_setopt(c, CURLOPT_URL, req->url);
++    curl_easy_setopt(c, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
++    curl_easy_setopt(c, CURLOPT_TIMEOUT_MS, 20000L);
++    const char* caBundle = getenv("TIC80_CA_BUNDLE");
++    if (caBundle && *caBundle) curl_easy_setopt(c, CURLOPT_CAINFO, caBundle);
+     curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT_MS, req->options.timeoutMS);
+
+     curl_easy_setopt(c, CURLOPT_READFUNCTION, readCallback);

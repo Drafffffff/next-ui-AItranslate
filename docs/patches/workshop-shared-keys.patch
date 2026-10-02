@@ -1,0 +1,491 @@
+--- a/ports/pocketjs-brick/brick-services.c
++++ b/ports/pocketjs-brick/brick-services.c
+@@ -1,6 +1,7 @@
+ #define _GNU_SOURCE
+ #include "brick-services.h"
+ #include "brick-hardware.h"
++#include "../../workspace/all/common/ai_credentials.h"
+ #include "workshop-native.h"
+ #include "workshop-voice.h"
+ #include "workshop-visual.h"
+@@ -34,12 +35,13 @@
+ #define DYNAMIC_PX dynamic_px
+ 
+ enum { EMPTY, QUEUED, RUNNING, DONE };
+-enum { READ, WRITE, TEXT, HTTP, PROJECTS, PUBLISH, PLAY, COVER, DELETE_PROJECT };
++enum { READ, WRITE, TEXT, HTTP, CREDENTIALS, PROJECTS, PUBLISH, PLAY, COVER, DELETE_PROJECT };
+ typedef struct {
+     int state, type, id, cancelled, timeout_ms, http_status;
+     pid_t pid;
+     char name[96], label[128], url[2048], method[8];
+-    char *input, *headers, *output;
++    char auth[512];
++    char *input, *output;
+     size_t output_size;
+     char error[192];
+     uint8_t *atlas;
+@@ -70,7 +72,7 @@
+     return t.tv_sec * 1000.0 + t.tv_nsec / 1000000.0;
+ }
+ static void release(Job *j) {
+-    free(j->input); free(j->headers); free(j->output); free(j->atlas);
++    free(j->input); free(j->output); free(j->atlas);
+     for (int i = 0; i < j->line_count; i++) free(j->lines[i]);
+     free(j->lines); memset(j, 0, sizeof(*j));
+ }
+@@ -240,12 +242,20 @@
+     *p++ = '"'; *p = 0; return out;
+ }
+ static void http(Job *j) {
++    char shared[512];
++    const char *provider = nextui_ai_provider_for_url(j->url);
++    int common = provider ? nextui_ai_read_key(provider, shared, sizeof(shared)) : 0;
++    if (common < 0) { fail(j, "公共 Key 配置格式无效，请检查 ai-keys.txt"); return; }
++    const char *auth = common ? shared : j->auth;
+     int output[2] = {-1,-1};
+     FILE *config = tmpfile();
+     if (!config) { fail(j, "无法准备请求"); return; }
+     char *q = quote(j->url); if (!q) { fclose(config); fail(j, "内存不足"); return; }
+     fprintf(config, "url = %s\nrequest = \"%s\"\n", q, j->method); free(q);
+-    if (j->headers) fputs(j->headers, config);
++    char header[640]; snprintf(header, sizeof(header), "Authorization: Bearer %s", auth);
++    q = quote(header);
++    if (!q) { fclose(config); fail(j, "内存不足"); return; }
++    fprintf(config, "header = \"Content-Type: application/json\"\nheader = %s\n", q); free(q);
+     FILE *body = NULL; char body_path[64];
+     if (j->input && *j->input) {
+         /* Anonymous descriptor, never a secret argv. */
+@@ -272,6 +282,7 @@
+         "--proto", "=http,https", "--proto-redir", "=https", "--max-redirs", "3", "--location",
+         "--config", "-", "--write-out", "\n%{http_code}", NULL};
+     int count = 18;
++    if (common) { args[count++] = "--max-redirs"; args[count++] = "0"; }
+     if (body) { args[count++] = "--data-binary"; args[count++] = body_path; }
+     if (ca && *ca) { args[count++] = "--cacert"; args[count++] = (char *)ca; }
+     args[count] = NULL;
+@@ -340,6 +351,12 @@
+         if (!cancelled(j)) {
+             if (j->type == HTTP) http(j);
+             else if (j->type == TEXT) prepare_text(j);
++            else if (j->type == CREDENTIALS) {
++                char key[512]; const char *provider = nextui_ai_provider_for_url(j->url);
++                int available = provider ? nextui_ai_read_key(provider, key, sizeof(key)) : 0;
++                if (available < 0) fail(j, "公共 Key 配置格式无效，请检查 ai-keys.txt");
++                else { j->output = strdup(available ? "yes" : "no"); if (j->output) j->output_size = strlen(j->output); else fail(j, "内存不足"); }
++            }
+             else if (j->type >= PROJECTS) workshop_job(j->type == PROJECTS ? "projects" : j->type == PUBLISH ? "publish" : j->type == COVER ? "cover" : j->type == DELETE_PROJECT ? "delete" : "play", j->name, j->input ? j->input : "", j->label, &j->output, &j->output_size, j->error, sizeof(j->error));
+             else disk(j);
+         }
+@@ -381,6 +398,14 @@
+             JS_FreeValue(ctx, value);
+         }
+     } else if (op && !strcmp(op, "text")) local.type = TEXT;
++    else if (op && !strcmp(op, "credentials")) {
++        local.type = CREDENTIALS;
++        JSValue value; const char *url = property(ctx, request, "url", &value);
++        if (!url || strlen(url) >= sizeof(local.url)) valid = 0;
++        else snprintf(local.url, sizeof(local.url), "%s", url);
++        if (url) JS_FreeCString(ctx, url);
++        JS_FreeValue(ctx, value);
++    }
+     else if (op && !strcmp(op, "http")) {
+         local.type = HTTP;
+         JSValue value; const char *url = property(ctx, request, "url", &value);
+@@ -398,14 +423,11 @@
+         if (local.timeout_ms < 100 || local.timeout_ms > 120000) valid = 0;
+         const char *auth = property(ctx, request, "key", &value);
+         if (auth && strlen(auth) < 512 && !strpbrk(auth, "\r\n")) {
+-            char header[640]; snprintf(header, sizeof(header), "Authorization: Bearer %s", auth);
+-            char *escaped = quote(header);
+-            if (escaped) { size_t n = strlen(escaped) + 100; local.headers = malloc(n); if (local.headers) snprintf(local.headers, n, "header = \"Content-Type: application/json\"\nheader = %s\n", escaped); free(escaped); }
++            snprintf(local.auth, sizeof(local.auth), "%s", auth);
+         } else valid = 0;
+         if (auth) JS_FreeCString(ctx, auth);
+         JS_FreeValue(ctx, value);
+     } else valid = 0;
+-    if (local.type == HTTP && !local.headers) valid = 0;
+     if (local.type == WRITE || local.type == TEXT || local.type == HTTP || local.type == PUBLISH) {
+         JSValue value; const char *text = property(ctx, request, "text", &value);
+         if (!text || strlen(text) > (local.type == TEXT ? MAX_TEXT : MAX_BODY)) valid = 0;
+--- a/ports/pocketjs-brick/app/services.ts
++++ b/ports/pocketjs-brick/app/services.ts
+@@ -29,3 +29,5 @@
+ export function request(url: string, key = "", body = "", timeoutMs = 30000) {
+   return task({ op: "http", url, key, text: body, method: body ? "POST" : "GET", timeoutMs });
+ }
++
++export const hasSharedCredential = async (url: string) => (await task({ op: "credentials", url }).promise).text === "yes";
+--- a/ports/pocketjs-brick/workshop/app.tsx
++++ b/ports/pocketjs-brick/workshop/app.tsx
+@@ -4,7 +4,7 @@
+ import {onFrame} from '@pocketjs/framework/solid/lifecycle';
+ import {BTN} from '@pocketjs/framework/input';
+ import {getOps,reportAppAction} from '@pocketjs/framework/host';
+-import {installServices,native,read,write,prepare,task} from '../app/services.ts';
++import {installServices,native,read,write,prepare,task,hasSharedCredential} from '../app/services.ts';
+ import {newProject,listProjects,saveProject,recoverProject,playProject,deleteProject,projectAgent,type Project,type Config} from './model.ts';
+ import {conversation,mix} from './conversation.ts';
+ interface VoiceState {state:string;session?:number;seconds?:number;rms?:number;text?:string;error?:string}
+@@ -67,9 +67,9 @@
+  };
+  const send=async(text:string)=>{
+   if(!current||busy())return;text=text.trim();if(!text){say('没有听清，请再说一次');return;}
+-  if(!config.key){say('请先配置 DeepSeek Key');return;}
+   failed=false;setBusy(true);setPage('conversation');setRow(maxRow());active.clear();say('Agent 正在创作 · X 取消');
+   try{
++   if(!config.key&&!await hasSharedCredential(config.endpoint)){say('请在 ai-keys.txt 配置 DeepSeek Key');return;}
+    agent=projectAgent(current,config,say,changed,(event)=>{
+     if(event.type==='tool_execution_start')active.add(event.toolCallId);
+     if(event.type==='tool_execution_end')active.delete(event.toolCallId);
+--- a/ports/pocketjs-brick/workshop/voice/main.go
++++ b/ports/pocketjs-brick/workshop/voice/main.go
+@@ -31,6 +31,7 @@
+ )
+ 
+ type Config struct {
++	KeyError    string `json:"-"`
+ 	AsrKey      string `json:"asrKey"`
+ 	AsrEndpoint string `json:"asrEndpoint"`
+ 	AsrModel    string `json:"asrModel"`
+@@ -89,6 +90,15 @@
+ 	}
+ 	if c.AsrModel == "" {
+ 		c.AsrModel = "qwen-audio-3.1-asr-flash-message"
++	}
++	if trustedBailianEndpoint(c.AsrEndpoint) {
++		key, err := readSharedBailian(v.shared)
++		if err != nil {
++			c.AsrKey = ""
++			c.KeyError = "公共 Key 配置格式无效，请检查 ai-keys.txt"
++		} else if key != "" {
++			c.AsrKey = key
++		}
+ 	}
+ 	return c
+ }
+@@ -233,6 +243,10 @@
+ 		}
+ 	}
+ 	c := v.config()
++	if c.KeyError != "" {
++		fail(c.KeyError)
++		return
++	}
+ 	if c.AsrKey == "" {
+ 		fail("请配置百炼语音识别 Key")
+ 		return
+@@ -465,7 +479,22 @@
+ 	probe := flag.String("probe-file", "", "diagnostic 16kHz S16LE input; normal app never sets this")
+ 	test := flag.Bool("test-mode", false, "allow local mock WebSocket")
+ 	command := flag.String("command", "", "diagnostic IPC command: start/stop/cancel/status")
++	checkConfig := flag.Bool("check-config", false, "check ASR credentials without recording or networking")
+ 	flag.Parse()
++	if *checkConfig {
++		if *data == "" || *shared == "" {
++			os.Exit(2)
++		}
++		v := &Voice{data: *data, shared: *shared}
++		c := v.config()
++		key, err := readSharedBailian(*shared)
++		configured := c.AsrKey != "" && c.KeyError == ""
++		fmt.Printf("ASR configured=%t shared_key=%t model_preserved=%t\n", configured, err == nil && key != "" && c.AsrKey == key, c.AsrModel == "qwen-audio-3.1-asr-flash-message")
++		if !configured {
++			os.Exit(1)
++		}
++		return
++	}
+ 	if *command != "" {
+ 		if *socket == "" || (*command != "start" && *command != "stop" && *command != "cancel" && *command != "status") {
+ 			os.Exit(2)
+--- a/ports/pocketjs-brick/workshop/README.md
++++ b/ports/pocketjs-brick/workshop/README.md
+@@ -11,7 +11,7 @@
+     game-<项目编号>.p8                  每个项目唯一的当前游戏
+     map.txt                             固定文件名 → 游戏标题
+   .userdata/shared/ai-game-workshop/
+-    config.json                         DeepSeek / ASR 配置
++    config.json                         模型 / 接口配置（兼容旧 Key）
+     last-project.txt                    列表选中项 / 试玩返回的项目编号
+     projects/game-<项目编号>.json       会话、草稿、当前版本、最近八个版本
+     covers/game-<项目编号>.png          可选游戏封面
+@@ -65,17 +65,23 @@
+ 
+ 按住 A 开始，松开 A 后提交已录音频，收到 `task-finished` 后聚合最终句子并自动发送给当前项目的 Agent。X 可取消，已取消会话的迟到结果不会提交。录音最长 60 秒，等待最终结果最多 15 秒；断网、录音失败或上传过慢显示错误并允许重试。正常使用只在内存中处理音频。
+ 
+-在现有 `config.json` 中可加入：
++在 SD 卡 `.userdata/shared/ai-keys.txt` 填入公共 Key（其他 AI 应用也使用此文件）：
++
++```ini
++DEEPSEEK_API_KEY=你的DeepSeekKey
++DASHSCOPE_API_KEY=你的百炼Key
++```
++
++在现有 `config.json` 中可配置模型与地址：
+ 
+ ```json
+ {
+   "asrModel": "qwen-audio-3.1-asr-flash-message",
+-  "asrEndpoint": "wss://dashscope.aliyuncs.com/api-ws/v1/inference",
+-  "asrKey": "你的百炼 API Key"
++  "asrEndpoint": "wss://dashscope.aliyuncs.com/api-ws/v1/inference"
+ }
+ ```
+ 
+-未指定 `asrKey` 时依次读取系统 `voice-ai.txt` 的 `voiceAsrKey`、`ai-translate.txt` 的 `aiBailianKey`。未指定地址时可复用 `voiceAsrEndpoint` 中的 WebSocket 地址，最后使用上面的默认地址。配置地域、workspace 域名和 Key 必须匹配；迁移旧 WebSocket 地址仅改 `/realtime` 路径为 `/inference`、移除旧 `model` 查询参数，保留主机。不接受其他 ASR 模型。Key 不写入会话、日志或命令行。
++优先读取公共 `DASHSCOPE_API_KEY`；未填写时兼容应用 `asrKey`，然后依次读取系统 `voice-ai.txt` 的 `voiceAsrKey`、`ai-translate.txt` 的 `aiBailianKey`。未指定地址时可复用 `voiceAsrEndpoint` 中的 WebSocket 地址，最后使用上面的默认地址。配置地域、workspace 域名和 Key 必须匹配；迁移旧 WebSocket 地址仅改 `/realtime` 路径为 `/inference`、移除旧 `model` 查询参数，保留主机。不接受其他 ASR 模型。Key 不写入会话、日志或命令行。
+ 
+ ## DeepSeek 配置
+ 
+@@ -83,14 +89,14 @@
+ 
+ ```json
+ {
+-  "key": "你的 DeepSeek API Key",
++  "key": "",
+   "endpoint": "https://api.deepseek.com",
+   "model": "deepseek-flash",
+   "timeoutMs": 120000
+ }
+ ```
+ 
+-首次创建配置时复用系统 `voice-ai.txt` 的 `voiceChatKey`，或 `ai-translate.txt` 的 `aiDeepseekKey`。模型名/地址可按实际服务修改。Key 不写入项目会话、请求日志或命令行参数。
++请求时优先读取公共 `DEEPSEEK_API_KEY`，缺失或留空时回退到应用 `key`。公共 Key 不回写到应用 JSON；修改后下一次请求生效。首次创建旧式配置时复用系统 `voice-ai.txt` 的 `voiceChatKey`，或 `ai-translate.txt` 的 `aiDeepseekKey`。模型名/地址可按实际服务修改。Key 不写入项目会话、请求日志或命令行参数。
+ 
+ ## 系统颜色
+ 
+--- /dev/null
++++ b/workspace/all/common/ai_credentials.h
+@@ -0,0 +1,92 @@
++#ifndef NEXTUI_AI_CREDENTIALS_H
++#define NEXTUI_AI_CREDENTIALS_H
++
++#include <errno.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/stat.h>
++
++/* Plain data, never sourced as shell code. No keys leave the native caller. */
++static inline const char *nextui_ai_key_name(const char *provider) {
++    if (!strcmp(provider, "deepseek")) return "DEEPSEEK_API_KEY";
++    if (!strcmp(provider, "bailian")) return "DASHSCOPE_API_KEY";
++    if (!strcmp(provider, "custom")) return "CUSTOM_API_KEY";
++    return NULL;
++}
++
++static inline int nextui_ai_keys_path(char *path, size_t size) {
++    const char *override = getenv("NEXTUI_AI_KEYS_FILE");
++    const char *shared = getenv("SHARED_USERDATA_PATH");
++    if (!shared || !*shared) shared = "/mnt/SDCARD/.userdata/shared";
++    int n = override && *override ? snprintf(path, size, "%s", override) :
++        snprintf(path, size, "%s/ai-keys.txt", shared);
++    return n >= 0 && (size_t)n < size;
++}
++
++/* 1: nonempty shared key, 0: absent/empty (legacy fallback), -1: invalid.
++ * Read on demand so changing the public file does not require app settings
++ * to be rewritten. Limits bound IO and prevent truncated credentials. */
++static inline int nextui_ai_read_key(const char *provider, char *out, size_t size) {
++    if (!out || !size) return -1;
++    out[0] = 0;
++    const char *name = nextui_ai_key_name(provider);
++    if (!name) return -1;
++    char path[1200];
++    if (!nextui_ai_keys_path(path, sizeof(path))) return -1;
++    FILE *file = fopen(path, "rb");
++    if (!file) return errno == ENOENT ? 0 : -1;
++    struct stat info;
++    if (fstat(fileno(file), &info) || !S_ISREG(info.st_mode) || info.st_size > 16384) { fclose(file); return -1; }
++    char contents[16385];
++    size_t bytes = fread(contents, 1, sizeof(contents)-1, file);
++    int invalid = ferror(file) || fgetc(file) != EOF || memchr(contents, 0, bytes) != NULL;
++    fclose(file);
++    if (invalid) return -1;
++    contents[bytes] = 0;
++    int found = 0, first = 1, result = 0;
++    char *cursor = contents;
++    while (*cursor) {
++        char *line = cursor;
++        char *next = strchr(cursor, '\n');
++        if (next) { *next = 0; cursor = next+1; } else cursor += strlen(cursor);
++        if (strlen(line) > 1022) { result = -1; break; }
++        char *p = line;
++        if (first && !strncmp(p, "\xef\xbb\xbf", 3)) p += 3;
++        first = 0;
++        while (*p == ' ' || *p == '\t') p++;
++        if (!*p || *p == '#' || *p == ';' || *p == '\r' || *p == '\n') continue;
++        char *eq = strchr(p, '=');
++        if (!eq) continue;
++        char *end = eq;
++        while (end > p && (end[-1] == ' ' || end[-1] == '\t')) end--;
++        *end = 0;
++        if (strcmp(p, name)) continue;
++        if (found++) { result = -1; break; }
++        p = eq + 1;
++        while (*p == ' ' || *p == '\t') p++;
++        end = p + strlen(p);
++        while (end > p && (end[-1] == ' ' || end[-1] == '\t' || end[-1] == '\r' || end[-1] == '\n')) end--;
++        *end = 0;
++        size_t length = (size_t)(end-p);
++        if (length >= size || length > 511) { result = -1; break; }
++        for (size_t i = 0; i < length; i++) if ((unsigned char)p[i] < 33 || (unsigned char)p[i] > 126) { result = -1; break; }
++        if (result < 0) break;
++        memcpy(out, p, length+1);
++        result = length ? 1 : 0;
++    }
++    if (result < 0) out[0] = 0;
++    return result;
++}
++
++static inline const char *nextui_ai_provider_for_url(const char *url) {
++    const char *deepseek = "https://api.deepseek.com";
++    const char *bailian = "https://dashscope.aliyuncs.com";
++    size_t n = strlen(deepseek);
++    if (!strncmp(url, deepseek, n) && (url[n] == '/' || !url[n])) return "deepseek";
++    n = strlen(bailian);
++    if (!strncmp(url, bailian, n) && (url[n] == '/' || !url[n])) return "bailian";
++    return NULL;
++}
++
++#endif
+--- /dev/null
++++ b/ports/pocketjs-brick/workshop/voice/shared_keys.go
+@@ -0,0 +1,80 @@
++package main
++
++import (
++	"bytes"
++	"errors"
++	"io"
++	"net/url"
++	"os"
++	"path/filepath"
++	"strings"
++)
++
++// Only provider-owned endpoints receive a shared Bailian credential.
++func trustedBailianEndpoint(endpoint string) bool {
++	u, err := url.Parse(endpoint)
++	if err != nil || u.Scheme != "wss" || u.User != nil || (u.Port() != "" && u.Port() != "443") {
++		return false
++	}
++	host := u.Hostname()
++	return host == "dashscope.aliyuncs.com" || host == "dashscope-intl.aliyuncs.com" || host == "dashscope-us.aliyuncs.com" || (strings.HasSuffix(host, ".maas.aliyuncs.com") && !strings.ContainsAny(host, " /\\"))
++}
++
++func readSharedBailian(shared string) (string, error) {
++	path := os.Getenv("NEXTUI_AI_KEYS_FILE")
++	if path == "" {
++		path = filepath.Join(shared, "ai-keys.txt")
++	}
++	file, err := os.Open(path)
++	if errors.Is(err, os.ErrNotExist) {
++		return "", nil
++	}
++	if err != nil {
++		return "", err
++	}
++	defer file.Close()
++	stat, err := file.Stat()
++	if err != nil {
++		return "", err
++	}
++	if !stat.Mode().IsRegular() || stat.Size() > 16384 {
++		return "", errors.New("invalid shared credentials file")
++	}
++	raw, err := io.ReadAll(io.LimitReader(file, 16385))
++	if err != nil {
++		return "", err
++	}
++	if len(raw) > 16384 || bytes.IndexByte(raw, 0) >= 0 {
++		return "", errors.New("invalid shared credentials file")
++	}
++	raw = bytes.TrimPrefix(raw, []byte{0xef, 0xbb, 0xbf})
++	key, found := "", false
++	for _, line := range strings.Split(string(raw), "\n") {
++		if len(line) > 1022 {
++			return "", errors.New("shared credentials line too long")
++		}
++		line = strings.TrimLeft(line, " \t")
++		if strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") {
++			continue
++		}
++		name, value, ok := strings.Cut(line, "=")
++		if !ok || strings.TrimRight(name, " \t") != "DASHSCOPE_API_KEY" {
++			continue
++		}
++		if found {
++			return "", errors.New("duplicate shared credential")
++		}
++		found = true
++		value = strings.Trim(value, " \t\r")
++		if len(value) > 511 {
++			return "", errors.New("shared credential too long")
++		}
++		for _, c := range []byte(value) {
++			if c < 33 || c > 126 {
++				return "", errors.New("invalid shared credential")
++			}
++		}
++		key = value
++	}
++	return key, nil
++}
+--- /dev/null
++++ b/ports/pocketjs-brick/workshop/voice/shared_keys_test.go
+@@ -0,0 +1,55 @@
++package main
++
++import (
++	"os"
++	"path/filepath"
++	"strings"
++	"testing"
++)
++
++func TestSharedKeyPriorityAndReload(t *testing.T) {
++	t.Setenv("NEXTUI_AI_KEYS_FILE", "")
++	dir := t.TempDir()
++	os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"asrKey":"legacy","asrEndpoint":"wss://workspace.ap-southeast-1.maas.aliyuncs.com/api-ws/v1/inference"}`), 0600)
++	v := &Voice{data: dir, shared: dir}
++	if v.config().AsrKey != "legacy" {
++		t.Fatal("legacy fallback")
++	}
++	path := filepath.Join(dir, "ai-keys.txt")
++	os.WriteFile(path, []byte("\xef\xbb\xbf# config\r\nDASHSCOPE_API_KEY = shared-one\r\n"), 0600)
++	got := v.config()
++	if got.AsrKey != "shared-one" || got.AsrEndpoint != "wss://workspace.ap-southeast-1.maas.aliyuncs.com/api-ws/v1/inference" || got.AsrModel != "qwen-audio-3.1-asr-flash-message" {
++		t.Fatal("shared priority must preserve region and model")
++	}
++	os.WriteFile(path, []byte("DASHSCOPE_API_KEY=shared-two\n"), 0600)
++	if v.config().AsrKey != "shared-two" {
++		t.Fatal("must reload")
++	}
++	os.WriteFile(path, []byte("DASHSCOPE_API_KEY=\n"), 0600)
++	if v.config().AsrKey != "legacy" {
++		t.Fatal("empty fallback")
++	}
++	os.WriteFile(path, []byte("DASHSCOPE_API_KEY=one\nDASHSCOPE_API_KEY=two\n"), 0600)
++	if got := v.config(); got.AsrKey != "" || got.KeyError == "" {
++		t.Fatal("invalid common key must not fallback")
++	}
++}
++
++func TestSharedParserBoundsAndLiteralValues(t *testing.T) {
++	dir := t.TempDir()
++	path := filepath.Join(dir, "ai-keys.txt")
++	t.Setenv("NEXTUI_AI_KEYS_FILE", path)
++	for _, raw := range []string{"DASHSCOPE_API_KEY=a b", "DASHSCOPE_API_KEY=a\x00b", "DASHSCOPE_API_KEY=" + strings.Repeat("x", 512), strings.Repeat("#", 16385)} {
++		os.WriteFile(path, []byte(raw), 0600)
++		if key, err := readSharedBailian(dir); err == nil || key != "" {
++			t.Fatal("invalid credential must fail closed")
++		}
++	}
++	os.WriteFile(path, []byte("DASHSCOPE_API_KEY=$(touch-never-executed)\n"), 0600)
++	if key, err := readSharedBailian(dir); err != nil || key != "$(touch-never-executed)" {
++		t.Fatal("literal data")
++	}
++	if trustedBailianEndpoint("wss://dashscope.aliyuncs.com.evil.example/api-ws/v1/inference") || trustedBailianEndpoint("wss://user@dashscope.aliyuncs.com/api-ws/v1/inference") {
++		t.Fatal("credential origin boundary")
++	}
++}

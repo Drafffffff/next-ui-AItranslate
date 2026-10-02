@@ -1,0 +1,117 @@
+diff --git a/src/system/sdl/main.c b/src/system/sdl/main.c
+index ed61389..e4a24a0 100644
+--- a/src/system/sdl/main.c
++++ b/src/system/sdl/main.c
+@@ -595,8 +595,12 @@ static void initGPU()
+             | (!soft && vsync ? SDL_RENDERER_PRESENTVSYNC : 0)
+         );
+ 
++        if(!platform.screen.renderer.sdl && !soft)
++            platform.screen.renderer.sdl = SDL_CreateRenderer(platform.window,-1,SDL_RENDERER_SOFTWARE);
++        if(!platform.screen.renderer.sdl){SDL_Log("Renderer initialization failed: %s",SDL_GetError());exit(EXIT_FAILURE);}
+         platform.screen.texture.sdl = SDL_CreateTexture(platform.screen.renderer.sdl, SDL_PIXELFORMAT_ABGR8888,
+             SDL_TEXTUREACCESS_STREAMING, TIC80_FULLWIDTH, TIC80_FULLHEIGHT);
++        if(!platform.screen.texture.sdl){SDL_Log("Texture initialization failed: %s",SDL_GetError());exit(EXIT_FAILURE);}
+     }
+ 
+ #if defined(TOUCH_INPUT_SUPPORT)
+@@ -978,6 +982,12 @@ static bool isControllerActive(SDL_GameController* controller)
+     return false;
+ }
+ 
++static SDL_Joystick *brick_joystick;
++static bool isBrickController(SDL_GameController *controller)
++{
++    return brick_joystick && SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(controller)) == SDL_JoystickInstanceID(brick_joystick);
++}
++
+ static void processGamepad()
+ {
+     {
+@@ -987,7 +997,7 @@ static void processGamepad()
+         {
+             SDL_GameController* controller = platform.gamepad.ports[i];
+ 
+-            if(controller && SDL_GameControllerGetAttached(controller))
++            if(controller && SDL_GameControllerGetAttached(controller) && !isBrickController(controller))
+             {
+                 SDL_JoystickID id = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(controller));
+ 
+@@ -1023,7 +1033,7 @@ static void processGamepad()
+ 
+             SDL_GameController* controller = SDL_GameControllerFromInstanceID(id);
+ 
+-            if(controller && SDL_GameControllerGetAttached(controller))
++            if(controller && SDL_GameControllerGetAttached(controller) && !isBrickController(controller))
+             {
+                 tic80_gamepad* gamepad = NULL;
+ 
+@@ -1128,6 +1138,16 @@ static void processGamepad()
+         input->gamepads.data |= platform.gamepad.touch.joystick.data;
+ #endif
+         input->gamepads.data |= platform.gamepad.joystick.data;
++        if(brick_joystick && SDL_JoystickGetAttached(brick_joystick)) {
++            tic80_gamepad *p=&input->gamepads.first;
++            Uint8 hat=SDL_JoystickGetHat(brick_joystick,0);
++            p->up |= !!(hat & SDL_HAT_UP); p->down |= !!(hat & SDL_HAT_DOWN);
++            p->left |= !!(hat & SDL_HAT_LEFT); p->right |= !!(hat & SDL_HAT_RIGHT);
++            p->a |= SDL_JoystickGetButton(brick_joystick,1);
++            p->b |= SDL_JoystickGetButton(brick_joystick,0);
++            p->x |= SDL_JoystickGetButton(brick_joystick,3);
++            p->y |= SDL_JoystickGetButton(brick_joystick,2);
++        }
+     }
+ }
+ 
+@@ -1383,6 +1403,14 @@ static void pollEvents()
+         case SDL_DROPFILE:
+             studio_load(platform.studio, event.drop.file);
+             break;
++        case SDL_JOYBUTTONDOWN:
++        case SDL_JOYBUTTONUP:
++            if(brick_joystick && event.jbutton.which == SDL_JoystickInstanceID(brick_joystick)) {
++                if(event.jbutton.button==8 && event.type==SDL_JOYBUTTONDOWN) studio_exit(platform.studio);
++                if(event.jbutton.button==6 || event.jbutton.button==7)
++                    handleKeydown(event.jbutton.button==6?SDLK_SPACE:SDLK_r,event.type==SDL_JOYBUTTONDOWN,platform.keyboard.state,platform.keyboard.pressed);
++            }
++            break;
+         case SDL_QUIT:
+             studio_exit(platform.studio);
+             break;
+@@ -2130,6 +2158,10 @@ static s32 start(s32 argc, char **argv, const char* folder)
+         SDL_Log("Unable to initialize SDL Game Controller: %i, %s\n", result, SDL_GetError());
+     }
+ 
++    if(getenv("TIC80_BRICK")) {
++        for(int i=0;i<SDL_NumJoysticks();i++)
++            if(strcmp(SDL_JoystickNameForIndex(i),"TRIMUI Player1")==0){brick_joystick=SDL_JoystickOpen(i);break;}
++    }
+     for(s32 i = 0; i < COUNT_OF(platform.gamepad.mapping); i++)
+         platform.gamepad.mapping[i] = -1;
+ 
+@@ -2186,9 +2218,17 @@ static s32 start(s32 argc, char **argv, const char* folder)
+                 const u64 Delta = SDL_GetPerformanceFrequency() / TIC80_FRAMERATE;
+                 u64 nextTick = SDL_GetPerformanceCounter();
+ 
++                const char *test_limit=getenv("TIC80_TEST_FRAMES");
++                unsigned test_frames=0,limit=test_limit?(unsigned)atoi(test_limit):0;
+                 while (!studio_alive(platform.studio))
+                 {
+                     gpuTick();
++                    if(limit && ++test_frames>=limit){
++                        const char *dump=getenv("TIC80_TEST_DUMP");
++                        if(dump){const tic_mem *cart=studio_mem(platform.studio);SDL_Surface *shot=SDL_CreateRGBSurfaceWithFormatFrom((void*)cart->product.screen,TIC80_FULLWIDTH,TIC80_FULLHEIGHT,32,TIC80_FULLWIDTH*4,SDL_PIXELFORMAT_ABGR8888);if(shot){SDL_SaveBMP(shot,dump);SDL_FreeSurface(shot);}}
++                        printf("PASS: TIC-80 SDL loop %u frames\n",test_frames);
++                        studio_exit(platform.studio);
++                    }
+ 
+                     s64 delay = (nextTick += Delta) - SDL_GetPerformanceCounter();
+ 
+@@ -2232,6 +2272,7 @@ static s32 start(s32 argc, char **argv, const char* folder)
+         }
+     }
+ 
++    if(brick_joystick){SDL_JoystickClose(brick_joystick);brick_joystick=NULL;}
+     return 0;
+ }
+ 

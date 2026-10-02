@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")"
+TASK_DATA="${SHARED_USERDATA_PATH:-/mnt/SDCARD/.userdata/shared}/tic80-studio"
+mkdir -p "$TASK_DATA"
+export LD_LIBRARY_PATH="/mnt/SDCARD/.system/tg5040/lib:/usr/trimui/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export TIC80_BRICK=1
+export TIC80_CA_BUNDLE="$PWD/certs/cacert.pem"
+export LD_PRELOAD="$PWD/sdl-nosensor.so${LD_PRELOAD:+:$LD_PRELOAD}"
+exec ./menu-exit.elf "$PWD/tic80.elf" --skip --fullscreen --fs "$TASK_DATA" --cmd surf > "$TASK_DATA/app.log" 2>&1

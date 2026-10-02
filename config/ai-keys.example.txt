@@ -1,0 +1,6 @@
+# 复制到 SD 卡 .userdata/shared/ai-keys.txt，填入实际 Key。
+# 按字面读取，无需引号、export 或转义。
+DEEPSEEK_API_KEY=
+DASHSCOPE_API_KEY=
+# 可选：AI 翻译自定义服务
+CUSTOM_API_KEY=

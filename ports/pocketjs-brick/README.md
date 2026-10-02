@@ -1,6 +1,6 @@
 # PocketJS / NextUI / TrimUI Brick：第一阶段
 
-本目录是 **PocketJS 原生 UI 核心 + SDL2 显示验证程序**。仅面向运行 NextUI 的 TrimUI Brick（`tg5040`）。当前没有接入 TypeScript/QuickJS 应用，也不是上游已支持的正式目标。
+本目录是 **PocketJS 原生 UI 核心 + SDL2 显示验证程序**。仅面向运行 NextUI 的 TrimUI Brick（`tg5040`）。本目录的 Smoke 程序保留第一阶段验证用途；完整的 TypeScript/QuickJS 聊天应用请看 [PocketJS App](APP.md)。Brick 尚不是上游已支持的正式目标。
 
 [阶段计划](../../docs/POCKETJS-BRICK-PLAN.md)。
 
@@ -46,7 +46,7 @@ Tools/tg5040/PocketJS Smoke.pak/
 
 开机，在 NextUI 的 Tools 中启动 **PocketJS Smoke**。方向键切换三个色块，A 改变选中色块，B 或 MENU 退出。底部红、绿、蓝、白色条用于检查颜色是否正常。
 
-文字说明由宿主 SDL_ttf 绘制，使用卡上的 `.system/res/font1.ttf`；PocketJS 自身字体与动态中文能力会在后续阶段接入。
+文字说明由宿主 SDL_ttf 绘制，使用卡上的 `.system/res/font1.ttf`；PocketJS 自身字体已在独立的 PocketJS App 包中接入，聊天应用已经支持动态中文及缺字补字。
 
 日志位于 SD 卡：
 

@@ -129,6 +129,8 @@ void hdmimon(void) {
 #define PWR_UPDATE_FREQ_INGAME 20
 
 int main(int argc , char* argv[]) {
+	/* Read-only diagnostic before display, input or game initialization. */
+	if (argc == 2 && !strcmp(argv[1], "--ai-credentials-status")) return AI_credentialsStatus();
 	//static char asoundpath[MAX_PATH];
 	//sprintf(asoundpath, "%s/.asoundrc", getenv("HOME"));
 	//LOG_info("minarch: need asoundrc at %s\n", asoundpath);

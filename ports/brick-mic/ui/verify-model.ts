@@ -1,0 +1,21 @@
+import {strict as assert} from 'node:assert';
+import {mode,clock,scrollRow,mix,waveformHeight} from './model.ts';
+assert.equal(mode({state:'bluetooth'}),'bluetooth');
+assert.equal(mode({state:'service'}),'service');
+assert.equal(mode({state:'ready',connected:false}),'waiting');
+assert.equal(mode({state:'ready',connected:true}),'ready');
+assert.equal(mode({state:'ready',connected:true,text:'识别文字'}),'result');
+assert.equal(mode({state:'recording',connected:true}),'recording');
+assert.equal(mode({state:'processing',connected:true}),'processing');
+assert.equal(mode({state:'ready',error:'断线'}),'error');
+assert.equal(mode({state:'poweroff',connected:false}),'poweroff');
+assert.equal(clock(59.9),'00:59');assert.equal(clock(60),'01:00');assert.equal(clock(NaN),'00:00');
+assert.equal(scrollRow(0,-1,30),0);assert.equal(scrollRow(26,1,30),26);assert.equal(scrollRow(4,1,2),0);
+assert.equal(mix('#000000','#ffffff',0.5),'#808080');
+console.log('PASS: startup, connection, recording, result/error states, clock and bounded text scrolling');
+
+assert.equal(waveformHeight(0),6);assert.equal(waveformHeight(160),6);assert.equal(waveformHeight(-1),6);
+assert.equal(waveformHeight(NaN),6);assert.equal(waveformHeight(Infinity),6);
+assert.equal(waveformHeight(6500),112);assert.equal(waveformHeight(30000),112);
+assert(waveformHeight(1000)<waveformHeight(4000));
+console.log('PASS: waveform follows real microphone level, silence baseline and bounded heights');

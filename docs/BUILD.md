@@ -122,17 +122,23 @@ workspace/all/nextui/build/tg5040/nextui.elf
 
 如果看不到 `.system`，请开启“显示隐藏文件”。如需恢复，关机后将备份的原文件复制回对应位置。
 
-在 SD 卡上创建或编辑 `.userdata/shared/ai-translate.txt`：
+在 SD 卡上创建或编辑 `.userdata/shared/ai-keys.txt`：
+
+```ini
+DEEPSEEK_API_KEY=填入你的DeepSeekAPIKey
+DASHSCOPE_API_KEY=
+```
+
+再在 `.userdata/shared/ai-translate.txt` 中启用翻译：
 
 ```ini
 aiEnable=1
 aiProvider=1
-aiDeepseekKey=填入你的DeepSeekAPIKey
 ```
 
 安全弹出 SD 卡，插回掌机并开机。连接 Wi-Fi、进入游戏，按住 **MENU** 再按 **X** 翻译。新配置默认绑定 MENU+X；已有自定义快捷键配置会保留，可在游戏菜单中重新绑定。
 
-如需同时保留百炼 Key，可在同一配置文件加上 `aiBailianKey=你的百炼APIKey`。`aiProvider=1` 使用 DeepSeek，`aiProvider=0` 使用百炼；两个 Key 可以并存，实际请求使用当前选择的服务。
+如需同时保留百炼 Key，在公共文件中填入 `DASHSCOPE_API_KEY=你的百炼APIKey`。`aiProvider=1` 使用 DeepSeek，`aiProvider=0` 使用百炼；两个 Key 可以并存，实际请求使用当前选择的服务。
 
 ## 7. 修改代码后重新编译
 
