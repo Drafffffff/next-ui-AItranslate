@@ -74,7 +74,11 @@ def dependency_check():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('target', choices=['mac', 'brick'])
+    parser.add_argument('--revision', help='Full manifest revision for exported source without Git metadata')
     args = parser.parse_args()
+    if args.revision and (len(args.revision) != 40 or any(c not in '0123456789abcdef' for c in args.revision)):
+        parser.error('--revision must be 40 lower-case hexadecimal characters')
+    dependency_check()
     core = source(args.target)
     if args.target == 'mac':
         run(['make', 'clean'], core)
@@ -94,8 +98,7 @@ def main():
             sdl_flags = shlex.split(subprocess.check_output(['sdl2-config', '--cflags', '--libs'], text=True))
             run(runner_args[:-1] + [OUTPUT / 'core-runner-window', '-DNP_SDL'] + sdl_flags)
     else:
-        dependency_check()
-        revision = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT)
+        revision = (args.revision[:7] + '\n').encode() if args.revision else subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT)
         (ROOT / 'workspace/hash.txt').write_bytes(revision)
         # Root mounted at a constant path; use argument arrays to preserve spaces.
         script = ('set -e; cd /work/' + str(core.relative_to(ROOT)) + '; '

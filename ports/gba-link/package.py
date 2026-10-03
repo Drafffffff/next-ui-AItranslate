@@ -30,6 +30,8 @@ shutil.copy2(ROOT/'ports/gba-link/install.py',package/'install.py')
 shutil.copy2(ROOT/'ports/gba-link/README.md',package/'README.md')
 shutil.copy2(ROOT/'ports/gba-link/compatibility.md',package/'compatibility.md')
 source_dir=package/'source';source_dir.mkdir()
+(source_dir/'REVISION.txt').write_text(revision+'\n')
+(source_dir/'BUILD.md').write_text('Extract nextui-source.tar.gz into a fresh directory. Dependencies are fetched at pinned commits by build.py.\nRun python3 ports/gba-link/build.py brick --revision '+revision+'\nFor Mac: python3 ports/gba-link/build.py mac. Docker SDK, Apple clang, Homebrew OpenSSL/SDL2 and Python are required.\nThe included dependency archives supply the source of linked libraries; the normal script uses pinned Git checkouts.\n')
 shutil.copy2(OUT/'gpsp-source.tar.gz',source_dir/'gpsp-source.tar.gz')
 subprocess.run(['git','archive','--format=tar.gz','-o',str(source_dir/'nextui-source.tar.gz'),revision],cwd=ROOT,check=True)
 for name,folder in [('libretro-common','libretro-common'),('libchdr','libchdr'),('rcheevos','rcheevos/src')]:
