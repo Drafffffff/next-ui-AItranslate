@@ -6,9 +6,9 @@
 
 优先采用现有 minarch + 固定新版 gpSP，接入 libretro `RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE`。不需要把系统换成 RetroArch。已实现 NextUI 的主机/加入菜单、内容校验、断线、暂停与自建中继。现有 AI 翻译入口保留；联机翻译期间双方暂停，前端继续处理网络。AI 自动玩在联机时禁用。
 
-Mac 的真实双核心测试、tg5040 ARM64 交叉编译、实际 ARM64 核心双端串口测试均通过。Mac 回归包含暂停、分片/延迟中继、ROM/模式/核心协议/核心二进制不匹配、突然断线、心跳超时及异常帧。另在一次性容器网络中使用 Linux netem 测试 25ms 延迟和 2% 丢包，确认实际出现丢包后双端仍交换了正确的 GBA 串口数据。详细数值在更新包 `validation/`。
+Mac 的真实双核心测试、tg5040 ARM64 交叉编译、实际 ARM64 核心双端串口测试均通过。Mac 回归包含暂停、分片/延迟中继、ROM/模式/核心协议/核心二进制不匹配、突然断线、心跳超时及异常帧；另拒绝 RFU 截断广播、过长客户端数据与非法玩家编号，防止核心接收路径越界。另在一次性容器网络中使用 Linux netem 测试 25ms 延迟和 2% 丢包，确认实际出现丢包后双端仍交换了正确的 GBA 串口数据。实际 ma_saves.c 持久化测试另验证联机禁读写、旧自动恢复隔离、写入失败保留保护及正常单人保存后解除保护。详细数值在更新包 `validation/`。
 
-测试 ROM 是本项目原创 ARM homebrew，它直接操作 GBA SIO 寄存器；不是前端伪造网络数据。附带原创 Link Duel 测试 ROM：A 攻击，红条是自己血量、蓝条是对手血量、绿色标记表示收到对端串口数据。它既验证双向串口，也验证真实 GBA 按键能经串口改变对端血量；不代表商业游戏已完成对战。电脑已有的《高级战争》汉化版和《马里奥网球》也用于游戏菜单/联机入口验证，结果单独记录在 `game-validation.json`。测试游戏的红/蓝条分别表示本机/对手血量，A 每按一次攻击一次；绿色标记表示收到对端数据。测试 ROM 可从包内 `tests/link-probe.gba` 手动拷贝到 `Roms/GBA/`，两端核心 `Link Cable Connectivity` 选择 `Link Cable - Pokemon Gen3 mode`（内部值 mul_poke）再开联机。商业游戏 ROM、Nintendo BIOS 和用户存档不会进入更新包。
+测试 ROM 是本项目原创 ARM homebrew，它直接操作 GBA SIO 寄存器；不是前端伪造网络数据。附带原创 Link Duel 测试 ROM：A 攻击，红条是自己血量、蓝条是对手血量、绿色标记表示收到对端串口数据。它既验证双向串口，也验证真实 GBA 按键能经串口改变对端血量；不代表商业游戏已完成对战。电脑已有的《马里奥网球 力量之旅》BTME 已用两个独立 Mac gpSP 客户端进入真实无线 Exhibition：双方各自选角色、P2 移动、P1 发球得分并赢下一局、随后 P2 发球得分；两端比分一致。整场比赛结束尚未测到，商业 RFU 在 ARM64/Brick 上也未验收。《高级战争》汉化版仅完成菜单流程。结果与输入记录在更新包 `validation/`，复现步骤见随包 `GAME-VALIDATION.md`。测试游戏的红/蓝条分别表示本机/对手血量，A 每按一次攻击一次；绿色标记表示收到对端数据。测试 ROM 可从包内 `tests/link-probe.gba` 手动拷贝到 `Roms/GBA/`，两端核心 `Link Cable Connectivity` 选择 `Link Cable - Pokemon Gen3 mode`（内部值 mul_poke）再开联机。商业游戏 ROM、Nintendo BIOS 和用户存档不会进入更新包。
 
 还没有两台 Brick 真机、真实局域网或真实公网测试。容器 ARM64 测试不等于 Brick 性能测试；本机中继和 netem 不等于真实公网。显示、实体按键、功耗、Wi-Fi 干扰及完整游戏兼容仍需真机验收。
 
@@ -50,6 +50,7 @@ Mac 的真实双核心测试、tg5040 ARM64 交叉编译、实际 ARM64 核心�
 | Advance Wars 2：AW2E / AW2P | auto / mul_aw2 | 源码支持；尚未验证此 ID 的实际游戏 |
 | Pokemon Ruby/Sapphire | auto / mul_poke | 源码支持；未验证商业交换/对战 |
 | Pokemon Emerald / FireRed / LeafGreen | 按 ROM 的 auto override；Wireless Adapter 玩法通常为 RFU | 源码支持；不能把有线柜台的所有玩法当作 RFU 支持 |
+| Mario Tennis Power Tour：BTME | auto / rfu | Mac 真实双端配对、角色选择、双方操作及计分通过；整场结束/真机待验收 |
 | 其他表内 RFU 游戏 | auto / rfu | 源码候选，逐款玩法验证待执行 |
 
 NAS 上名为“高级战争2”的文件实际 header 是 BGWJ（日版 1+2 合集），不是 AW2E/AW2P；不能只按中文文件名当作 AW2 支持证据。两端必须使用逐字节相同的 ROM，包含补丁版本。
@@ -112,13 +113,14 @@ python3 ports/gba-link/build.py mac
 python3 ports/gba-link/tests/run-tests.py
 python3 ports/gba-link/build.py brick
 python3 ports/gba-link/tests/run-arm.py
+python3 ports/gba-link/tests/run-save-guard.py
 python3 ports/gba-link/tests/run-arm.py --netem
 python3 ports/gba-link/package.py
 ```
 
 netem 仅修改一次性 Docker 容器的网络命名空间，需要 NET_ADMIN；脚本在该容器内安装 iproute2 测试工具，不修改 Mac 网络。Mac gpSP 用解释器，Brick core 用 ARM64 dynarec；ARM64 测试使用目标 SDK 的 glibc 2.28 loader，避免宿主 libc 混用。包生成要求源码工作区干净、已提交；包含 GPL 源码、依赖版本、许可证、校验值和验证日志。
 
-可选 SDL 桌面测试窗口：`NP_WINDOW=1 NP_GAME=1 NP_CAPTURE=/tmp/host.bmp build/gba-link/core-runner-window CORE ROM host 127.0.0.1 55435 auto 3600`，另一进程用 join。X=A、Z=B、Return=Start，方向键移动，F12截图。商业 ROM 的 `NP_GAME` 返回成功仅表示运行了画面，不能据此报告对战通过。`NP_FAST` 仅用于菜单定位；玩法验收须使用正常帧速。
+可选 SDL 桌面测试窗口：`NP_WINDOW=1 NP_GAME=1 NP_CAPTURE=/tmp/host.bmp build/gba-link/core-runner-window CORE ROM host 127.0.0.1 55435 auto 3600`，另一进程用 join。X=A、Z=B、Return=Start，方向键移动，F12截图。无窗口调试可用 `NP_CONTROL` 指定文本文件，每行写 `命令序号 按键位图 持续帧数`；`NP_INPUT_LOG` 记录实际执行帧，便于重放。`NP_CAPTURE_EVERY` 配合 `NP_LIVE_CAPTURE=1` 原子更新当前截图。商业 ROM 的 `NP_GAME` 返回成功仅表示运行了画面，不能据此报告对战通过。`NP_FAST` 仅用于菜单定位；玩法验收须使用正常帧速。
 
 ## 掌机 ready 后验收
 

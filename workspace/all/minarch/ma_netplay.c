@@ -229,6 +229,25 @@ static void start_core(void) {
     unsigned char value = np.local_pause;
     packet(W_PAUSE, &value, 1);
 }
+/* The pinned gpSP RFU receiver trusts some inner lengths. Validate them
+ * before dispatching to that core, including its 16-byte client data buffer.
+ * RFU commands use a 12-byte prefix (usually padded to 16); data sends are
+ * padded to 104 bytes. Do not mistake padding for the declared payload size. */
+static bool valid_core_packet(const unsigned char *data, size_t len) {
+    if (strcmp(np.cb.protocol_version, "gpSP v1.0") || len < 4 || memcmp(data, "RFU1", 4)) return true;
+    if (len < 12) return false;
+    uint32_t fields[2]; memcpy(fields, data + 4, 8);
+    uint32_t type = ntohl(fields[0]), info = ntohl(fields[1]);
+    if (type > 7) return false;
+    if (type == 0) return len >= 36; /* broadcast: six 32-bit words */
+    if (type == 2) return (info >> 16) < 4; /* assigned RFU slot */
+    if (type == 5) return len >= 12 + (info & 0x7f); /* host payload <=127, storage=128 */
+    if (type == 6) {
+        size_t bytes = info >> 24;
+        return bytes <= 16 && len >= 12 + bytes; /* client storage=16 */
+    }
+    return true;
+}
 static void consume(void) {
     while (Netplay_active() && np.rx_end >= 8) {
         uint32_t header[2]; memcpy(header, np.rx, 8);
@@ -240,6 +259,7 @@ static void consume(void) {
         }
         if (np.rx_end < len + 8) return;
         if (type == W_DATA) {
+            if (!valid_core_packet(np.rx + 8, len)) { end_session("Invalid gpSP RFU payload", true); return; }
             np.received++;
             np.cb.receive(np.rx + 8, len, np.host ? 1 : 0);
         } else if (type == W_PAUSE) {

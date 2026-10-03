@@ -8,7 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 #ifdef NP_SDL
-#include <SDL2/SDL.h>
+#include <SDL.h>
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
@@ -20,6 +20,8 @@ static size_t pixel_pitch;
 struct Hold { unsigned start, end, mask; };
 static struct Hold holds[1024];
 static unsigned hold_count;
+static unsigned control_sequence, control_until, control_mask;
+static FILE *input_history;
 
 static const char *serial = "mul_poke";
 static const char *system_dir = ".";
@@ -63,12 +65,22 @@ static void video(const void *data, unsigned w, unsigned h, size_t pitch) {
     if (data && w <= 240 && h <= 160 && pitch*h <= sizeof(pixels)) {
         memcpy(pixels, data, pitch*h); pixel_width=w; pixel_height=h; pixel_pitch=pitch;
 #ifdef NP_SDL
-        if (getenv("NP_CAPTURE_EVERY") && getenv("NP_CAPTURE") && frames && frames % (unsigned)atoi(getenv("NP_CAPTURE_EVERY")) == 0) {
-            char path[1024]; snprintf(path,sizeof(path),"%s-%06u.bmp",getenv("NP_CAPTURE"),frames);
+        unsigned capture_every=getenv("NP_CAPTURE_EVERY") ? (unsigned)atoi(getenv("NP_CAPTURE_EVERY")) : 0;
+        if (capture_every && getenv("NP_CAPTURE") && frames && frames % capture_every == 0) {
+            char path[1024];
+            if (getenv("NP_LIVE_CAPTURE")) snprintf(path,sizeof(path),"%s.tmp",getenv("NP_CAPTURE"));
+            else snprintf(path,sizeof(path),"%s-%06u.bmp",getenv("NP_CAPTURE"),frames);
             SDL_Surface *shot=SDL_CreateRGBSurfaceWithFormatFrom(pixels,(int)w,(int)h,
                 pixel_format==RETRO_PIXEL_FORMAT_XRGB8888?32:16,(int)pitch,
                 pixel_format==RETRO_PIXEL_FORMAT_XRGB8888?SDL_PIXELFORMAT_ARGB8888:SDL_PIXELFORMAT_RGB565);
-            if (shot) { SDL_SaveBMP(shot,path); SDL_FreeSurface(shot); }
+            if (shot) {
+                SDL_SaveBMP(shot,path); SDL_FreeSurface(shot);
+                if (getenv("NP_LIVE_CAPTURE")) {
+                    rename(path,getenv("NP_CAPTURE"));
+                    printf("SNAPSHOT frame=%u sent=%llu received=%llu\n",frames,
+                           (unsigned long long)Netplay_sent(),(unsigned long long)Netplay_received());
+                }
+            }
         }
         if (renderer) {
             if (!texture) texture = SDL_CreateTexture(renderer,
@@ -97,6 +109,10 @@ static void symbol(void *out, const char *name) {
 int main(int argc, char **argv) {
     if (argc < 6) { fprintf(stderr, "core-runner CORE ROM host|join IP PORT [MODE] [FRAMES]\n"); return 2; }
     setbuf(stdout, NULL);
+    if (getenv("NP_INPUT_LOG")) {
+        input_history=fopen(getenv("NP_INPUT_LOG"),"w");
+        if (!input_history) { perror("input history"); return 2; }
+    }
     if (getenv("NP_SYSTEM")) system_dir=getenv("NP_SYSTEM");
     if (getenv("NP_SCRIPT")) {
         FILE *script=fopen(getenv("NP_SCRIPT"),"r");
@@ -163,6 +179,7 @@ int main(int argc, char **argv) {
     bool pause_requested = false, pause_released = false;
     struct timespec pause_time = {0};
     while (frames < limit && Netplay_state() != NP_ERROR) {
+        if (getenv("NP_STOP_FILE") && access(getenv("NP_STOP_FILE"),F_OK)==0) break;
         Netplay_poll();
         if (host && getenv("NP_PAUSE") && frames >= 60 && !pause_requested) {
             Netplay_pause(true); pause_requested = true;
@@ -177,7 +194,18 @@ int main(int argc, char **argv) {
         if (Netplay_state() != previous) {
             printf("state=%d %s\n", Netplay_state(), Netplay_status()); previous = Netplay_state();
         }
-        button_mask=0;
+        if (getenv("NP_CONTROL")) {
+            FILE *control=fopen(getenv("NP_CONTROL"),"r"); unsigned sequence,mask,duration;
+            if (control) {
+                if (fscanf(control,"%u %u %u",&sequence,&mask,&duration)==3 && sequence!=control_sequence) {
+                    control_sequence=sequence;control_mask=mask;control_until=frames+duration;
+                    printf("INPUT %u %u %u\n",frames,control_until,mask);
+                    if (input_history) { fprintf(input_history,"%u %u %u\n",frames,control_until,mask);fflush(input_history); }
+                }
+                fclose(control);
+            }
+        }
+        button_mask=frames<control_until ? control_mask : 0;
         for (unsigned i=0;i<hold_count;i++) if (frames>=holds[i].start && frames<holds[i].end) button_mask|=holds[i].mask;
 #ifdef NP_SDL
         if (window) {
@@ -203,6 +231,7 @@ int main(int argc, char **argv) {
 #endif
         if (Netplay_active() && !Netplay_paused()) { run(); frames++; }
         else if (++waiting > 1800) break;
+        if (getenv("NP_FAST_UNTIL")) tick.tv_nsec=frames<(unsigned)atoi(getenv("NP_FAST_UNTIL")) ? 1000000 : 16666667;
         nanosleep(&tick, NULL);
     }
 #ifdef NP_SDL
@@ -219,7 +248,8 @@ finished:
     printf("RESULT frames=%u video=%u sent=%llu received=%llu marker=%08x counter=%u paused_ticks=%u status=%s\n",
            frames,video_frames,(unsigned long long)Netplay_sent(),(unsigned long long)Netplay_received(),
            ram ? ram[0] : 0,counter,pause_ticks,Netplay_status());
-    printf("DUEL local_hp=%u peer_hp=%u\n",ram ? ram[4] : 0,ram ? ram[5] : 0);
+    if (!getenv("NP_GAME")) printf("DUEL local_hp=%u peer_hp=%u\n",ram ? ram[4] : 0,ram ? ram[5] : 0);
+    else puts("GAMEPLAY_STATUS: runner verifies emulation only; multiplayer requires game evidence");
     bool passed = frames > 60 && Netplay_sent() > 10 && Netplay_received() > 10 && counter > 10 &&
                   ram && ram[0] == (host ? 0x5678U : 0x1234U);
     if (getenv("NP_DUEL")) passed = passed && ram && ram[4]==(host ? 19U : 18U) && ram[5]==(host ? 18U : 19U);
@@ -237,5 +267,6 @@ finished:
     if (window) SDL_DestroyWindow(window);
     SDL_Quit();
 #endif
+    if (input_history) fclose(input_history);
     return passed ? 0 : 1;
 }

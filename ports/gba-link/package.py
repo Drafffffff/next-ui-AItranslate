@@ -29,6 +29,7 @@ manifest={'schema':1,'experimental':True,'platform':'tg5040','revision':revision
 shutil.copy2(ROOT/'ports/gba-link/install.py',package/'install.py')
 shutil.copy2(ROOT/'ports/gba-link/README.md',package/'README.md')
 shutil.copy2(ROOT/'ports/gba-link/compatibility.md',package/'compatibility.md')
+shutil.copy2(ROOT/'ports/gba-link/GAME-VALIDATION.md',package/'GAME-VALIDATION.md')
 source_dir=package/'source';source_dir.mkdir()
 (source_dir/'REVISION.txt').write_text(revision+'\n')
 (source_dir/'BUILD.md').write_text('Extract nextui-source.tar.gz into a fresh directory. Dependencies are fetched at pinned commits by build.py.\nRun python3 ports/gba-link/build.py brick --revision '+revision+'\nFor Mac: python3 ports/gba-link/build.py mac. Docker SDK, Apple clang, Homebrew OpenSSL/SDL2 and Python are required.\nThe included dependency archives supply the source of linked libraries; the normal script uses pinned Git checkouts.\n')
@@ -46,7 +47,7 @@ for candidate in ('COPYING','LICENSE','LICENSE.txt'):
 tests=package/'tests';tests.mkdir()
 shutil.copy2(OUT/'link-probe.gba',tests/'link-probe.gba')
 records=package/'validation';records.mkdir()
-for name in ('test-results.json','regression.log','arm-host.log','arm-join.log','arm-test.log','netem-test.log','netem-host.log','netem-join.log','game-validation.json','install-test.log'):
+for name in ('test-results.json','regression.log','arm-host.log','arm-join.log','arm-test.log','netem-test.log','netem-host.log','netem-join.log','game-validation.json','install-test.log','save-guard-test.log','tennis-wireless-host.log','tennis-wireless-join.log','tennis-wireless-host-input.txt','tennis-wireless-join-input.txt'):
     path=OUT/name
     if path.is_file():shutil.copy2(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'
