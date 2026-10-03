@@ -14,6 +14,7 @@
 #endif
 
 #include "ma_saves.h"
+#include "ma_netplay.h"
 
 ///////////////////////////////////////
 
@@ -198,6 +199,7 @@ void State_getPath(char* filename) {
 
 #define RASTATE_HEADER_SIZE 16
 int State_read(void) { // from picoarch
+	if (Netplay_busy() || Netplay_used()) return 0;
 	// Block load states in RetroAchievements hardcore mode
 	if (RA_isHardcoreModeActive()) {
 		LOG_info("State load blocked - hardcore mode active\n");
@@ -301,7 +303,24 @@ error:
 	return success;
 }
 
+static int State_linkMarker(char *path, size_t capacity) {
+    int n = snprintf(path, capacity, "%s/%s.gba-link-no-auto", core.states_dir, game.alt_name);
+    return n >= 0 && (size_t)n < capacity;
+}
+int State_prepareLink(void) {
+    char path[MAX_PATH];
+    if (!State_linkMarker(path, sizeof(path))) return 0;
+    FILE *file = fopen(path, "wb");
+    if (!file) return 0;
+    int ok = fputs("Skip stale automatic resume after a link session.\n", file) >= 0 &&
+             fflush(file) == 0 && fsync(fileno(file)) == 0;
+    if (fclose(file)) ok = 0;
+    return ok;
+}
+
 int State_write(void) { // from picoarch
+	// Core link state is not fully serialized. Preserve pre-link resume states.
+	if (Netplay_busy() || Netplay_used()) return 0;
 	if (RA_isHardcoreModeActive()) {
 		Notification_push(NOTIFICATION_ACHIEVEMENT, "Save states disabled in Hardcore mode", NULL);
 		return 0;
@@ -347,6 +366,10 @@ int State_write(void) { // from picoarch
 		unlink(temporary);
 		LOG_error("State save failed; previous state retained\n");
 	}
+	if (success && state_slot == AUTO_RESUME_SLOT) {
+        char marker[MAX_PATH];
+        if (State_linkMarker(marker, sizeof(marker))) unlink(marker);
+    }
 	free(state);
 	sync();
 	fast_forward = was_ff;
@@ -365,7 +388,11 @@ void State_resume(void) {
 	int last_state_slot = state_slot;
 	state_slot = getInt(RESUME_SLOT_PATH);
 	unlink(RESUME_SLOT_PATH);
-	State_read();
+    char marker[MAX_PATH];
+    if (state_slot != AUTO_RESUME_SLOT || (State_linkMarker(marker, sizeof(marker)) && !exists(marker)))
+        State_read();
+    else
+        Notification_push(NOTIFICATION_LOAD_STATE, "Fresh start after GBA Link; local save kept", NULL);
 	state_slot = last_state_slot;
 	Rewind_on_state_change();
 }

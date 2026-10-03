@@ -4,6 +4,8 @@
 #include "ma_input.h"
 #include "ma_config.h"
 #include "ma_runframe.h"
+#include "ma_netplay.h"
+#include "notification.h"
 
 void chooseSyncRef(void) {
 	switch (sync_ref) {
@@ -46,6 +48,18 @@ static void limitFF(void) {
 }
 
 void run_frame(void) {
+	Netplay_poll();
+	static enum NPState previous = NP_IDLE;
+	if (Netplay_state() != previous) {
+		previous = Netplay_state();
+		Notification_push(NOTIFICATION_SETTING, Netplay_status(), NULL);
+	}
+	if (Netplay_busy() || Netplay_used()) {
+		fast_forward = rewind_pressed = rewind_toggle = rewinding = 0;
+		if (Netplay_paused()) { input_poll_callback(); SDL_Delay(5); return; }
+		core.run();
+		return;
+	}
 	// if rewind is toggled, fast-forward toggle must stay off; fast-forward hold pauses rewind
 	int do_rewind = (rewind_pressed || rewind_toggle) && !(rewind_toggle && ff_hold_active);
 	if (do_rewind) {

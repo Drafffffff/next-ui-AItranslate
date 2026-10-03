@@ -11,3 +11,4 @@ int  State_read(void);
 int  State_write(void);
 void State_autosave(void);
 void State_resume(void);
+int State_prepareLink(void);

@@ -7,6 +7,8 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <poll.h>
+#include <errno.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <msettings.h>
@@ -21,6 +23,7 @@
 #include "ma_ai.h"
 #include "ma_video.h"
 #include "ai_credentials.h"
+#include "ma_netplay.h"
 
 /* 临时文件放 SD 卡：设备上的 /tmp 不保证可写、也未必装得下这几百 KB */
 #define AI_TMP_DIR   SDCARD_PATH "/.userdata/ai"
@@ -343,11 +346,13 @@ static void ai_wait_dismiss(SDL_Surface* screen, int seconds) {
 	uint32_t start = SDL_GetTicks();
 	/* 先把热键本身松开，不然会立刻被判成"已按键" */
 	while (!quit && PAD_anyPressed() && SDL_GetTicks() - start < 1500) {
+		Netplay_poll();
 		PAD_poll();
 		GFX_delay();
 	}
 	PAD_reset();
 	while (!quit) {
+		Netplay_poll();
 		GFX_startFrame();
 		PAD_poll();
 		if (PAD_anyPressed()) break;
@@ -835,7 +840,7 @@ static int ai_have_cmd(const char* name) {
 	return system(c) == 0;
 }
 
-static int ai_http_post(const char* url, const char* body_path, int timeout_secs, char* err, int err_cap) {
+static int ai_http_post(const char* url, const char* body_path, int timeout_secs, char* err, int err_cap, void (*tick)(void)) {
 	char cmd[3072];
 	err[0] = '\0';
 
@@ -885,7 +890,23 @@ static int ai_http_post(const char* url, const char* body_path, int timeout_secs
 		return -1;
 	}
 	char status[256] = {0};
-	size_t n = fread(status, 1, sizeof(status) - 1, pipe);
+	size_t n = 0;
+	if (!tick) n = fread(status, 1, sizeof(status) - 1, pipe);
+	else {
+		/* Translation runs on the emulation thread; keep a paused peer alive
+		 * while curl runs. The autoplay worker passes NULL and never calls core callbacks. */
+		struct pollfd descriptor = { .fd=fileno(pipe), .events=POLLIN };
+		while (n < sizeof(status) - 1) {
+			tick();
+			int ready = poll(&descriptor, 1, 50);
+			if (ready < 0 && errno == EINTR) continue;
+			if (ready < 0) break;
+			if (!ready) continue;
+			ssize_t got = read(descriptor.fd, status + n, sizeof(status) - 1 - n);
+			if (got <= 0) break;
+			n += got;
+		}
+	}
 	status[n] = '\0';
 	int rc = pclose(pipe);
 	fclose(auth);
@@ -1660,11 +1681,13 @@ static void ai_crossfade(SDL_Surface* screen, SDL_Surface* over, SDL_Surface* un
 static void ai_hold(SDL_Surface* screen, int hold_secs) {
 	uint32_t start = SDL_GetTicks();
 	while (!quit && PAD_anyPressed() && SDL_GetTicks() - start < 1500) {
+		Netplay_poll();
 		PAD_poll();
 		GFX_delay();
 	}
 	PAD_reset();
 	while (!quit) {
+		Netplay_poll();
 		GFX_startFrame();
 		PAD_poll();
 		if (PAD_anyPressed()) break;
@@ -1758,6 +1781,7 @@ static void ai_dbg_draw(SDL_Surface* dst) {
 /* ------------------------------------------------------------------ 主流程 */
 
 void Menu_aiTranslate(void) {
+	bool link_pause_before = Netplay_localPaused();
 	SDL_Surface* frozen = NULL;
 
 	/* 两个功能共用 /req.json 和 /resp.json，同时跑会互相覆盖 */
@@ -1776,6 +1800,7 @@ void Menu_aiTranslate(void) {
 		return;
 	}
 
+	Netplay_pause(true);
 	mkdir(AI_TMP_DIR, 0755);
 	remove(AI_RESP_PATH);
 	uint32_t t_start = SDL_GetTicks();
@@ -1827,7 +1852,7 @@ void Menu_aiTranslate(void) {
 	{
 		char errbuf[512];
 		int code = ai_http_post(ai_endpoint(), AI_REQ_PATH,
-			ai_timeout(), errbuf, sizeof(errbuf));
+			ai_timeout(), errbuf, sizeof(errbuf), Netplay_busy() ? Netplay_poll : NULL);
 		ai_dbg_http = code;
 		AI_STAGE(AI_DBG_CURL);
 		SDL_BlitSurface(frozen, NULL, screen, NULL);   /* 把"翻译中"抹掉再判断 */
@@ -1956,6 +1981,7 @@ fail:
 	ai_wait_dismiss(screen, AI_WAIT_SECS);
 
 cleanup:
+	Netplay_pause(link_pause_before);
 	if (resp) free(resp);
 	if (over) SDL_FreeSurface(over);
 	if (frozen) {
@@ -2227,7 +2253,7 @@ static int ai_play_worker(void* arg) {
 	/* 3) 请求 */
 	{
 		char errbuf[256];
-		int code = ai_http_post(ai_endpoint(), AI_REQ_PATH, ai_timeout(), errbuf, sizeof(errbuf));
+		int code = ai_http_post(ai_endpoint(), AI_REQ_PATH, ai_timeout(), errbuf, sizeof(errbuf), NULL);
 		ai_dbg_http = code;
 		if (code != 200) { err = 5; goto done; }
 	}
@@ -2332,6 +2358,7 @@ int  AI_playIsActive(void) { return ai_play_active; }
 void AI_playStopFor(const char* why) { ai_play_stop(why); }
 
 void Menu_aiAutoPlay(void) {
+	if (Netplay_busy()) return;
 	if (!ai_on() || !ai_key()[0]) {
 		ai_notify(screen, "AI Translate 未配置",
 			"ai-translate.txt 开启 aiEnable=1，ai-keys.txt 配置 Key");

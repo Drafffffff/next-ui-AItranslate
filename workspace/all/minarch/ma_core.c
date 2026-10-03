@@ -9,6 +9,7 @@
 #include "ma_input.h"
 #include "ma_cheats.h"
 #include "ma_core.h"
+#include "ma_netplay.h"
 
 
 void Core_getName(char* in_name, char* out_name) {
@@ -17,6 +18,8 @@ void Core_getName(char* in_name, char* out_name) {
 	tmp[0] = '\0';
 }
 void Core_open(const char* core_path, const char* tag_name) {
+	Netplay_clear();
+	snprintf(core.image_path, sizeof(core.image_path), "%s", core_path);
 	LOG_info("Core_open\n");
 	core.handle = dlopen(core_path, RTLD_LAZY);
 	
@@ -147,6 +150,7 @@ void Core_load(void) {
 	Core_updateAVInfo();
 }
 void Core_reset(void) {
+	if (Netplay_busy()) return;
 	core.reset();
 	Rewind_on_state_change();
 }
@@ -157,6 +161,7 @@ void Core_unload(void) {
 	//SND_quit();
 }
 void Core_quit(void) {
+	Netplay_stop("Game closed");
 	if (core.initialized) {
 		SRAM_write();
 		Cheats_free();

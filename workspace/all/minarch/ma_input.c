@@ -1,11 +1,13 @@
 #include "ma_internal.h"
 #include "ma_input.h"
 #include "ma_ai.h"
+#include "ma_netplay.h"
 
 #include <string.h>
 
 int setFastForward(int enable) {
 	int val = enable ? 1 : 0;
+	if (Netplay_busy()) val = 0;
 	if (fast_forward != val) {
 		LOG_info("FF state -> %i\n", val);
 	}
@@ -52,6 +54,11 @@ void input_poll_callback(void) {
 		int btn = 1 << mapping->local;
 		if (btn==BTN_NONE) continue; // not bound
 		if (!mapping->mod || PAD_isPressed(BTN_MENU)) {
+			if (Netplay_busy() && (i == SHORTCUT_TOGGLE_FF || i == SHORTCUT_HOLD_FF ||
+			    i == SHORTCUT_HOLD_REWIND || i == SHORTCUT_TOGGLE_REWIND || i == SHORTCUT_AI_AUTOPLAY)) {
+				if (mapping->mod && PAD_isPressed(btn)) ignore_menu = 1;
+				continue;
+			}
 			if (i==SHORTCUT_TOGGLE_FF) {
 				if (PAD_justPressed(btn)) {
 					toggled_ff_on = setFastForward(!fast_forward);

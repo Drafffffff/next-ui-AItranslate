@@ -14,6 +14,7 @@
 #include "utils.h"
 
 struct Core {
+	char image_path[MAX_PATH];
 	int initialized;
 	int need_fullpath;
 

@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Package only ARM64 binaries plus reproducible source, licenses and SD installer."""
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import zipfile
+
+ROOT=Path(__file__).resolve().parents[2]
+OUT=ROOT/'build/gba-link'
+FILES={'.system/tg5040/bin/minarch.elf':OUT/'brick/minarch.elf',
+       '.system/tg5040/cores/gpsp_libretro.so':OUT/'brick/gpsp_libretro.so'}
+revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
+if subprocess.check_output(['git','status','--porcelain','--untracked-files=normal'],cwd=ROOT,text=True).strip():
+    raise SystemExit('Commit the source before packaging; refuse an unrecorded source tree')
+package=OUT/('nextui-gba-link-'+revision[:8])
+if package.exists():shutil.rmtree(package)
+package.mkdir();checksums={}
+for name,source in FILES.items():
+    raw=source.read_bytes()
+    if raw[:5]!=b'\x7fELF\x02' or int.from_bytes(raw[18:20],'little')!=183:
+        raise SystemExit('Refusing a non-Linux ARM64 binary: '+str(source))
+    target=package/'payload'/name;target.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(source,target);checksums[name]=hashlib.sha256(raw).hexdigest()
+manifest={'schema':1,'experimental':True,'platform':'tg5040','revision':revision,
+          'versions':json.loads((ROOT/'ports/gba-link/versions.json').read_text()),'files':checksums}
+(package/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+shutil.copy2(ROOT/'ports/gba-link/install.py',package/'install.py')
+shutil.copy2(ROOT/'ports/gba-link/README.md',package/'README.md')
+shutil.copy2(ROOT/'ports/gba-link/compatibility.md',package/'compatibility.md')
+source_dir=package/'source';source_dir.mkdir()
+shutil.copy2(OUT/'gpsp-source.tar.gz',source_dir/'gpsp-source.tar.gz')
+subprocess.run(['git','archive','--format=tar.gz','-o',str(source_dir/'nextui-source.tar.gz'),revision],cwd=ROOT,check=True)
+for name,folder in [('libretro-common','libretro-common'),('libchdr','libchdr'),('rcheevos','rcheevos/src')]:
+    subprocess.run(['git','archive','--format=tar.gz','-o',str(source_dir/(name+'-source.tar.gz')),'HEAD'],
+                   cwd=ROOT/'workspace/all/minarch'/folder,check=True)
+licenses=package/'licenses';licenses.mkdir()
+for candidate in ('LICENSE','LICENSE.md','LICENSE.txt','COPYING'):
+    if (ROOT/candidate).is_file():shutil.copy2(ROOT/candidate,licenses/('NextUI-'+candidate))
+gpsp=next((OUT/'brick-source').glob('gpsp-*'))
+for candidate in ('COPYING','LICENSE','LICENSE.txt'):
+    if (gpsp/candidate).is_file():shutil.copy2(gpsp/candidate,licenses/('gpSP-'+candidate))
+tests=package/'tests';tests.mkdir()
+shutil.copy2(OUT/'link-probe.gba',tests/'link-probe.gba')
+records=package/'validation';records.mkdir()
+for name in ('test-results.json','regression.log','arm-host.log','arm-join.log','arm-test.log','netem-test.log','netem-host.log','netem-join.log','game-validation.json','install-test.log'):
+    path=OUT/name
+    if path.is_file():shutil.copy2(path,records/name)
+(package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'
+                                      for p in sorted(package.rglob('*')) if p.is_file()))
+archive=package.with_suffix('.zip')
+with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED) as z:
+    for path in package.rglob('*'):
+        if path.is_file():z.write(path,str(path.relative_to(package.parent)))
+archive.with_suffix('.zip.sha256').write_text(hashlib.sha256(archive.read_bytes()).hexdigest()+'  '+archive.name+'\n')
+print(archive)
