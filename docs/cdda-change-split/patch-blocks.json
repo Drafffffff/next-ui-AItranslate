@@ -1,0 +1,1031 @@
+{
+  "path": "ports/cdda-brick-i/apply-port.py",
+  "sha256": "6c13aced77d20ebacececccaffac2dc356ba08d152b1bb0776a69b7b1ffb614b",
+  "blocks": [
+    {
+      "start": 2,
+      "end": 2,
+      "category": "mixed-initialization"
+    },
+    {
+      "start": 3,
+      "end": 3,
+      "category": "mixed-initialization"
+    },
+    {
+      "start": 4,
+      "end": 4,
+      "category": "mixed-initialization"
+    },
+    {
+      "start": 5,
+      "end": 5,
+      "category": "mixed-initialization"
+    },
+    {
+      "start": 7,
+      "end": 7,
+      "category": "mixed-initialization"
+    },
+    {
+      "start": 8,
+      "end": 8,
+      "category": "mixed-initialization"
+    },
+    {
+      "start": 9,
+      "end": 12,
+      "category": "mixed-initialization"
+    },
+    {
+      "start": 14,
+      "end": 14,
+      "category": "ui"
+    },
+    {
+      "start": 15,
+      "end": 15,
+      "category": "ui"
+    },
+    {
+      "start": 16,
+      "end": 32,
+      "category": "ui"
+    },
+    {
+      "start": 35,
+      "end": 59,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 63,
+      "end": 63,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 64,
+      "end": 64,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 65,
+      "end": 83,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 86,
+      "end": 86,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 87,
+      "end": 87,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 88,
+      "end": 92,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 94,
+      "end": 94,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 98,
+      "end": 98,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 99,
+      "end": 99,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 100,
+      "end": 125,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 126,
+      "end": 126,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 128,
+      "end": 128,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 129,
+      "end": 129,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 130,
+      "end": 136,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 137,
+      "end": 137,
+      "category": "ui"
+    },
+    {
+      "start": 138,
+      "end": 138,
+      "category": "ui"
+    },
+    {
+      "start": 139,
+      "end": 153,
+      "category": "ui"
+    },
+    {
+      "start": 156,
+      "end": 156,
+      "category": "ui"
+    },
+    {
+      "start": 157,
+      "end": 157,
+      "category": "ui"
+    },
+    {
+      "start": 158,
+      "end": 177,
+      "category": "ui"
+    },
+    {
+      "start": 179,
+      "end": 179,
+      "category": "ui"
+    },
+    {
+      "start": 180,
+      "end": 180,
+      "category": "ui"
+    },
+    {
+      "start": 181,
+      "end": 187,
+      "category": "ui"
+    },
+    {
+      "start": 191,
+      "end": 191,
+      "category": "ui"
+    },
+    {
+      "start": 192,
+      "end": 192,
+      "category": "ui"
+    },
+    {
+      "start": 193,
+      "end": 194,
+      "category": "ui"
+    },
+    {
+      "start": 195,
+      "end": 219,
+      "category": "ui"
+    },
+    {
+      "start": 220,
+      "end": 220,
+      "category": "ui"
+    },
+    {
+      "start": 222,
+      "end": 222,
+      "category": "ui"
+    },
+    {
+      "start": 223,
+      "end": 223,
+      "category": "ui"
+    },
+    {
+      "start": 224,
+      "end": 237,
+      "category": "ui"
+    },
+    {
+      "start": 238,
+      "end": 238,
+      "category": "ui"
+    },
+    {
+      "start": 240,
+      "end": 240,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 241,
+      "end": 241,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 242,
+      "end": 243,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 244,
+      "end": 246,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 247,
+      "end": 247,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 251,
+      "end": 251,
+      "category": "ui"
+    },
+    {
+      "start": 252,
+      "end": 252,
+      "category": "ui"
+    },
+    {
+      "start": 253,
+      "end": 287,
+      "category": "ui"
+    },
+    {
+      "start": 288,
+      "end": 288,
+      "category": "ui"
+    },
+    {
+      "start": 292,
+      "end": 292,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 293,
+      "end": 293,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 294,
+      "end": 370,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 373,
+      "end": 373,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 374,
+      "end": 374,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 375,
+      "end": 377,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 378,
+      "end": 379,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 381,
+      "end": 381,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 382,
+      "end": 382,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 383,
+      "end": 403,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 404,
+      "end": 404,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 407,
+      "end": 431,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 432,
+      "end": 432,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 435,
+      "end": 435,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 436,
+      "end": 438,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 439,
+      "end": 439,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 440,
+      "end": 440,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 441,
+      "end": 441,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 442,
+      "end": 442,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 443,
+      "end": 446,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 448,
+      "end": 448,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 449,
+      "end": 449,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 450,
+      "end": 456,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 459,
+      "end": 459,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 460,
+      "end": 460,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 461,
+      "end": 469,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 472,
+      "end": 472,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 473,
+      "end": 473,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 476,
+      "end": 476,
+      "category": "ui"
+    },
+    {
+      "start": 477,
+      "end": 477,
+      "category": "ui"
+    },
+    {
+      "start": 478,
+      "end": 491,
+      "category": "ui"
+    },
+    {
+      "start": 492,
+      "end": 492,
+      "category": "ui"
+    },
+    {
+      "start": 493,
+      "end": 493,
+      "category": "ui"
+    },
+    {
+      "start": 494,
+      "end": 499,
+      "category": "ui"
+    },
+    {
+      "start": 500,
+      "end": 500,
+      "category": "ui"
+    },
+    {
+      "start": 502,
+      "end": 502,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 503,
+      "end": 503,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 505,
+      "end": 505,
+      "category": "startup-performance-and-diagnostics"
+    },
+    {
+      "start": 508,
+      "end": 508,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 509,
+      "end": 509,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 510,
+      "end": 545,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 546,
+      "end": 546,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 547,
+      "end": 547,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 548,
+      "end": 551,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 552,
+      "end": 552,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 553,
+      "end": 553,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 554,
+      "end": 591,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 592,
+      "end": 592,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 594,
+      "end": 594,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 595,
+      "end": 595,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 596,
+      "end": 599,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 600,
+      "end": 600,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 601,
+      "end": 601,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 602,
+      "end": 604,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 607,
+      "end": 607,
+      "category": "ui"
+    },
+    {
+      "start": 608,
+      "end": 608,
+      "category": "ui"
+    },
+    {
+      "start": 609,
+      "end": 627,
+      "category": "ui"
+    },
+    {
+      "start": 630,
+      "end": 630,
+      "category": "ui"
+    },
+    {
+      "start": 631,
+      "end": 631,
+      "category": "ui"
+    },
+    {
+      "start": 632,
+      "end": 646,
+      "category": "ui"
+    },
+    {
+      "start": 649,
+      "end": 649,
+      "category": "ui"
+    },
+    {
+      "start": 650,
+      "end": 650,
+      "category": "ui"
+    },
+    {
+      "start": 651,
+      "end": 659,
+      "category": "ui"
+    },
+    {
+      "start": 662,
+      "end": 662,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 663,
+      "end": 663,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 664,
+      "end": 664,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 665,
+      "end": 670,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 673,
+      "end": 673,
+      "category": "ui"
+    },
+    {
+      "start": 674,
+      "end": 674,
+      "category": "ui"
+    },
+    {
+      "start": 675,
+      "end": 691,
+      "category": "ui"
+    },
+    {
+      "start": 694,
+      "end": 694,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 695,
+      "end": 695,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 696,
+      "end": 697,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 700,
+      "end": 700,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 701,
+      "end": 701,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 702,
+      "end": 702,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 703,
+      "end": 705,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 708,
+      "end": 708,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 709,
+      "end": 709,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 710,
+      "end": 712,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 715,
+      "end": 715,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 716,
+      "end": 716,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 717,
+      "end": 717,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 718,
+      "end": 720,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 724,
+      "end": 724,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 725,
+      "end": 725,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 726,
+      "end": 749,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 752,
+      "end": 752,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 753,
+      "end": 753,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 754,
+      "end": 763,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 766,
+      "end": 766,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 767,
+      "end": 767,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 768,
+      "end": 777,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 780,
+      "end": 780,
+      "category": "ui"
+    },
+    {
+      "start": 781,
+      "end": 781,
+      "category": "ui"
+    },
+    {
+      "start": 782,
+      "end": 799,
+      "category": "ui"
+    },
+    {
+      "start": 802,
+      "end": 802,
+      "category": "ui"
+    },
+    {
+      "start": 803,
+      "end": 803,
+      "category": "ui"
+    },
+    {
+      "start": 804,
+      "end": 816,
+      "category": "ui"
+    },
+    {
+      "start": 819,
+      "end": 819,
+      "category": "ui"
+    },
+    {
+      "start": 820,
+      "end": 820,
+      "category": "ui"
+    },
+    {
+      "start": 821,
+      "end": 821,
+      "category": "ui"
+    },
+    {
+      "start": 822,
+      "end": 824,
+      "category": "ui"
+    },
+    {
+      "start": 827,
+      "end": 827,
+      "category": "ui"
+    },
+    {
+      "start": 828,
+      "end": 828,
+      "category": "ui"
+    },
+    {
+      "start": 829,
+      "end": 860,
+      "category": "ui"
+    },
+    {
+      "start": 861,
+      "end": 861,
+      "category": "ui"
+    },
+    {
+      "start": 862,
+      "end": 862,
+      "category": "ui"
+    },
+    {
+      "start": 863,
+      "end": 880,
+      "category": "ui"
+    },
+    {
+      "start": 883,
+      "end": 883,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 884,
+      "end": 884,
+      "category": "ui"
+    },
+    {
+      "start": 885,
+      "end": 885,
+      "category": "ui"
+    },
+    {
+      "start": 886,
+      "end": 886,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 887,
+      "end": 888,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 889,
+      "end": 889,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 893,
+      "end": 893,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 894,
+      "end": 894,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 895,
+      "end": 904,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 908,
+      "end": 908,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 909,
+      "end": 909,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 910,
+      "end": 914,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 917,
+      "end": 917,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 918,
+      "end": 919,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 920,
+      "end": 920,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 921,
+      "end": 921,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 922,
+      "end": 938,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 943,
+      "end": 943,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 944,
+      "end": 944,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 945,
+      "end": 960,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 964,
+      "end": 964,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 965,
+      "end": 965,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 966,
+      "end": 969,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 972,
+      "end": 972,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 973,
+      "end": 973,
+      "category": "ui"
+    },
+    {
+      "start": 974,
+      "end": 974,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 975,
+      "end": 975,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 976,
+      "end": 976,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 977,
+      "end": 977,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 978,
+      "end": 978,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 979,
+      "end": 979,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 980,
+      "end": 980,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 981,
+      "end": 981,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 982,
+      "end": 982,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 983,
+      "end": 983,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 984,
+      "end": 984,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 985,
+      "end": 985,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 986,
+      "end": 986,
+      "category": "ui"
+    },
+    {
+      "start": 987,
+      "end": 987,
+      "category": "platform-or-portability"
+    },
+    {
+      "start": 988,
+      "end": 988,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 989,
+      "end": 989,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 990,
+      "end": 990,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 991,
+      "end": 991,
+      "category": "memory-or-correctness"
+    },
+    {
+      "start": 992,
+      "end": 992,
+      "category": "memory-or-correctness"
+    }
+  ]
+}

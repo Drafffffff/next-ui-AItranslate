@@ -46,3 +46,7 @@ workspace/.container_runtime
 AGENTS.md
 CLAUDE.md
 .worktrees/
+
+# Local Python bytecode is not a portable source snapshot.
+__pycache__/
+*.py[cod]

@@ -1,0 +1,34 @@
+{
+  "pinned_archive_verified": true,
+  "ui_source_replay_passes": 2,
+  "idempotent": true,
+  "original_files": 966,
+  "changed_ui_files": [
+    "src/advanced_inv.cpp",
+    "src/cata_imgui.cpp",
+    "src/crafting_gui.cpp",
+    "src/font_loader.cpp",
+    "src/game.cpp",
+    "src/input_context.cpp",
+    "src/input_popup.cpp",
+    "src/inventory_ui.cpp",
+    "src/output.cpp",
+    "src/overmap_ui.cpp",
+    "src/sdl_font.cpp",
+    "src/sdltiles.cpp",
+    "src/third-party/imgui/imgui_draw.cpp",
+    "src/third-party/imgui/imgui_impl_sdlrenderer2.cpp",
+    "src/uilist.cpp"
+  ],
+  "added_ui_files": [
+    "src/brick_gui.h",
+    "src/brick_gui_fallback.h",
+    "src/brick_input.cpp",
+    "src/brick_input.h",
+    "src/brick_ui.h"
+  ],
+  "all_other_upstream_files_byte_equal": true,
+  "game_cpp_only_sidebar_measurement": true,
+  "steam_deck_build_verified": false,
+  "native_verified": false
+}
