@@ -9,6 +9,7 @@
 #endif
 #include <arpa/inet.h>
 #include <errno.h>
+#include <ifaddrs.h>
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
@@ -131,9 +132,25 @@ static void link_progress_draw(const char *text) {
     GFX_flip(screen);
     hdmimon();
 }
+/* Read only the local interface address; the full Wi-Fi status API launches
+ * external commands and must not run in this per-frame waiting loop. */
+static void link_local_ip(char ip[INET_ADDRSTRLEN]) {
+    ip[0] = 0;
+    struct ifaddrs *interfaces = NULL;
+    if (getifaddrs(&interfaces)) return;
+    for (struct ifaddrs *i = interfaces; i; i = i->ifa_next) {
+        if (i->ifa_addr && i->ifa_addr->sa_family == AF_INET && !strcmp(i->ifa_name, "wlan0")) {
+            inet_ntop(AF_INET, &((struct sockaddr_in *)i->ifa_addr)->sin_addr, ip, INET_ADDRSTRLEN);
+            break;
+        }
+    }
+    freeifaddrs(interfaces);
+}
 static bool link_wait(bool host) {
     GFX_setMode(MODE_MAIN);
     bool connected = false;
+    char local_ip[INET_ADDRSTRLEN] = {0};
+    uint32_t ip_updated = SDL_GetTicks() - 1000;
     while (1) {
         GFX_startFrame(); PAD_poll();
         if (PAD_justPressed(BTN_B)) { Netplay_stop("Connection cancelled"); break; }
@@ -145,10 +162,13 @@ static bool link_wait(bool host) {
         char waiting[256];
         const char *text = Netplay_status();
         if (host && connection_mode == 0 && !via_relay && Netplay_state() == NP_LISTENING) {
-            struct WIFI_connection wifi = {0};
-            WIFI_connectionInfo(&wifi);
+            uint32_t now = SDL_GetTicks();
+            if ((uint32_t)(now - ip_updated) >= 1000) {
+                link_local_ip(local_ip);
+                ip_updated = now;
+            }
             snprintf(waiting, sizeof(waiting), "Room created\n%s : 55435\n\nWaiting for another Brick...",
-                wifi.ip[0] ? wifi.ip : "Wi-Fi address unavailable");
+                local_ip[0] ? local_ip : "Wi-Fi address unavailable");
             text = waiting;
         }
         link_progress_draw(text);
