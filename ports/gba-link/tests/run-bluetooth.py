@@ -86,7 +86,7 @@ def main():
                 log.close()
         content = (args.output / (label + '-host.log')).read_text()
         join_content = (args.output / (label + '-join.log')).read_text()
-        metrics = {key: int(value) for key, value in re.findall(r'(\w+)=(\d+)', content)}
+        metrics = {key: int(value) for key, value in re.findall(r'(\w+)=(\d+)(?=\s|$)', content)}
         results.append(dict(test=label, return_codes=codes, metrics=metrics,
                             host_log=content, join_log=join_content,
                             probe_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),

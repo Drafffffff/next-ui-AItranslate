@@ -60,7 +60,7 @@
   },
   "transport_selection": {
     "classic_l2cap": "Candidate only. ERTM ordered stream can reuse existing bounded framing, identity and receive callbacks; discovery still required.",
-    "ble_gatt": "Candidate only. Complete central discovery + notification/write path, negotiated MTU, bounded fragmentation and session cancellation before benchmarking.",
+    "ble_gatt": "Two-way BlueZ and raw ATT framing validated at negotiated MTU 517. Raw ATT avoids client multi-notification batching, requests owned 7.5ms connection timing, and waits for actual controller completion. Game integration still pending latency/long-run evidence.",
     "known_measurement": {
       "kind": "isolated 256-byte echo, not gameplay",
       "ertm_awake_100_samples_us": {
@@ -70,7 +70,7 @@
       },
       "initial_max_us": 3211698
     },
-    "conclusion": "Existing classic results do not support smoother-than-WiFi claims. Complete small-packet/frequency comparison and BLE measurements before selecting.",
+    "conclusion": "BLE can maintain complete CRC-checked two-way data for 600 seconds, but the current 29ms median, 120ms p99 and 299ms maximum do not establish smooth GBA play. Retain Wi-Fi and complete matched radio/pacing/burst controls before choosing a production path.",
     "acceptance": [
       "No payload corruption or truncation across repeated sessions",
       "Measure p50/p95/p99/max, stalls above 33/66/200ms and queue growth over 10-minute runs",
@@ -84,7 +84,35 @@
       "classic_104_continuous_p50_us": 33764,
       "tcp_104_continuous_p50_us": 4312,
       "gameplay_verified": false,
-      "classic_not_selected_as_default": true
-    }
+      "classic_not_selected_as_default": true,
+      "ble_bluez_104_p50_us": 139951,
+      "ble_fast_bluez_104_p50_us": 40833,
+      "ble_raw_att_104_p50_us": 29955,
+      "ble_raw_att_104_max_us": 92357,
+      "ble_fd_600sec": {
+        "exchanges": 16899,
+        "elapsed_ms": 600021,
+        "p50": 29015,
+        "p95": 71478,
+        "p99": 119947,
+        "max": 298754
+      }
+    },
+    "remaining_experiments": [
+      "Server FD repeat and role-switch discovery with explicit legacy parameters",
+      "Matched Wi-Fi power-save-off BLE control",
+      "Per-connection event-length hints 0/6/12 with actual timing validation",
+      "Production-like bounded burst/pipeline comparison before transport selection"
+    ],
+    "sources": [
+      {
+        "url": "https://github.com/bluez/bluez/blob/5.78/src/shared/gatt-server.c",
+        "finding": "Multiple notifications use a 10ms batching timer; direct ATT central avoids advertising that client feature."
+      },
+      {
+        "url": "https://nrfconnectdocs.nordicsemi.com/ncs/latest/nrfxlib/doxygen/html/group__HCI__VS__API_ga983adff8d1da7f0db2a16838df27c3f9.html",
+        "finding": "Connection event lengths are informational hints; actual controller behavior may differ and needs measurement."
+      }
+    ]
   }
 }

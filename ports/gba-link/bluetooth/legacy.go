@@ -41,6 +41,12 @@ func prepareLegacy(ctx context.Context, conn *dbus.Conn) error {
 	if err := controllerCommand(0x200a, []byte{0}); err != nil {
 		return err
 	}
+	// Role changes on Tina may leave legacy advertising parameters behind.
+	// With no active advertisements or peers, prepare this probe's connectable
+	// public-address advertisement explicitly before BlueZ enables it.
+	if err := controllerCommand(0x2006, []byte{0xa0, 0, 0xa0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0}); err != nil {
+		return err
+	}
 	uuid, err := hex.DecodeString(strings.ReplaceAll(serviceUUID, "-", ""))
 	if err != nil {
 		return err

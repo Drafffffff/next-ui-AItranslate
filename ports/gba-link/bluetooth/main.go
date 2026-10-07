@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -42,12 +43,16 @@ type Advertisement struct{}
 func (*Advertisement) Release() *dbus.Error { return nil }
 
 type Peripheral struct {
-	conn      *dbus.Conn
-	mu        sync.Mutex
-	notifying bool
-	peer      dbus.ObjectPath
-	packets   uint64
-	mtu       uint16
+	conn          *dbus.Conn
+	mu            sync.Mutex
+	notifying     bool
+	peer          dbus.ObjectPath
+	packets       uint64
+	mtu           uint16
+	assembly      *assembly
+	files         []*os.File
+	notifyWriter  *os.File
+	writeAcquired bool
 }
 type Characteristic struct {
 	Peripheral *Peripheral
@@ -68,6 +73,7 @@ func (c *Characteristic) StopNotify() *dbus.Error {
 	c.Peripheral.mu.Lock()
 	c.Peripheral.notifying = false
 	c.Peripheral.peer = ""
+	c.Peripheral.assembly = nil
 	c.Peripheral.mu.Unlock()
 	fmt.Println("UNSUBSCRIBED")
 	return nil
@@ -92,13 +98,65 @@ func (c *Characteristic) WriteValue(value []byte, options map[string]dbus.Varian
 		p.mtu = mtu
 		fmt.Printf("READY mtu=%d peer=%s\n", mtu, device)
 	}
-	// Echo exact fragments; errors terminate the test rather than claiming delivery.
-	if err := p.conn.Emit(tx, "org.freedesktop.DBus.Properties.PropertiesChanged", charInterface, map[string]dbus.Variant{"Value": dbus.MakeVariant(value)}, []string{}); err != nil {
+	if len(value) <= frameHeader {
+		return dbus.NewError("org.bluez.Error.InvalidValueLength", nil)
+	}
+	if p.assembly == nil {
+		p.assembly = newAssembly(binary.BigEndian.Uint32(value[4:]))
+	}
+	message, ack, err := p.assembly.accept(value)
+	if err != nil {
 		return dbus.NewError("org.bluez.Error.Failed", []any{err.Error()})
 	}
-	p.packets++
+	// Echo only validated fragments. The extra completion ACK is emitted only
+	// after the whole message passes bounded assembly and CRC verification.
+	if err := p.sendNotification(value); err != nil {
+		return dbus.NewError("org.bluez.Error.Failed", []any{err.Error()})
+	}
+	if ack != nil {
+		if err := p.sendNotification(ack); err != nil {
+			return dbus.NewError("org.bluez.Error.Failed", []any{err.Error()})
+		}
+	}
+	if message != nil {
+		p.packets++
+	}
 	return nil
 }
+
+// Called with the peripheral mutex held. The optional FD backend is a
+// single-session measurement path; all returned FD copies are owned until
+// probe teardown and must not be reused as a production reconnect lifecycle.
+func (p *Peripheral) sendNotification(value []byte) error {
+	if p.notifyWriter != nil {
+		p.notifyWriter.SetWriteDeadline(time.Now().Add(time.Second))
+		n, err := p.notifyWriter.Write(value)
+		if err != nil {
+			return err
+		}
+		if n != len(value) {
+			return fmt.Errorf("short notification write")
+		}
+		return nil
+	}
+	return p.conn.Emit(tx, "org.freedesktop.DBus.Properties.PropertiesChanged", charInterface, map[string]dbus.Variant{"Value": dbus.MakeVariant(value)}, []string{})
+}
+
+func (p *Peripheral) closeFDs() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for _, file := range p.files {
+		file.Close()
+	}
+	p.files = nil
+	p.notifyWriter = nil
+	p.notifying = false
+	p.assembly = nil
+	p.peer = ""
+}
+
+var probeServerFD bool
+
 func export(conn *dbus.Conn, path dbus.ObjectPath, values properties, methods any, iface string) error {
 	if methods != nil {
 		if err := conn.Export(methods, path, iface); err != nil {
@@ -127,10 +185,15 @@ func managed(ctx context.Context, conn *dbus.Conn) (objects, error) {
 }
 func host(ctx context.Context, conn *dbus.Conn) error {
 	p := &Peripheral{conn: conn}
+	defer p.closeFDs()
 	objs := objects{
 		service: {"org.bluez.GattService1": {"UUID": dbus.MakeVariant(serviceUUID), "Primary": dbus.MakeVariant(true), "Includes": dbus.MakeVariant([]dbus.ObjectPath{})}},
 		tx:      {charInterface: {"UUID": dbus.MakeVariant(txUUID), "Service": dbus.MakeVariant(service), "Flags": dbus.MakeVariant([]string{"notify"}), "Value": dbus.MakeVariant([]byte{}), "Notifying": dbus.MakeVariant(false)}},
 		rx:      {charInterface: {"UUID": dbus.MakeVariant(rxUUID), "Service": dbus.MakeVariant(service), "Flags": dbus.MakeVariant([]string{"write", "write-without-response"})}},
+	}
+	if probeServerFD {
+		objs[tx][charInterface]["NotifyAcquired"] = dbus.MakeVariant(false)
+		objs[rx][charInterface]["WriteAcquired"] = dbus.MakeVariant(false)
 	}
 	if err := conn.Export(&Manager{objs}, app, "org.freedesktop.DBus.ObjectManager"); err != nil {
 		return err
@@ -139,7 +202,7 @@ func host(ctx context.Context, conn *dbus.Conn) error {
 		var methods any
 		iface := "org.bluez.GattService1"
 		if path != service {
-			methods = &Characteristic{p, path == tx}
+			methods = &Characteristic{Peripheral: p, TX: path == tx}
 			iface = charInterface
 		}
 		if err := export(conn, path, vs, methods, iface); err != nil {
@@ -161,50 +224,14 @@ func host(ctx context.Context, conn *dbus.Conn) error {
 		return fmt.Errorf("advertise: %w", err)
 	}
 	defer call(context.Background(), conn, adapter, "org.bluez.LEAdvertisingManager1.UnregisterAdvertisement", advert)
+	// Close local FDs before potentially slow D-Bus unregister calls.
+	defer p.closeFDs()
 	fmt.Println("ROOM_READY")
 	<-ctx.Done()
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	fmt.Printf("HOST_SUMMARY fragments=%d mtu=%d\n", p.packets, p.mtu)
+	fmt.Printf("HOST_SUMMARY messages=%d mtu=%d\n", p.packets, p.mtu)
 	return nil
-}
-func findRoom(ctx context.Context, conn *dbus.Conn, expected string) (dbus.ObjectPath, error) {
-	filter := map[string]dbus.Variant{"Transport": dbus.MakeVariant("le"), "UUIDs": dbus.MakeVariant([]string{serviceUUID})}
-	if err := call(ctx, conn, adapter, "org.bluez.Adapter1.SetDiscoveryFilter", filter).Err; err != nil {
-		return "", err
-	}
-	if err := call(ctx, conn, adapter, "org.bluez.Adapter1.StartDiscovery").Err; err != nil {
-		return "", err
-	}
-	defer call(context.Background(), conn, adapter, "org.bluez.Adapter1.StopDiscovery")
-	for ctx.Err() == nil {
-		objs, err := managed(ctx, conn)
-		if err != nil {
-			return "", err
-		}
-		for path, ifaces := range objs {
-			d, ok := ifaces["org.bluez.Device1"]
-			if !ok {
-				continue
-			}
-			address, _ := d["Address"].Value().(string)
-			uuids, _ := d["UUIDs"].Value().([]string)
-			if expected != "" && !strings.EqualFold(address, expected) {
-				continue
-			}
-			for _, uuid := range uuids {
-				if strings.EqualFold(uuid, serviceUUID) {
-					fmt.Printf("FOUND address=%s path=%s\n", address, path)
-					return path, nil
-				}
-			}
-		}
-		select {
-		case <-ctx.Done():
-		case <-time.After(200 * time.Millisecond):
-		}
-	}
-	return "", fmt.Errorf("room discovery: %w", ctx.Err())
 }
 func central(ctx context.Context, conn *dbus.Conn, expected string, count, length int, delay time.Duration) error {
 	device, err := findRoom(ctx, conn, expected)
@@ -225,6 +252,7 @@ func central(ctx context.Context, conn *dbus.Conn, expected string, count, lengt
 	if err := call(ctx, conn, device, "org.bluez.Device1.Connect").Err; err != nil {
 		return err
 	}
+	fmt.Println("DEVICE_CONNECT_RETURNED")
 	var txPath, rxPath dbus.ObjectPath
 	for ctx.Err() == nil {
 		objs, err = managed(ctx, conn)
@@ -253,7 +281,8 @@ func central(ctx context.Context, conn *dbus.Conn, expected string, count, lengt
 		}
 	}
 	if txPath == "" || rxPath == "" {
-		return fmt.Errorf("GATT discovery timeout")
+		state := objs[device]["org.bluez.Device1"]
+		return fmt.Errorf("GATT discovery timeout (connected=%v services_resolved=%v)", state["Connected"].Value(), state["ServicesResolved"].Value())
 	}
 	// Acquire APIs return the actual exchanged MTU and avoid per-packet D-Bus.
 	var notifyFD, writeFD dbus.UnixFD
@@ -282,30 +311,61 @@ func central(ctx context.Context, conn *dbus.Conn, expected string, count, lengt
 	if n := int(writeMTU) - 3; n < payload {
 		payload = n
 	}
-	if payload < 8 {
+	if payload > 512 {
+		payload = 512
+	}
+	if payload <= frameHeader {
 		return fmt.Errorf("invalid negotiated MTU")
 	}
+	address, _ := objs[device]["org.bluez.Device1"]["Address"].Value().(string)
+	if err := requestFastInterval(ctx, address); err != nil {
+		return fmt.Errorf("owned link pacing: %w", err)
+	}
 	fmt.Printf("READY notify_mtu=%d write_mtu=%d payload=%d\n", notifyMTU, writeMTU, payload)
+	return probeDataExchange(ctx, reader, writer, payload, count, length, delay)
+}
+
+type packetEndpoint interface {
+	Read([]byte) (int, error)
+	Write([]byte) (int, error)
+	SetReadDeadline(time.Time) error
+	SetWriteDeadline(time.Time) error
+}
+
+var probeRunDuration time.Duration
+var probeEventLength uint16
+
+func probeDataExchange(ctx context.Context, reader, writer packetEndpoint, payload, count, length int, delay time.Duration) error {
+	if probeWindow > 1 {
+		return probeWindowExchange(ctx, reader, writer, payload, count, length, delay)
+	}
+	testStart := time.Now()
 	samples := make([]int64, 0, count)
 	response := make([]byte, 65536)
 	fragments := 0
+	var nonce [4]byte
+	if _, err := rand.Read(nonce[:]); err != nil {
+		return err
+	}
+	epoch := binary.BigEndian.Uint32(nonce[:])
+	if epoch == 0 {
+		epoch = 1
+	}
+	echo := newAssembly(epoch)
 	for i := 0; i < count; i++ {
 		data := make([]byte, length)
 		for j := range data {
 			data[j] = byte(i + j)
 		}
 		start := time.Now()
-		// Bounded stop-and-wait per fragment. Sequence and offset detect corruption,
-		// loss, duplication or stale notifications; not a production stream yet.
-		for offset := 0; offset < length; {
-			n := length - offset
-			if n > payload-8 {
-				n = payload - 8
-			}
-			packet := make([]byte, n+8)
-			binary.BigEndian.PutUint32(packet, uint32(i))
-			binary.BigEndian.PutUint32(packet[4:], uint32(offset))
-			copy(packet[8:], data[offset:offset+n])
+		packets, err := fragmentMessage(payload, epoch, uint32(i+1), data)
+		if err != nil {
+			return err
+		}
+		var complete []byte
+		// Diagnostic baseline: wait for each echo. Production queue pacing is
+		// selected after hardware measurements, not inferred from this probe.
+		for _, packet := range packets {
 			if err := writer.SetWriteDeadline(time.Now().Add(5 * time.Second)); err != nil {
 				return err
 			}
@@ -320,23 +380,52 @@ func central(ctx context.Context, conn *dbus.Conn, expected string, count, lengt
 				return fmt.Errorf("notify: %w", err)
 			}
 			if !bytes.Equal(packet, response[:nread]) {
-				return fmt.Errorf("fragment integrity failed exchange=%d offset=%d", i, offset)
+				return fmt.Errorf("fragment echo mismatch exchange=%d", i)
 			}
-			offset += n
+			complete, _, err = echo.accept(response[:nread])
+			if err != nil {
+				return err
+			}
 			fragments++
 		}
+		if !bytes.Equal(complete, data) {
+			return fmt.Errorf("whole-message integrity failed")
+		}
+		nread, err := reader.Read(response)
+		if err != nil {
+			return fmt.Errorf("completion ACK: %w", err)
+		}
+		if !validAck(response[:nread], epoch, uint32(i+1)) {
+			return fmt.Errorf("invalid completion ACK")
+		}
+
 		samples = append(samples, time.Since(start).Microseconds())
+		if probeRunDuration > 0 && time.Since(testStart) >= probeRunDuration {
+			break
+		}
+		if probeRunDuration > 0 && len(samples)%1000 == 0 {
+			fmt.Printf("PROGRESS exchanges=%d elapsed_ms=%d\n", len(samples), time.Since(testStart).Milliseconds())
+		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-time.After(delay):
 		}
 	}
+	if probeRunDuration > 0 && time.Since(testStart) < probeRunDuration {
+		return fmt.Errorf("exchange limit reached before requested measurement duration")
+	}
+	count = len(samples)
 	sort.Slice(samples, func(i, j int) bool { return samples[i] < samples[j] })
-	fmt.Printf("PASS exchanges=%d fragments=%d bytes_each_way=%d p50=%d p95=%d p99=%d max=%d\n", count, fragments, count*length, samples[count/2], samples[count*95/100], samples[count*99/100], samples[count-1])
+	fmt.Printf("PASS exchanges=%d fragments=%d bytes_each_way=%d elapsed_ms=%d p50=%d p95=%d p99=%d max=%d\n", count, fragments, count*length, time.Since(testStart).Milliseconds(), samples[count/2], samples[count*95/100], samples[count*99/100], samples[count-1])
 	return nil
 }
+
 func main() {
+	window := flag.Int("window", 1, "maximum pending diagnostic messages, 1..16")
+	eventLength := flag.Uint("event-length", 0, "informational event length hint in 625us units, 0..12")
+	serverFD := flag.Bool("server-fd", false, "single-session server FD measurement backend")
+	runFor := flag.Duration("run-for", 0, "minimum continuous measurement duration; count is the safety limit")
 	role := flag.String("role", "host", "host or join")
 	peer := flag.String("peer", "", "optional expected room MAC")
 	count := flag.Int("count", 100, "exchanges")
@@ -344,7 +433,23 @@ func main() {
 	delay := flag.Duration("delay", 0, "delay after each reply")
 	duration := flag.Duration("duration", 2*time.Minute, "total timeout")
 	flag.Parse()
-	if (*role != "host" && *role != "join") || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
+	if *window < 1 || *window > 16 {
+		fmt.Fprintln(os.Stderr, "invalid diagnostic window")
+		os.Exit(2)
+	}
+	probeWindow = *window
+	if *eventLength > 12 {
+		fmt.Fprintln(os.Stderr, "event length exceeds requested connection interval")
+		os.Exit(2)
+	}
+	probeEventLength = uint16(*eventLength)
+	if *runFor < 0 || *runFor > 20*time.Minute {
+		fmt.Fprintln(os.Stderr, "invalid measurement duration")
+		os.Exit(2)
+	}
+	probeRunDuration = *runFor
+	probeServerFD = *serverFD
+	if (*role != "host" && *role != "join" && *role != "join-raw") || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
 		fmt.Fprintln(os.Stderr, "invalid arguments")
 		os.Exit(2)
 	}
@@ -360,6 +465,8 @@ func main() {
 	defer conn.Close()
 	if *role == "host" {
 		err = host(ctx, conn)
+	} else if *role == "join-raw" {
+		err = centralRaw(ctx, conn, *peer, *count, *length, *delay)
 	} else {
 		err = central(ctx, conn, *peer, *count, *length, *delay)
 	}

@@ -1,12 +1,70 @@
 package main
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
 
 	"golang.org/x/sys/unix"
 )
+
+func intervalMonitor(handle, interval uint16) (func(context.Context) error, func(), error) {
+	fd, err := unix.Socket(unix.AF_BLUETOOTH, unix.SOCK_RAW|unix.SOCK_CLOEXEC|unix.SOCK_NONBLOCK, unix.BTPROTO_HCI)
+	if err != nil {
+		return nil, nil, err
+	}
+	closeMonitor := func() { unix.Close(fd) }
+	if err := unix.Bind(fd, &unix.SockaddrHCI{Dev: 0, Channel: 0}); err != nil {
+		closeMonitor()
+		return nil, nil, err
+	}
+	filter := make([]byte, 16)
+	binary.LittleEndian.PutUint32(filter, 1<<4)
+	binary.LittleEndian.PutUint32(filter[8:], 1<<(0x3e-32))
+	if err := unix.SetsockoptString(fd, 0, 2, string(filter)); err != nil {
+		closeMonitor()
+		return nil, nil, err
+	}
+	wait := func(ctx context.Context) error {
+		deadline := time.Now().Add(5 * time.Second)
+		buffer := make([]byte, 260)
+		for time.Now().Before(deadline) {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			poll := []unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}
+			if _, err := unix.Poll(poll, 100); err != nil {
+				if err == unix.EINTR {
+					continue
+				}
+				return err
+			}
+			if poll[0].Revents&(unix.POLLERR|unix.POLLHUP|unix.POLLNVAL) != 0 {
+				return fmt.Errorf("interval monitor unavailable")
+			}
+			if poll[0].Revents&unix.POLLIN == 0 {
+				continue
+			}
+			n, err := unix.Read(fd, buffer)
+			if err == unix.EAGAIN || err == unix.EINTR {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			ready, err := intervalCompletion(buffer[:n], handle, interval)
+			if err != nil {
+				return err
+			}
+			if ready {
+				return nil
+			}
+		}
+		return fmt.Errorf("requested LE interval was not applied before timeout")
+	}
+	return wait, closeMonitor, nil
+}
 
 func controllerCommand(opcode uint16, data []byte) error {
 	if len(data) > 255 {
@@ -63,7 +121,7 @@ func controllerCommand(opcode uint16, data []byte) error {
 		}
 		if status, matched := hciCommandReply(buf[:n], opcode); matched {
 			if status != 0 {
-				return fmt.Errorf("controller command 0x%04x rejected, status 0x%02x", opcode, status)
+				return &hciStatusError{opcode, status}
 			}
 			return nil
 		}

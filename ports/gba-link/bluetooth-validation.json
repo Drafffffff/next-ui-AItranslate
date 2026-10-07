@@ -191,7 +191,7 @@
     }
   ],
   "ble_gatt": {
-    "status": "discovery verified; two-way transfer not yet verified",
+    "status": "two-way framed integrity verified; latency and production suitability still under evaluation",
     "attempts": [
       {
         "host": ".70",
@@ -210,7 +210,437 @@
       "go vet ./... passed",
       "linux/arm64 CGO-disabled build succeeded"
     ],
-    "scope": "Diagnostic acquired-fd GATT echo and negotiated fragmentation; not a production game stream or gameplay proof"
+    "scope": "Diagnostic acquired-fd GATT echo and negotiated fragmentation; not a production game stream or gameplay proof",
+    "framed_trials": [
+      {
+        "transport": "BLE GATT acquired fds",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "notify_mtu": 517,
+          "write_mtu": 517,
+          "payload": 512,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "p50": 139951,
+          "p95": 210499,
+          "p99": 211190,
+          "max": 211190
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nDEVICE_CONNECT_RETURNED\nREADY notify_mtu=517 write_mtu=517 payload=512\nPASS exchanges=100 fragments=100 bytes_each_way=10400 p50=139951 p95=210499 p99=211190 max=211190\n",
+        "game_pids": [
+          "4151",
+          "8172"
+        ],
+        "completed_at": 1791377297,
+        "probe_sha256": "3235f42257c3b860799f45afb5e9091e146e0ef3967f7f45bc2a6dc28720a17f",
+        "test": "ble-reboot"
+      },
+      {
+        "transport": "BLE GATT acquired fds",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "notify_mtu": 517,
+          "write_mtu": 517,
+          "payload": 512,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "p50": 40833,
+          "p95": 59926,
+          "p99": 140513,
+          "max": 140513
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nDEVICE_CONNECT_RETURNED\nINTERVAL_REQUEST_ACCEPTED handle=0 target_us=7500; controller completion must be verified\nREADY notify_mtu=517 write_mtu=517 payload=512\nPASS exchanges=100 fragments=100 bytes_each_way=10400 p50=40833 p95=59926 p99=140513 max=140513\n",
+        "game_pids": [
+          "4151",
+          "8172"
+        ],
+        "completed_at": 1791377459,
+        "probe_sha256": "11c4c628c8acd76250be82d4b645a92f68f6a8dda7002ce8f4557c5ed53ce3c1",
+        "test": "ble-fast"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          2
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "invalid arguments\n",
+        "game_pids": [
+          "4151",
+          "8172"
+        ],
+        "completed_at": 1791378055,
+        "probe_sha256": "11c4c628c8acd76250be82d4b645a92f68f6a8dda7002ce8f4557c5ed53ce3c1",
+        "test": "ble-raw-framed"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\ncontroller command 0x2013 rejected, status 0x0c\n",
+        "game_pids": [
+          "4151",
+          "8172"
+        ],
+        "completed_at": 1791378130,
+        "probe_sha256": "3f28755448034105038c2e602f95a0726541e49a11f817ef647b7a440fcf3d2e",
+        "test": "ble-raw-framed-v2"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 59,
+          "rx": 62,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "p50": 30044,
+          "p95": 44642,
+          "p99": 141129,
+          "max": 141129
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_REQUEST_ACCEPTED handle=0 target_us=7500; controller completion must be verified\nRAW_ATT_READY mtu=517 payload=512 tx=59 rx=62\nPASS exchanges=100 fragments=100 bytes_each_way=10400 p50=30044 p95=44642 p99=141129 max=141129\n",
+        "game_pids": [
+          "4151",
+          "8172"
+        ],
+        "completed_at": 1791378414,
+        "probe_sha256": "dbddb57d7d145110250ee35bcc4398a0505be0198d87891fddeb087166e666f1",
+        "test": "ble-raw-framed-v3"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 65,
+          "rx": 68,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "elapsed_ms": 3129,
+          "p50": 29955,
+          "p95": 37552,
+          "p99": 92357,
+          "max": 92357
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=65 rx=68\nPASS exchanges=100 fragments=100 bytes_each_way=10400 elapsed_ms=3129 p50=29955 p95=37552 p99=92357 max=92357\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791378513,
+        "probe_sha256": "866bcb3df959224e9057d7597febe671906166bf9305f48ba2ff380437674c83",
+        "test": "raw-matrix-steady104"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 71,
+          "rx": 74,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 3200,
+          "elapsed_ms": 2559,
+          "p50": 22648,
+          "p95": 37004,
+          "p99": 106753,
+          "max": 106753
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=71 rx=74\nPASS exchanges=100 fragments=100 bytes_each_way=3200 elapsed_ms=2559 p50=22648 p95=37004 p99=106753 max=106753\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791378538,
+        "probe_sha256": "866bcb3df959224e9057d7597febe671906166bf9305f48ba2ff380437674c83",
+        "test": "raw-matrix-small32"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 77,
+          "rx": 80,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 25600,
+          "elapsed_ms": 5077,
+          "p50": 48841,
+          "p95": 67134,
+          "p99": 112887,
+          "max": 112887
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=77 rx=80\nPASS exchanges=100 fragments=100 bytes_each_way=25600 elapsed_ms=5077 p50=48841 p95=67134 p99=112887 max=112887\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791378567,
+        "probe_sha256": "866bcb3df959224e9057d7597febe671906166bf9305f48ba2ff380437674c83",
+        "test": "raw-matrix-medium256"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 83,
+          "rx": 86,
+          "exchanges": 100,
+          "fragments": 300,
+          "bytes_each_way": 102400,
+          "elapsed_ms": 14593,
+          "p50": 141371,
+          "p95": 196957,
+          "p99": 252292,
+          "max": 252292
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=83 rx=86\nPASS exchanges=100 fragments=300 bytes_each_way=102400 elapsed_ms=14593 p50=141371 p95=196957 p99=252292 max=252292\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791378601,
+        "probe_sha256": "866bcb3df959224e9057d7597febe671906166bf9305f48ba2ff380437674c83",
+        "test": "raw-matrix-fragment1024"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          2
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "flag provided but not defined: -run-for\nUsage of /tmp/nextui-gba-bluetooth/ble-probe.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -count int\n    \texchanges (default 100)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -peer string\n    \toptional expected room MAC\n  -role string\n    \thost or join (default \"host\")\n",
+        "game_pids": [
+          "8172",
+          ""
+        ],
+        "completed_at": 1791378615,
+        "probe_sha256": "866bcb3df959224e9057d7597febe671906166bf9305f48ba2ff380437674c83",
+        "test": "raw-matrix-reverse104"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 47,
+          "rx": 50,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "elapsed_ms": 3152,
+          "p50": 30021,
+          "p95": 37476,
+          "p99": 91239,
+          "max": 91239
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_1C_11_93_21\nUNSUBSCRIBED\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:64:D7:F4:74 path=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=47 rx=50\nPASS exchanges=100 fragments=100 bytes_each_way=10400 elapsed_ms=3152 p50=30021 p95=37476 p99=91239 max=91239\n",
+        "game_pids": [
+          "8172",
+          ""
+        ],
+        "completed_at": 1791378660,
+        "probe_sha256": "99ce594902b5e8b2bec6aac913cbccc348371c755c975e83b2ab1fdb09b6cd3f",
+        "test": "raw-matrix-reverse104-v2"
+      },
+      {
+        "transport": "BLE raw-att",
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "room discovery: context deadline exceeded\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791378766,
+        "probe_sha256": "99ce594902b5e8b2bec6aac913cbccc348371c755c975e83b2ab1fdb09b6cd3f",
+        "test": "raw-matrix-paced104"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 97,
+          "rx": 95,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "elapsed_ms": 2754,
+          "p50": 26413,
+          "p95": 33945,
+          "p99": 92461,
+          "max": 92461
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=97 rx=95\nPASS exchanges=100 fragments=100 bytes_each_way=10400 elapsed_ms=2754 p50=26413 p95=33945 p99=92461 max=92461\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791378805,
+        "probe_sha256": "e54ac8a14b8852f8eb9f2f55a28280759a32b420c6921bd5b4b22ae0c3987046",
+        "test": "raw-server-fd104"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 101,
+          "rx": 104,
+          "exchanges": 16899,
+          "elapsed_ms": 600021,
+          "fragments": 16899,
+          "bytes_each_way": 1757496,
+          "p50": 29015,
+          "p95": 71478,
+          "p99": 119947,
+          "max": 298754
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=16899 mtu=517\n",
+        "join_log": "FOUND address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=101 rx=104\nPROGRESS exchanges=1000 elapsed_ms=41723\nPROGRESS exchanges=2000 elapsed_ms=110923\nPROGRESS exchanges=3000 elapsed_ms=184999\nPROGRESS exchanges=4000 elapsed_ms=231029\nPROGRESS exchanges=5000 elapsed_ms=259469\nPROGRESS exchanges=6000 elapsed_ms=291884\nPROGRESS exchanges=7000 elapsed_ms=320032\nPROGRESS exchanges=8000 elapsed_ms=351184\nPROGRESS exchanges=9000 elapsed_ms=381959\nPROGRESS exchanges=10000 elapsed_ms=413358\nPROGRESS exchanges=11000 elapsed_ms=442439\nPROGRESS exchanges=12000 elapsed_ms=469402\nPROGRESS exchanges=13000 elapsed_ms=495564\nPROGRESS exchanges=14000 elapsed_ms=521650\nPROGRESS exchanges=15000 elapsed_ms=548185\nPROGRESS exchanges=16000 elapsed_ms=575532\nPASS exchanges=16899 fragments=16899 bytes_each_way=1757496 elapsed_ms=600021 p50=29015 p95=71478 p99=119947 max=298754\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379436,
+        "probe_sha256": "e54ac8a14b8852f8eb9f2f55a28280759a32b420c6921bd5b4b22ae0c3987046",
+        "test": "raw-server-fd-10min",
+        "scope": "104-byte stop-and-wait CRC echo plus completion ACK, queue depth one, Wi-Fi power save on; not gameplay"
+      }
+    ],
+    "long_run_verified": true,
+    "production_integrated": false,
+    "timing_evidence": {
+      "initial_bluez_interval_us": 70000,
+      "explicit_applied_interval_us": 7500,
+      "raw_notification_opcode": "0x1b",
+      "trace": "build/gba-link/bluetooth/ble-raw-framed-v3-btmon-91.log",
+      "initial_samples_preceded_interval_completion": true,
+      "mitigation": "New probe waits for LE Connection Update Complete for its own handle and target timing before measuring"
+    },
+    "limitations": [
+      "Echo probes do not establish game compatibility or gameplay quality.",
+      "Host FD prototype retains exported FD copies until single-session teardown; not suitable for production reconnect.",
+      "Current measurement has queue depth one; production burst/backpressure handling is not verified.",
+      "Role-switch discovery had one timeout; explicit legacy parameter preparation passed one later connection but needs repetition.",
+      "Wi-Fi power save is on during current BLE measurements; classic/TCP earlier controls disabled it."
+    ],
+    "linux_protocol_tests": {
+      "passed": 16,
+      "native_device": "192.168.50.91",
+      "physical_bluetooth_used": false,
+      "coverage": [
+        "Negotiated MTU framing and bounded whole-message CRC",
+        "Stale epoch, ACK identity, malformed ATT and unrelated HCI events",
+        "Owned interval completion and fresh discovery signals",
+        "FD peer guard, complete echo/ACK and duplicate acquisition",
+        "Bounded fragmented window, queue drain and stale ACK rejection"
+      ],
+      "mac_race_test": "passed",
+      "wifi_latency_regression": "16 checks passed under ASAN/UBSAN across pacing modes"
+    },
+    "production_burst_queue_verified": false
   },
   "conclusion": "All 400 TCP and 400 repeated classic Bluetooth exchanges passed integrity checks. Classic 104-byte p50 ~33.8ms vs TCP ~4.3ms; classic is not selected as production default. Initial connection abort remains an unresolved transient, not relabelled as success. BLE GATT is still unmeasured.",
   "bluetooth_repeat": [

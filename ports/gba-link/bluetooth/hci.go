@@ -1,6 +1,18 @@
 package main
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+)
+
+type hciStatusError struct {
+	opcode uint16
+	status byte
+}
+
+func (e *hciStatusError) Error() string {
+	return fmt.Sprintf("controller command 0x%04x rejected, status 0x%02x", e.opcode, e.status)
+}
 
 // Ignore unrelated completions from BlueZ. Raw HCI command tools can observe
 // other commands' replies when the system adapter is already busy.
@@ -14,7 +26,7 @@ func hciCommandReply(packet []byte, opcode uint16) (byte, bool) {
 			return packet[6], true
 		}
 	case 0x0f: // Command Status: status, credits, opcode.
-		if len(packet) == 7 && binary.LittleEndian.Uint16(packet[5:7]) == opcode && packet[3] != 0 {
+		if len(packet) == 7 && binary.LittleEndian.Uint16(packet[5:7]) == opcode && (packet[3] != 0 || opcode == 0x2013) {
 			return packet[3], true
 		}
 	}
