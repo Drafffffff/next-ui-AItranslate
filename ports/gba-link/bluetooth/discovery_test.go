@@ -61,3 +61,23 @@ func TestRoomListRejectsStaleAndMalformedAddresses(t *testing.T) {
 		t.Fatal("stale room remained visible")
 	}
 }
+
+func TestSelectedRoomCannotUseWrongAdapterOrUnknownAddressType(t *testing.T) {
+	path := dbus.ObjectPath("/org/bluez/hci0/dev_22_22_64_D7_F4_74")
+	props := map[string]dbus.Variant{"Address": dbus.MakeVariant("22:22:64:D7:F4:74"), "AddressType": dbus.MakeVariant("public")}
+	objs := objects{path: {"org.bluez.Device1": props}}
+	if selectedRoomPath(objs, "22:22:64:d7:f4:74") != path {
+		t.Fatal("selected room rejected")
+	}
+	if selectedRoomPath(objs, "22:22:1C:11:93:21") != "" {
+		t.Fatal("wrong room accepted")
+	}
+	props["AddressType"] = dbus.MakeVariant("unknown")
+	if selectedRoomPath(objs, "22:22:64:D7:F4:74") != "" {
+		t.Fatal("unknown address type accepted")
+	}
+	props["AddressType"] = dbus.MakeVariant("random")
+	if selectedRoomPath(objects{"/org/bluez/hci1/dev_22_22_64_D7_F4_74": {"org.bluez.Device1": props}}, "22:22:64:D7:F4:74") != "" {
+		t.Fatal("other adapter accepted")
+	}
+}

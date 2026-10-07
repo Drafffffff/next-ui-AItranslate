@@ -232,3 +232,26 @@ func discoverRooms(ctx context.Context, conn *dbus.Conn, expected string, onRoom
 		}
 	}
 }
+
+// Selection already came from the scanner's physical advertisement proof.
+// Avoid starting discovery again: on this controller a second scan with
+// duplicate filtering enabled failed to report the selected room again.
+// A cached address is only a connection target; actual ATT service discovery,
+// bilateral readiness and protocol 3 identity still gate connected state.
+func selectedRoomPath(objs objects, address string) dbus.ObjectPath {
+	if !validRoomAddress(address) {
+		return ""
+	}
+	for path, interfaces := range objs {
+		if !strings.HasPrefix(string(path), string(adapter)+"/dev_") {
+			continue
+		}
+		props := interfaces["org.bluez.Device1"]
+		candidate, _ := props["Address"].Value().(string)
+		kind, _ := props["AddressType"].Value().(string)
+		if strings.EqualFold(candidate, address) && (kind == "public" || kind == "random") {
+			return path
+		}
+	}
+	return ""
+}

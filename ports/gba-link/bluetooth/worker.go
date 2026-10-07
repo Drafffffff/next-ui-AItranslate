@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -76,6 +77,14 @@ func inheritedSocket(fd, kind int, name string) (*os.File, error) {
 	return os.NewFile(uintptr(fd), name), nil
 }
 
+func waitingRoomText(address string) string {
+	if !validRoomAddress(address) {
+		return "Waiting for another Brick..."
+	}
+	clean := strings.ReplaceAll(strings.ToUpper(address), ":", "")
+	return "GBA Link " + clean[len(clean)-4:] + "\nWaiting for another Brick..."
+}
+
 // Every session is a separate child with private inherited sockets. The
 // frontend can cancel/reap it without touching bluetoothd, other users or
 // their connections. No local TCP listener or filesystem socket is exposed.
@@ -127,6 +136,7 @@ func serveFrontend(ctx context.Context, conn *dbus.Conn, role, peer string, data
 		control.send('E', "Turn on Bluetooth, then try again.")
 		return fmt.Errorf("Bluetooth adapter not powered")
 	}
+	address, _ := devices[adapter]["org.bluez.Adapter1"]["Address"].Value().(string)
 	ready := func() error { return control.send('H', "Checking game compatibility...") }
 	if role == "serve-scan" {
 		if err = control.send('S', "Searching nearby rooms..."); err == nil {
@@ -135,12 +145,12 @@ func serveFrontend(ctx context.Context, conn *dbus.Conn, role, peer string, data
 			_, err = discoverRooms(search, conn, "", control.rooms)
 		}
 	} else if role == "serve-host" {
-		err = peripheralSession(ctx, conn, func() error { return control.send('W', "Waiting for another Brick...") }, func(ctx context.Context, endpoint duplexEndpoint, payload int, epoch uint32) error {
+		err = peripheralSession(ctx, conn, func() error { return control.send('W', waitingRoomText(address)) }, func(ctx context.Context, endpoint duplexEndpoint, payload int, epoch uint32) error {
 			return bridgeSession(ctx, endpoint, payload, epoch, true, stream, ready)
 		})
 	} else {
-		if err = control.send('S', "Searching for room..."); err == nil {
-			err = centralRawSession(ctx, conn, peer, control.send, func(ctx context.Context, endpoint duplexEndpoint, payload int) error {
+		if err = control.send('C', "Connecting to room..."); err == nil {
+			err = centralSelectedSession(ctx, conn, peer, control.send, func(ctx context.Context, endpoint duplexEndpoint, payload int) error {
 				epoch, err := randomDuplexEpoch()
 				if err != nil {
 					return err

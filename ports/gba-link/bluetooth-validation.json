@@ -1796,5 +1796,166 @@
       "worker-lifecycle-arm-v1-failed.log: test fixture assumed /usr/bin/false on Tina; repaired self-exec fixture passed",
       "package-current-v1-failed.log: Homebrew stores runtime LICENSE above GOROOT; packaging now handles both layouts and fails if neither exists"
     ]
+  },
+  "physical_frontend_bridge": {
+    "scope": "Real gpSP ARM cores with open-source SIO ROM through production asynchronous frontend/helper/private-FD Bluetooth bridge. Actual NextUI rendering and commercial RFU gameplay remain unverified.",
+    "passed": true,
+    "cases": {
+      "selected-room-core-normal": {
+        "passed": true,
+        "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
+        "case": "normal",
+        "hashes": {
+          "core-runner.elf": "10d4f2412850ea343cba9cfda81c70bf2fae0adfee44374798ccb508a9cf8c0b",
+          "nextui-gba-bluetooth.elf": "540039a2b3a79f2a5f845fac59d6089eaecaaac566242c9e542307efa54be6f6",
+          "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+        },
+        "uncommitted_test_source": true,
+        "source_revision": "34999bb6cde1c4519e8261fa1b4aa588cbb6dcdd",
+        "game_pids": [
+          "",
+          "28412"
+        ],
+        "return_codes": [
+          0,
+          0
+        ],
+        "host_log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=25 received=25 core_polls=0 skipped=0 socket_reads=52 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=8113882 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=20717 send_calls=27 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=240 received=251 marker=00005678 counter=1663 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=19 peer_hp=18\nHOST_SUMMARY messages=0 mtu=517\n",
+        "join_log": "DISCOVERED_ROOM GBA Link 9321\nstate=2 Searching for room...\nwrite frontend control: connection refused\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=281 rx=284\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=212 received=189 core_polls=0 skipped=0 socket_reads=378 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=21367147 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=19650 send_calls=217 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=251 received=221 marker=00001234 counter=169 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=18 peer_hp=19\ncontext canceled\n",
+        "completed_at": 1791385293
+      },
+      "selected-room-core-core-mismatch": {
+        "passed": true,
+        "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
+        "case": "core-mismatch",
+        "hashes": {
+          "core-runner.elf": "10d4f2412850ea343cba9cfda81c70bf2fae0adfee44374798ccb508a9cf8c0b",
+          "nextui-gba-bluetooth.elf": "540039a2b3a79f2a5f845fac59d6089eaecaaac566242c9e542307efa54be6f6",
+          "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+        },
+        "uncommitted_test_source": true,
+        "source_revision": "34999bb6cde1c4519e8261fa1b4aa588cbb6dcdd",
+        "game_pids": [
+          "",
+          "28412"
+        ],
+        "return_codes": [
+          1,
+          1
+        ],
+        "host_log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nstate=3 Checking core, ROM and link mode...\nstate=5 Core build mismatch: install the same update\nHOST_SUMMARY messages=0 mtu=517\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Core build mismatch: install the same update\nDUEL local_hp=0 peer_hp=0\nEOF\n",
+        "join_log": "DISCOVERED_ROOM GBA Link 9321\nstate=2 Searching for room...\nroom discovery: context canceled\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=287 rx=290\nstate=3 Checking core, ROM and link mode...\nstate=5 Core build mismatch: install the same update\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Core build mismatch: install the same update\nDUEL local_hp=0 peer_hp=0\nEOF\n",
+        "completed_at": 1791385309
+      },
+      "selected-room-core-rom-mismatch": {
+        "passed": true,
+        "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
+        "case": "rom-mismatch",
+        "hashes": {
+          "core-runner.elf": "10d4f2412850ea343cba9cfda81c70bf2fae0adfee44374798ccb508a9cf8c0b",
+          "nextui-gba-bluetooth.elf": "540039a2b3a79f2a5f845fac59d6089eaecaaac566242c9e542307efa54be6f6",
+          "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+        },
+        "uncommitted_test_source": true,
+        "source_revision": "34999bb6cde1c4519e8261fa1b4aa588cbb6dcdd",
+        "game_pids": [
+          "",
+          "28412"
+        ],
+        "return_codes": [
+          1,
+          1
+        ],
+        "host_log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nstate=3 Checking core, ROM and link mode...\nstate=5 ROM mismatch: use identical ROM files\nHOST_SUMMARY messages=0 mtu=517\nEOF\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=ROM mismatch: use identical ROM files\nDUEL local_hp=0 peer_hp=0\n",
+        "join_log": "DISCOVERED_ROOM GBA Link 9321\nstate=2 Searching for room...\nwrite frontend control: connection refused\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=293 rx=296\nstate=3 Checking core, ROM and link mode...\nstate=5 ROM mismatch: use identical ROM files\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=ROM mismatch: use identical ROM files\nDUEL local_hp=0 peer_hp=0\nEOF\n",
+        "completed_at": 1791385325
+      },
+      "selected-room-core-mode-mismatch": {
+        "passed": true,
+        "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
+        "case": "mode-mismatch",
+        "hashes": {
+          "core-runner.elf": "10d4f2412850ea343cba9cfda81c70bf2fae0adfee44374798ccb508a9cf8c0b",
+          "nextui-gba-bluetooth.elf": "540039a2b3a79f2a5f845fac59d6089eaecaaac566242c9e542307efa54be6f6",
+          "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+        },
+        "uncommitted_test_source": true,
+        "source_revision": "34999bb6cde1c4519e8261fa1b4aa588cbb6dcdd",
+        "game_pids": [
+          "",
+          "28412"
+        ],
+        "return_codes": [
+          1,
+          1
+        ],
+        "host_log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nstate=3 Checking core, ROM and link mode...\nstate=5 Link mode mismatch\nHOST_SUMMARY messages=0 mtu=517\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Link mode mismatch\nDUEL local_hp=0 peer_hp=0\nEOF\n",
+        "join_log": "DISCOVERED_ROOM GBA Link 9321\nstate=2 Searching for room...\ncontext canceled\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=299 rx=302\nstate=3 Checking core, ROM and link mode...\nstate=5 Link mode mismatch\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Link mode mismatch\nDUEL local_hp=0 peer_hp=0\ncontext canceled\n",
+        "completed_at": 1791385340
+      },
+      "selected-room-core-normal-retry": {
+        "passed": true,
+        "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
+        "case": "normal",
+        "hashes": {
+          "core-runner.elf": "10d4f2412850ea343cba9cfda81c70bf2fae0adfee44374798ccb508a9cf8c0b",
+          "nextui-gba-bluetooth.elf": "540039a2b3a79f2a5f845fac59d6089eaecaaac566242c9e542307efa54be6f6",
+          "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+        },
+        "uncommitted_test_source": true,
+        "source_revision": "34999bb6cde1c4519e8261fa1b4aa588cbb6dcdd",
+        "game_pids": [
+          "",
+          "28412"
+        ],
+        "return_codes": [
+          0,
+          0
+        ],
+        "host_log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=37 received=39 core_polls=0 skipped=0 socket_reads=72 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=8178411 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=20268 send_calls=39 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=240 received=251 marker=00005678 counter=1663 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=19 peer_hp=18\nHOST_SUMMARY messages=0 mtu=517\n",
+        "join_log": "DISCOVERED_ROOM GBA Link 9321\nstate=2 Searching for room...\nroom discovery: context canceled\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=305 rx=308\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=214 received=191 core_polls=0 skipped=0 socket_reads=385 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=21431509 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=19037 send_calls=219 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=251 received=223 marker=00001234 counter=169 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=18 peer_hp=19\nread frontend data: connection reset by peer\n",
+        "completed_at": 1791385358
+      },
+      "selected-room-core-reverse": {
+        "passed": true,
+        "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
+        "case": "normal",
+        "hashes": {
+          "core-runner.elf": "10d4f2412850ea343cba9cfda81c70bf2fae0adfee44374798ccb508a9cf8c0b",
+          "nextui-gba-bluetooth.elf": "540039a2b3a79f2a5f845fac59d6089eaecaaac566242c9e542307efa54be6f6",
+          "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+        },
+        "uncommitted_test_source": true,
+        "source_revision": "34999bb6cde1c4519e8261fa1b4aa588cbb6dcdd",
+        "game_pids": [
+          "28412",
+          ""
+        ],
+        "return_codes": [
+          0,
+          0
+        ],
+        "host_log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=0 received=0 core_polls=0 skipped=0 socket_reads=2 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=21457826 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=0 send_calls=2 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=240 received=232 marker=00005678 counter=1655 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=19 peer_hp=18\nHOST_SUMMARY messages=0 mtu=517\nread frontend data: connection reset by peer\n",
+        "join_log": "DISCOVERED_ROOM GBA Link F474\nstate=2 Searching for room...\nroom discovery: context canceled\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=47 rx=50\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=151 received=156 core_polls=0 skipped=0 socket_reads=287 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=8210410 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=20452 send_calls=155 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=251 received=240 marker=00001234 counter=178 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=18 peer_hp=19\ncontext canceled\n",
+        "completed_at": 1791385388
+      }
+    },
+    "retained_failures": {
+      "real-core-ble-host70": "Both cores succeeded but first verifier incorrectly expected uppercase STATE; retained failed record, corrected test and repeated successfully",
+      "discovered-core-ble-core-mismatch": "Second discovery never saw host again; compatibility stage not reached. Both cores ran zero frames and timed out waiting.",
+      "discovered-core-mismatch-traced": "Reproduced second-discovery stall; host advertising enabled at 100ms, client first scan saw host, second scan duplicate filtering enabled and did not report it again."
+    },
+    "fix": "Connect selected Device1 address and validated address type without a second discovery. Actual ATT service discovery, readiness and protocol 3 checks still required.",
+    "trace_files": [
+      "core-discovery-trace-70.log",
+      "core-discovery-trace-91.log"
+    ],
+    "gameplay_verified": false
   }
 }

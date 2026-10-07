@@ -290,7 +290,7 @@ bool Netplay_bluetooth(bool host, const char *peer) {
         end_session("Bluetooth helper unavailable. Check the update.",true);return false;
     }
     np.bt_owned=np.bt_pending=true;
-    status(host?NP_LISTENING:NP_CONNECTING,host?"Preparing room...":"Searching for room...");
+    status(host?NP_LISTENING:NP_CONNECTING,host?"Preparing room...":"Connecting to room...");
     return true;
 #else
     (void)host;(void)peer;status(NP_ERROR,"Bluetooth link is unavailable in this build");return false;

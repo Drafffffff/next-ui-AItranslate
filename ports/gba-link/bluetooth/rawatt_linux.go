@@ -295,14 +295,33 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 }
 
 func centralRawSession(ctx context.Context, conn *dbus.Conn, expected string, progress func(byte, string) error, handler func(context.Context, duplexEndpoint, int) error) error {
-	device, err := findRoom(ctx, conn, expected)
-	if err != nil {
-		return err
+	return centralSession(ctx, conn, expected, false, progress, handler)
+}
+
+func centralSelectedSession(ctx context.Context, conn *dbus.Conn, expected string, progress func(byte, string) error, handler func(context.Context, duplexEndpoint, int) error) error {
+	return centralSession(ctx, conn, expected, true, progress, handler)
+}
+
+func centralSession(ctx context.Context, conn *dbus.Conn, expected string, selected bool, progress func(byte, string) error, handler func(context.Context, duplexEndpoint, int) error) error {
+	var device dbus.ObjectPath
+	var err error
+	if !selected {
+		device, err = findRoom(ctx, conn, expected)
+		if err != nil {
+			return err
+		}
 	}
 	objs, err := managed(ctx, conn)
 	if err != nil {
 		return err
 	}
+	if selected {
+		device = selectedRoomPath(objs, expected)
+		if device == "" {
+			return fmt.Errorf("selected room unavailable; search again")
+		}
+	}
+
 	properties := objs[device]["org.bluez.Device1"]
 	if connected, _ := properties["Connected"].Value().(bool); connected {
 		return fmt.Errorf("peer already connected; raw probe will not reuse it")

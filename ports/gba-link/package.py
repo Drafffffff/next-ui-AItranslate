@@ -79,6 +79,9 @@ for name in ('bluetooth-plan.json','bluetooth-validation.json'):
 for name in ('core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log','native-tests-current.elf.log','native-worker-lifecycle-results.json','worker-lifecycle-arm.elf.log','worker-lifecycle-arm-v1-failed.log'):
     path=OUT/'bluetooth'/name
     if path.is_file():shutil.copy2(path,records/name)
+for name in ('selected-room-core-normal','selected-room-core-core-mismatch','selected-room-core-rom-mismatch','selected-room-core-mode-mismatch','selected-room-core-normal-retry','selected-room-core-reverse','discovered-core-ble-core-mismatch','discovered-core-mismatch-traced'):
+    path=OUT/'bluetooth'/name
+    if path.is_dir():shutil.copytree(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'
                                       for p in sorted(package.rglob('*')) if p.is_file()))
 archive=package.with_suffix('.zip')

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "production_bridge_and_simple_menu_compiled_validation_pending",
+  "status": "physical_frontend_bridge_verified_menu_gameplay_pending",
   "production_integration": false,
   "source_review": {
     "existing_prototype": "gba-netplay/workspace/all/minarch/ma_netplay_ble*.c (untracked)",
@@ -192,13 +192,15 @@
       "Eight installation regressions passed, including first helper installation/removal on rollback and legacy journal recovery",
       "Current ARM Go suite: 28 passes, 1 intentional Mac-core integration skip",
       "Corrected private FD lifecycle fixture passed on Brick",
-      "Current helper physical duplex: both directions 300x104 bytes, integrity and final empty queues passed"
+      "Current helper physical duplex: both directions 300x104 bytes, integrity and final empty queues passed",
+      "Six physical frontend/core cases passed: automatic room selection, both roles, repeat, ROM/core/mode mismatch; failed second discovery fixed without restarting discovery"
     ],
     "pending": [
       "Generate final revision-labelled build and installation package",
       "On-device menu acceptance and user-controlled Mario Tennis gameplay",
-      "Production inherited-FD frontend bridge over physical radio, both roles and cancel/retry"
+      "Production host/scan cancellation over real radio and helper teardown verification"
     ],
-    "build_note": "Preliminary build passed; rebuild committed revision including the packaged helper before installation."
+    "build_note": "Rebuild committed selected-room fix and package before installation.",
+    "obsolete_package": "34999bb6: do not deploy; superseded after reproducing and fixing second-discovery stall"
   }
 }

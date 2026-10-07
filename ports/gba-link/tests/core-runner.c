@@ -208,7 +208,30 @@ int main(int argc, char **argv) {
     Netplay_identity(sha, core_sha, serial);
     bool host = !strcmp(argv[3], "host");
     bool ok;
-    if (getenv("NP_STREAM_FD")) {
+    if (getenv("NP_BT_PEER")) {
+        /* Exercise the production asynchronous helper contract, not an
+         * emulated socket transport. Only the open-source probe ROM is used. */
+#ifdef NEXTUI_LINK_BT
+        if (!host && getenv("NP_BT_DISCOVER")) {
+            if (!Netplay_bluetoothScan()) return 2;
+            struct NetplayBTRoom rooms[NETPLAY_BT_ROOMS]; unsigned count = 0;
+            struct timespec discovery_tick = {.tv_nsec=10000000};
+            for (unsigned tries=0; tries<1000; tries++) {
+                Netplay_poll(); count=Netplay_btRooms(rooms);
+                if (Netplay_btScanFailed()) break;
+                if (count && tries>=200) break;
+                nanosleep(&discovery_tick,NULL);
+            }
+            Netplay_bluetoothScanStop();
+            if (count!=1 || strcmp(rooms[0].address,getenv("NP_BT_PEER"))) {
+                fprintf(stderr,"Expected one fresh probe room, found %u\n",count);return 2;
+            }
+            printf("DISCOVERED_ROOM %s\n",rooms[0].label);
+            ok = Netplay_bluetooth(false,rooms[0].address);
+        } else
+#endif
+        ok = Netplay_bluetooth(host, getenv("NP_BT_PEER"));
+    } else if (getenv("NP_STREAM_FD")) {
         char *end = NULL; long fd = strtol(getenv("NP_STREAM_FD"), &end, 10);
         if (!end || *end || fd < 3 || fd > 1024) return 2;
         ok = Netplay_attachTransport((int)fd, host);
