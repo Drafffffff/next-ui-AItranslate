@@ -36,14 +36,22 @@ static void incoming(int fd, const void *buf, size_t len) {
     memcpy(frame,header,8); memcpy(frame+8,buf,len);
     assert(write(fd,frame,len+8)==(ssize_t)(len+8));
 }
+static void incoming_tag(int fd, unsigned type, uint64_t id, const void *buf, size_t len) {
+    unsigned char frame[128]; assert(len+16<=sizeof(frame));
+    uint32_t words[4]={htonl(type),htonl(len+8),htonl(id>>32),htonl(id)};
+    memcpy(frame,words,16); memcpy(frame+16,buf,len);
+    assert(write(fd,frame,len+16)==(ssize_t)(len+16));
+}
 static void check_replies(int fd) {
-    unsigned char data[64]; ssize_t len=recv(fd,data,sizeof(data),0);
-    assert(len==44); // uplink frame (24), ACK frame (20), unchanged ordering.
-    assert(!memcmp(data+8,uplink,16)); assert(!memcmp(data+32,ack,12));
+    unsigned char data[80]; ssize_t len=recv(fd,data,sizeof(data),0);
+    assert(len==52); // uplink frame (24), numbered ACK frame (28).
+    assert(!memcmp(data+8,uplink,16)); assert(!memcmp(data+40,ack,12));
+    uint32_t words[2]; memcpy(words,data+32,8);
+    assert(ntohl(words[0])==0 && ntohl(words[1])==77);
 }
 int main(void) {
     int sockets[2]; replies=true; setup(sockets,false);
-    incoming(sockets[1],host_data,sizeof(host_data)); Netplay_poll();
+    incoming_tag(sockets[1],W_RFU_EXCHANGE,77,host_data,sizeof(host_data)); Netplay_poll();
     assert(callbacks==1 && np.send_calls==1 && np.tx_end==0); check_replies(sockets[1]);
     puts("PASS: uplink and ACK share one write and leave before receive poll returns");
     Netplay_stop("next test"); close(sockets[1]);
@@ -52,7 +60,7 @@ int main(void) {
     fflush(stdout); pid_t child=fork(); assert(child>=0);
     if (!child) {
         close(sockets[0]); struct timespec t={.tv_nsec=2000000}; nanosleep(&t,NULL);
-        uint64_t start=now_us(); incoming(sockets[1],host_data,sizeof(host_data));
+        uint64_t start=now_us(); incoming_tag(sockets[1],W_RFU_EXCHANGE,77,host_data,sizeof(host_data));
         struct pollfd p={.fd=sockets[1],.events=POLLIN};
         if (poll(&p,1,40)!=1) _exit(1);
         check_replies(sockets[1]);
@@ -72,15 +80,32 @@ int main(void) {
 
     replies=false; setup(sockets,true);
     core_send(0,host_data,sizeof(host_data),1); core_send(0,host_data,sizeof(host_data),1);
-    incoming(sockets[1],ack,sizeof(ack)); incoming(sockets[1],ack,sizeof(ack)); Netplay_poll();
+    incoming_tag(sockets[1],W_RFU_CONFIRM,2,ack,sizeof(ack)); incoming_tag(sockets[1],W_RFU_CONFIRM,1,ack,sizeof(ack)); Netplay_poll();
     assert(np.ack_samples==2 && np.outstanding_peak==2 && np.rfu_received[7]==2);
     assert(np.ack_bins[0]+np.ack_bins[1]+np.ack_bins[2]+np.ack_bins[3]+np.ack_bins[4]==2);
-    puts("PASS: ordered ACK samples track real elapsed time and outstanding exchanges");
-    /* Overwrite timing ring, not transport state. Old timestamps cannot label new ACKs. */
-    np.rfu_sent[5]=300; np.rfu_received[7]=0;
-    np.ack_started[0]=now_us(); incoming(sockets[1],ack,sizeof(ack)); Netplay_poll();
-    assert(np.ack_samples==2 && np.ack_unmeasured==1);
-    puts("PASS: timing ring overflow is reported and never fabricated as a valid RTT");
+    puts("PASS: ACK identity survives out-of-order confirmations and preserves core bytes");
+    incoming_tag(sockets[1],W_RFU_CONFIRM,1,ack,sizeof(ack)); Netplay_poll();
+    assert(np.ack_samples==2 && np.ack_unmeasured==1 && np.ack_outstanding==0);
+    puts("PASS: duplicate numbered ACK does not fabricate a second RTT");
+    core_send(0,host_data,sizeof(host_data),1); uint64_t stale=np.exchange_sequence;
+    unsigned char reconnect[12]={'R','F','U','1',0,0,0,1,0,0,0,0};
+    incoming(sockets[1],reconnect,sizeof(reconnect)); Netplay_poll();
+    assert(np.ack_outstanding==0 && np.ack_cancelled==1);
+    core_send(0,host_data,sizeof(host_data),1); uint64_t fresh=np.exchange_sequence;
+    incoming_tag(sockets[1],W_RFU_CONFIRM,stale,ack,sizeof(ack)); Netplay_poll();
+    assert(np.ack_samples==2 && np.ack_outstanding==1);
+    incoming_tag(sockets[1],W_RFU_CONFIRM,fresh,ack,sizeof(ack)); Netplay_poll();
+    assert(np.ack_samples==3 && np.ack_outstanding==0);
+    puts("PASS: reconnect cancels old exchange timing; late ACK cannot shift a new sample");
+    core_send(0,host_data,sizeof(host_data),1); fresh=np.exchange_sequence;
+    Netplay_pause(true); Netplay_pause(false);
+    incoming_tag(sockets[1],W_RFU_CONFIRM,fresh,ack,sizeof(ack)); Netplay_poll();
+    assert(np.ack_samples==3 && np.ack_paused==1 && np.ack_outstanding==0);
+    puts("PASS: menu pause time is excluded from gameplay RTT distribution");
+    np.ack_ids[0]=NP_ACK_SAMPLES+1; np.ack_started[0]=now_us();
+    incoming_tag(sockets[1],W_RFU_CONFIRM,1,ack,sizeof(ack)); Netplay_poll();
+    assert(np.ack_samples==3);
+    puts("PASS: overwritten ring slot cannot attribute its timestamp to an older ACK");
     Netplay_stop("next test"); close(sockets[1]);
 
     setup(sockets,false); close(sockets[1]); start=now_us(); Netplay_wait(16000);

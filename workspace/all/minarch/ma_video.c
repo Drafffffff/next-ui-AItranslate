@@ -6,6 +6,7 @@
 #include "scaler.h"
 #include "ma_video.h"
 #include "ma_ai.h"
+#include "ma_netplay.h"
 
 
 static const char* bitmap_font[] = {
@@ -638,6 +639,7 @@ void selectScaler(int src_w, int src_h, int src_p) {
 	renderer.blit = GFX_getScaler(&renderer);
 }
 static void screen_flip(SDL_Surface* screen) {
+	uint64_t began = SDL_GetPerformanceCounter();
 	
 	if (use_core_fps) {
 		GFX_flip_fixed_rate(screen, core.fps);
@@ -646,6 +648,8 @@ static void screen_flip(SDL_Surface* screen) {
 		GFX_GL_Swap();
 		// GFX_flip(screen);
 	}
+	Netplay_videoTiming((SDL_GetPerformanceCounter() - began) * 1000000 / SDL_GetPerformanceFrequency(),
+	                    GFX_getLastPresentTimeUs(), use_core_fps != 0);
 }
 
 // couple of animation functions for pixel data keeping them all cause wanna use them later

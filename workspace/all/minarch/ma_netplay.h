@@ -15,6 +15,7 @@ bool Netplay_join(const char *ipv4, uint16_t port);
 bool Netplay_relay(const char *ipv4, uint16_t port, const char *room, bool host);
 void Netplay_poll(void);
 void Netplay_wait(unsigned microseconds); // existing pacing wait, with socket wakeups
+void Netplay_videoTiming(uint64_t elapsed_us, uint64_t present_us, bool core_pacing);
 void Netplay_stop(const char *reason);
 void Netplay_pause(bool paused);
 bool Netplay_active(void);
