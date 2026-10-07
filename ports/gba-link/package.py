@@ -32,7 +32,7 @@ shutil.copy2(ROOT/'ports/gba-link/install.py',package/'install.py')
 shutil.copy2(ROOT/'ports/gba-link/README.md',package/'README.md')
 shutil.copy2(ROOT/'ports/gba-link/compatibility.md',package/'compatibility.md')
 shutil.copy2(ROOT/'ports/gba-link/GAME-VALIDATION.md',package/'GAME-VALIDATION.md')
-for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md', 'RFU-EXCHANGE-FIX.md'):
+for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md', 'RFU-EXCHANGE-FIX.md', 'RFU-TIMING-FIX.md'):
     shutil.copy2(ROOT/'ports/gba-link'/name, package/name)
 source_dir=package/'source';source_dir.mkdir()
 (source_dir/'REVISION.txt').write_text(revision+'\n')
@@ -55,7 +55,8 @@ for name in ('test-results.json','regression.log','arm-host.log','arm-join.log',
              'rfu-queue-before.log', 'rfu-queue-after.log', 'rfu-queue-regression.log',
              'rfu-local-validation.json', 'rfu-local-host.log', 'rfu-local-join.log',
              'rfu-local-proxy.log', 'local-launcher-smoke.log',
-             'rfu-exchange-validation.json', 'rfu-exchange-regression.log', 'rfu-exchange-adapter.log'):
+             'rfu-exchange-validation.json', 'rfu-exchange-regression.log', 'rfu-exchange-adapter.log',
+             'rfu-timing-validation.json', 'rfu-timing-regression.log', 'rfu-timing-adapter.log'):
     path=OUT/name
     if path.is_file():shutil.copy2(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'

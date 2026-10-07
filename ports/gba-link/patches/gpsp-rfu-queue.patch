@@ -1,9 +1,43 @@
 --- a/rfu.c
 +++ b/rfu.c
-@@ -33,6 +33,16 @@
+@@ -19,6 +19,32 @@
+
+ #include "common.h"
+
++#if defined(__linux__) || defined(__APPLE__)
++#include <time.h>
++#endif
++
++#ifndef RFU_NET_TIME_US
++static u64 rfu_net_time_us(void) {
++#if defined(__linux__) || defined(__APPLE__)
++  struct timespec ts;
++  if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
++    return (u64)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
++#endif
++  return 0; // Other targets retain the emulated-cycle deadline.
++}
++#define RFU_NET_TIME_US() rfu_net_time_us()
++#endif
++
++/* One peer frame plus transport latency can exceed the original RF deadline.
++ * Keep emulated timing, but do not report failure before a bounded real-time
++ * grace of two 60Hz frames has elapsed. This does not sleep or stall rendering. */
++#define RFU_NET_GRACE_US 33334
++static u64 rfu_wait_started_us;
++static bool rfu_real_deadline_expired(u32 limit_us) {
++  u64 now = RFU_NET_TIME_US();
++  return !now || !rfu_wait_started_us || now - rfu_wait_started_us >= limit_us;
++}
++
+ // Debug print logic:
+ #ifdef RFU_DEBUG
+   #define RFU_DEBUG_LOG(...) printf(__VA_ARGS__)
+@@ -32,6 +58,17 @@
+
  #define RFU_DEF_TIMEOUT              32   // Expressed as frames (~533ms)
  #define RFU_DEF_RTXMAX                4   // Up to 4 transmissions per send
-
++
 +/* Real RFU transfers are host-clocked and expose one receive mailbox.
 + * A later exchange replaces unread data, rather than replaying stale frames.
 + * See gba-link-connection/docs/wireless_adapter.md (SendData / Waiting). */
@@ -11,13 +45,13 @@
 +static struct {
 +  u32 host_peak, client_peak, host_dropped, client_dropped;
 +  u32 host_replaced, client_replaced;
++  u32 host_ack_ok, host_late_ack, max_wait_us, rejected_spi, staged;
 +  u32 host_no_reply, client_timeout, frames;
 +} rfu_queue_stats;
-+
+
 
  // Unpacks big endian integers used for signaling
- static inline u32 upack32(const u8 *ptr) {
-@@ -135,10 +145,11 @@
+@@ -135,10 +172,11 @@
      u16 client_id;   // libretro client ID
      u16 devid;       // Host-assigned device ID
      u16 clttl;       // Client TTL (to check for disconnects)
@@ -30,7 +64,7 @@
    } clients[4];      // Connected clients IDs (zero means empty slot).
  } rfu_host;
 
-@@ -146,11 +157,12 @@
+@@ -146,11 +184,12 @@
    u16 devid;         // Device ID assigned to the client (by the host?)
    u16 clnum;         // Client number (0 to 3)
    u16 host_id;       // Client ID for the host device.
@@ -45,7 +79,12 @@
  } rfu_client;
 
  typedef struct {
-@@ -238,6 +250,8 @@
+@@ -235,9 +274,13 @@
+   rfu_comstate = RFU_COMSTATE_RESET;
+   rfu_timeout_cycles = 0;
+   rfu_resp_timeout = 0;
++  rfu_wait_started_us = 0;
++  memset(&rfu_tx_buf, 0, sizeof(rfu_tx_buf));
    rfu_timeout = RFU_DEF_TIMEOUT;
    rfu_rtx_max = RFU_DEF_RTXMAX;
    memset(&rfu_host, 0, sizeof(rfu_host));
@@ -54,7 +93,41 @@
 
    // Clear all the received broadcasts.
    memset(&rfu_peer_bcst, 0, sizeof(rfu_peer_bcst));
-@@ -466,21 +480,17 @@
+@@ -276,6 +319,8 @@
+     // Contains the slave timeout and retransmit count.
+     rfu_timeout = rfu_buf[0];
+     rfu_rtx_max = rfu_buf[0] >> 8;
++    fprintf(stderr, "GBA Link RFU setup: timeout_frames=%u retry_count=%u real_grace_us=%u\n",
++            rfu_timeout, rfu_rtx_max, RFU_NET_GRACE_US);
+     return 0;
+
+   case RFU_CMD_SYSVER:
+@@ -446,15 +491,24 @@
+   case RFU_CMD_SEND_DATA:
+     if (!rfu_plen)
+       return 0;
++    // SPI is game-controlled too: never let a malformed word count overwrite
++    // adapter state. Header-only ghost sends retain existing TX bytes.
++    if (rfu_plen > 1 + sizeof(rfu_tx_buf.buf) / sizeof(u32) ||
++        (rfu_state == RFU_STATE_CLIENT && rfu_plen > 5)) {
++      rfu_queue_stats.rejected_spi++;
++      return -2;
++    }
+
+     if (rfu_state == RFU_STATE_HOST) {
+       // Read data to be sent into the TX buffer
+       rfu_tx_buf.blen = rfu_buf[0] & 0x7F;
++      if (rfu_tx_buf.blen > 90) { rfu_queue_stats.rejected_spi++; return -2; }
+       memcpy(rfu_tx_buf.buf, &rfu_buf[1], (rfu_plen - 1)*sizeof(u32));
+     }
+     else if (rfu_state == RFU_STATE_CLIENT) {
+       // Same as above, but the header encoding is funny
+       rfu_tx_buf.blen = (rfu_buf[0] >> (8 + rfu_client.clnum * 5)) & 0x1F;
++      if (rfu_tx_buf.blen > 16) { rfu_queue_stats.rejected_spi++; return -2; }
+       memcpy(rfu_tx_buf.buf, &rfu_buf[1], (rfu_plen - 1)*sizeof(u32));
+     }
+
+@@ -466,21 +520,18 @@
                      rfu_tx_buf.blen, rfu_plen - 1);
        if (rfu_tx_buf.blen <= 90) {
          for (i = 0; i < 4; i++)
@@ -79,10 +152,11 @@
 +      /* A child cannot initiate RF: 24h/25h only stage its uplink.
 +       * The host's next transfer clocks it out (including ghost sends). */
 +      rfu_client.tx_pending = rfu_tx_buf.blen <= 16;
++      rfu_queue_stats.staged++;
      }
      else
        return -1;   // We are not connected nor a host
-@@ -502,9 +512,7 @@
+@@ -502,9 +553,7 @@
            // Update byte count header for this client
            rfu_buf[0] |= dlen << (8 + i * 5);
            // Discard front packet
@@ -93,7 +167,7 @@
          }
        }
        // Copy data into words into the RFU buffer.
-@@ -521,8 +529,7 @@
+@@ -521,8 +570,7 @@
          rfu_buf[cnt++] = leupack32(&rfu_client.pkts[0].hdata[j*4]);
 
        // Move to the next packet
@@ -103,34 +177,39 @@
        return cnt;
      }
      break;
-@@ -644,8 +651,8 @@
+@@ -644,8 +692,9 @@
      // and reverse the clock roles (the RFU becomes master).
      if (rfu_cmd == RFU_CMD_WAIT || rfu_cmd == RFU_CMD_RTX_WAIT || rfu_cmd == RFU_CMD_SEND_DATAW) {
        rfu_comstate = RFU_COMSTATE_WAITEVENT;
 -      rfu_timeout_cycles = rfu_timeout * (16777216 / 60);  // Frames to cycles
 -      rfu_resp_timeout = rfu_rtx_max * (16777216 / 60 / 6);  // RFU "frame" to cycles
++      rfu_wait_started_us = RFU_NET_TIME_US();
 +      rfu_timeout_cycles = rfu_timeout ? rfu_timeout * (16777216 / 60) : ~0U;  // Frames to cycles
 +      rfu_resp_timeout = rfu_rtx_max ? rfu_rtx_max * (16777216 / 60 / 6) : ~0U;  // RFU "frame" to cycles
      } else {
        rfu_comstate = rfu_plen ? RFU_COMSTATE_RESPDAT : RFU_COMSTATE_WAITCMD;
      }
-@@ -681,6 +688,15 @@
+@@ -681,6 +730,19 @@
 
  // Gets called every frame for basic device updates.
  void rfu_frame_update() {
 +  if ((rfu_state == RFU_STATE_HOST || rfu_state == RFU_STATE_CLIENT) &&
 +      ++rfu_queue_stats.frames % 300 == 0) {
 +    fprintf(stderr, "GBA Link RFU queue: host_peak=%u client_peak=%u "
-+            "host_dropped=%u client_dropped=%u host_no_reply=%u client_timeout=%u host_replaced=%u client_replaced=%u\n",
++            "host_dropped=%u client_dropped=%u host_no_reply=%u client_timeout=%u host_replaced=%u client_replaced=%u "
++            "ack_ok=%u late_ack=%u max_wait_us=%u rejected_spi=%u staged=%u state=%u com=%u cmd=%02x\n",
 +            rfu_queue_stats.host_peak, rfu_queue_stats.client_peak,
 +            rfu_queue_stats.host_dropped, rfu_queue_stats.client_dropped,
 +            rfu_queue_stats.host_no_reply, rfu_queue_stats.client_timeout,
-+            rfu_queue_stats.host_replaced, rfu_queue_stats.client_replaced);
++            rfu_queue_stats.host_replaced, rfu_queue_stats.client_replaced,
++            rfu_queue_stats.host_ack_ok, rfu_queue_stats.host_late_ack,
++            rfu_queue_stats.max_wait_us, rfu_queue_stats.rejected_spi, rfu_queue_stats.staged,
++            rfu_state, rfu_comstate, rfu_cmd);
 +  }
    // If device is in reset state, do nothing really.
    if (rfu_comstate != RFU_COMSTATE_RESET) {
      u32 i;
-@@ -807,50 +823,44 @@
+@@ -807,50 +869,48 @@
        break;
 
      case NET_RFU_HOST_SEND:
@@ -141,10 +220,12 @@
          if (len >= blen + 12) {
 -          u32 i;
 -          // ACK the reception (so they know we are alive!)
-+          if (rfu_client.pkts[0].hblen) rfu_queue_stats.client_replaced++;
-+          memset(rfu_client.pkts[0].hdata, 0, sizeof(rfu_client.pkts[0].hdata));
-+          memcpy(rfu_client.pkts[0].hdata, payl, blen);
-+          rfu_client.pkts[0].hblen = blen;
++          if (blen) {
++            if (rfu_client.pkts[0].hblen) rfu_queue_stats.client_replaced++;
++            memset(rfu_client.pkts[0].hdata, 0, sizeof(rfu_client.pkts[0].hdata));
++            memcpy(rfu_client.pkts[0].hdata, payl, blen);
++            rfu_client.pkts[0].hblen = blen;
++          }
 +          rfu_client.rx_event = true; // Even a zero-byte exchange wakes a child.
 +          rfu_queue_stats.client_peak = MAX(rfu_queue_stats.client_peak, !!blen);
 +          if (rfu_client.tx_pending) {
@@ -188,17 +269,18 @@
 -              RFU_DEBUG_LOG("Recv client packet (%d bytes) Q[#%d]\n", blen, i);
 -              return;
 -            }
--          }
--          RFU_DEBUG_LOG("Host dropped a client packet\n");
--        }
--      }
 +        if (rfu_host.clients[clid].devid == cdevid && cdevid &&
 +            rfu_host.clients[clid].client_id == client_id && blen <= 16 && len >= 12 + blen) {
 +          rfu_host.clients[clid].clttl = 0;
-+          if (rfu_host.clients[clid].pkts[0].datalen) rfu_queue_stats.host_replaced++;
-+          memset(rfu_host.clients[clid].pkts[0].data, 0, sizeof(rfu_host.clients[clid].pkts[0].data));
-+          memcpy(rfu_host.clients[clid].pkts[0].data, payl, blen);
-+          rfu_host.clients[clid].pkts[0].datalen = blen;
++          if (blen) {
++            if (rfu_host.clients[clid].pkts[0].datalen) rfu_queue_stats.host_replaced++;
++            memset(rfu_host.clients[clid].pkts[0].data, 0, sizeof(rfu_host.clients[clid].pkts[0].data));
++            memcpy(rfu_host.clients[clid].pkts[0].data, payl, blen);
++            rfu_host.clients[clid].pkts[0].datalen = blen;
+           }
+-          RFU_DEBUG_LOG("Host dropped a client packet\n");
+-        }
+-      }
 +          rfu_queue_stats.host_peak = MAX(rfu_queue_stats.host_peak, !!blen);
 +        }
 +      }
@@ -206,7 +288,7 @@
 
      case NET_RFU_CLIENT_ACK:
        // Should only happen when hosting
-@@ -858,8 +868,12 @@
+@@ -858,8 +918,12 @@
          u32 devid = hdata & 0xffff;
          u32 clid = (hdata >> 16) & 0x3;
 
@@ -221,7 +303,7 @@
        }
      };
    } else {
-@@ -884,8 +898,8 @@
+@@ -884,8 +948,8 @@
      netpacket_poll_receive();
 
      // Check if we are running our of time to respond.
@@ -232,7 +314,7 @@
 
      // Wait for GBA to go into slave mode before finishing the wait!
      if ((read_ioreg(REG_SIOCNT) & 0x1) == 0) {
-@@ -899,7 +913,9 @@
+@@ -899,7 +963,9 @@
          rfu_comstate = RFU_COMSTATE_WAITRESP;
          RFU_DEBUG_LOG("Wait command resp: disconnect\n");
        }
@@ -243,7 +325,7 @@
          // Some event is available!
          rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_DATA;
          rfu_buf[1] = 0x80000000;
-@@ -907,17 +923,28 @@
+@@ -907,17 +973,41 @@
          rfu_plen = 2;
          rfu_comstate = RFU_COMSTATE_WAITRESP;
        }
@@ -256,6 +338,8 @@
 -        rfu_cnt = 0;
 -        rfu_plen = 3;
 -        rfu_comstate = RFU_COMSTATE_WAITRESP;
+-      }
+-      else if (!rfu_timeout_cycles) {
 +      else if (rfu_state == RFU_STATE_HOST) {
 +        u32 connected = 0, received = 0;
 +        for (unsigned i = 0; i < 4; i++) if (rfu_host.clients[i].devid) {
@@ -263,9 +347,21 @@
 +          if (rfu_host.clients[i].acked == rfu_host.clients[i].sent)
 +            received |= 1U << i;
 +        }
-+        if (received == connected || !rfu_resp_timeout || !rfu_timeout_cycles) {
++        u32 retry_us = MAX(RFU_NET_GRACE_US, (u32)rfu_rtx_max * (1000000 / 60 / 6));
++        bool retry_expired = !rfu_resp_timeout && rfu_real_deadline_expired(retry_us);
++        bool total_expired = !rfu_timeout_cycles &&
++          rfu_real_deadline_expired((u32)rfu_timeout * (1000000 / 60));
++        if (received == connected || retry_expired || total_expired) {
 +          bool missing = received != connected;
 +          if (missing) rfu_queue_stats.host_no_reply++;
++          else {
++            rfu_queue_stats.host_ack_ok++;
++            if (!rfu_resp_timeout) rfu_queue_stats.host_late_ack++;
++          }
++          if (rfu_wait_started_us) {
++            u64 elapsed = RFU_NET_TIME_US() - rfu_wait_started_us;
++            rfu_queue_stats.max_wait_us = MAX(rfu_queue_stats.max_wait_us, MIN(elapsed, 0xffffffffULL));
++          }
 +          rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_DATA | (missing ? 1 << 8 : 0);
 +          // Only actual receivers are marked. No fabricated inactive slots:
 +          // real hardware marks a client inactive after ~4s, not one missed RF frame.
@@ -275,8 +371,9 @@
 +          rfu_plen = missing ? 3 : 2;
 +          rfu_comstate = RFU_COMSTATE_WAITRESP;
 +        }
-       }
-       else if (!rfu_timeout_cycles) {
++      }
++      else if (!rfu_timeout_cycles &&
++               rfu_real_deadline_expired((u32)rfu_timeout * (1000000 / 60))) {
 +        rfu_queue_stats.client_timeout++;
          // We ran out of time, just return an "error" code
          rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_TIMEO;
