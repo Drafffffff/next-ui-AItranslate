@@ -12,6 +12,14 @@ python3 ports/gba-link/tests/run-tests.py
 
 需要 Python、Apple clang、Homebrew OpenSSL 与 SDL2。第一条命令校验上游源码压缩包和本地 RFU 补丁的 SHA256；仅接受已知原始源码或完整补丁后的源码，拒绝其他缓存修改。RFU 测试使用真实 `rfu.c`，以 ASan / UBSan 检查双向突发、顺序、排空、容量边界和重置；外部 CPU 寄存器与网络回调为测试桩。
 
+## 一条命令打开双实例
+
+```sh
+python3 ports/gba-link/tests/launch-local.py ROM --save-host HOST_SRAM --save-join JOIN_SRAM
+```
+
+启动器先复制两份 SRAM 到独立运行目录，再打开两个 gpSP 窗口和仅监听本机的网络代理。不会改传入的存档。目录里保留按键帧号、双方截图、网络日志及 `jitter.txt`；向该文件写 `150` 开启抖动，写 `0` 恢复，关闭任一窗口或 Ctrl-C 会结束测试。`--headless` 可供自动化运行；各端 `.control` 文件接受“递增序号 按键位掩码 持续帧数”，日志记录实际应用的帧号。初始化存档需先按游戏自己的流程保存到 Main Menu。
+
 ## 可操作的游戏窗口
 
 自行指定合法 ROM 和两份独立的 SRAM 测试副本。不要直接指向掌机原存档。两个终端分别运行：
@@ -36,3 +44,9 @@ python3 ports/gba-link/tests/jitter-proxy.py --port 55438 --target-port 55437 --
 客机连接代理端口 `55438`。向控制文件写 `0` 为正常转发；写 `150` 会每两秒将每个方向暂缓至多 150ms，再按原顺序放行积压数据。代理保留全部字节，模拟延迟和成批到达，不伪造丢包。退出测试后停止代理。
 
 gpSP 日志的 `GBA Link RFU queue` 显示队列峰值、实际丢弃次数、主机未及时收到回应及客机等待超时次数；前端日志记录收发数量和待发送字节。这些统计用于定位问题，不能把网络包收到了等同于游戏已消费或已进入比赛。
+
+## 2026-10-07 本轮实测
+
+两个独立 Mac gpSP 解释器采用 `7b0acfd` 的 RFU 补丁和生产网络代码，在 BTME 中配对、分别选择 Mario / Luigi，双方一致显示 Mario 30–0，P2 独立移动在两端可见。代理每两秒暂缓转发至多 150ms 后，两端实际队列峰值均为 9，队列丢弃计数均为 0。停止抖动后双方继续到 Mario 40–0。RFU 主机未及时收到回应的次数仍会增加；队列修复不能消除网络延迟，也不能据此声称所有红标已解决。
+
+完整比赛结束未验证。14 项既有回归、RFU 队列 ASan / UBSan 检查和双实例启动器的正常退出 / 原始 SRAM 保持检查均通过。tg5040 新核心和前端编译完成；本轮两台 SSH 不可达，未安装这次核心补丁。原始输入帧、截图、代理转发统计和 `rfu-local-validation.json` 留在本机 `build/gba-link/`，ROM 与 SRAM 不进更新包。
