@@ -48,14 +48,25 @@ static void packet(unsigned char *p,unsigned length,uint32_t sequence,int padded
     put32(p+8,sequence);
 }
 static int compare(const void *a,const void *b) {uint64_t x=*(const uint64_t*)a,y=*(const uint64_t*)b;return (x>y)-(x<y);}
+static int fake_transfer(unsigned char *data,size_t length,int writing) {
+    while(length) {
+        ssize_t n=writing?write(3,data,length):read(3,data,length);
+        if(n<0&&errno==EINTR)continue;
+        if(n<=0)return 0;
+        data+=n;length-=(size_t)n;
+    }
+    return 1;
+}
 int main(int argc,char **argv) {
     if(argc>1&&!strcmp(argv[1],"-role")&&getenv("NP_STREAM_FAKE")) {
-        unsigned char buffer[8192];fcntl(3,F_SETFL,0);write(4,"H",1);
-        ssize_t n;
-        while((n=read(3,buffer,sizeof(buffer)))>0) {
+        unsigned char buffer[65544];fcntl(3,F_SETFL,0);write(4,"H",1);
+        if(!fake_transfer(buffer,160,0)||!fake_transfer(buffer,160,1))return 1;
+        while(fake_transfer(buffer,8,0)) {
+            unsigned length=get32(buffer+4);if(length>65536)return 1;
+            if(!fake_transfer(buffer+8,length,0))return 1;
+            if(getenv("NP_STREAM_FAKE_CORRUPT")&&length)buffer[8+length-1]^=1;
             struct timespec pace={0,100000};nanosleep(&pace,NULL);
-            ssize_t offset=0;
-            while(offset<n) {ssize_t sent=write(3,buffer+offset,(size_t)(n-offset));if(sent<=0)return 1;offset+=sent;}
+            if(!fake_transfer(buffer,8+length,1))return 1;
         }
         return 0;
     }
