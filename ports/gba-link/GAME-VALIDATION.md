@@ -36,4 +36,4 @@ CORE 为 `build/gba-link/mac-source/gpsp-<固定提交>/gpsp_libretro.dylib`，R
 
 Advance Wars AWRE 汉化 ROM 已进入 Field Training，未完成联机对战。59 个候选 ID 只是固定核心源码声明，不是逐款实测结果。
 
-Brick ready 后，先用相同 BTME ROM 在两台真机按上述步骤完成至少一场，再测菜单/翻译暂停、断线退出、游戏 SRAM、其他核心单人运行和回滚。真实 LAN、公网中继、Bluetooth 以及 Brick 的显示/按键/性能仍待相应硬件与网络测试。
+2026-10-07 已接入两台真机：直接 LAN 的原创 Link Duel 对战与双方暂停恢复通过；BTME 在 NextUI 完成配对和选角，进入球场开始场景后卡住，用户反馈两端卡顿。尚未验证实际得分或整场比赛。随后新增空收包退避和日志，并安排用户手动复测；见 [HARDWARE-VALIDATION.md](HARDWARE-VALIDATION.md)。真实公网、Bluetooth、商业游戏完整比赛及功耗仍待验收。

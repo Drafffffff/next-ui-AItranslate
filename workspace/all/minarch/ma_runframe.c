@@ -55,6 +55,12 @@ void run_frame(void) {
 		Notification_push(NOTIFICATION_SETTING, Netplay_status(), NULL);
 	}
 	if (Netplay_busy() || Netplay_used()) {
+		static uint32_t last_report;
+		uint32_t now = SDL_GetTicks();
+		if (Netplay_active() && now - last_report >= 5000) {
+			LOG_info("GBA Link frame rate: %.1f fps; %s\n", perf.fps, Netplay_status());
+			last_report = now;
+		}
 		fast_forward = rewind_pressed = rewind_toggle = rewinding = 0;
 		if (Netplay_paused()) { input_poll_callback(); SDL_Delay(5); return; }
 		core.run();

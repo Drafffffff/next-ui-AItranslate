@@ -10,6 +10,9 @@
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef NEXTUI_LINK_WIFI
+#include "ma_netplay_wifi.h"
+#endif
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -30,6 +33,8 @@ static struct {
     unsigned char tx[NP_QUEUE], rx[NP_MAX_PACKET + 8];
     size_t tx_start, tx_end, rx_end;
     uint64_t last_rx, last_ping, began, sent, received;
+    uint64_t next_core_read_us, core_polls, skipped_polls, socket_reads, last_report;
+    uint64_t rfu_sent[8], rfu_received[8];
     char status[160];
 } np = { .listener = -1, .fd = -1 };
 
@@ -37,6 +42,11 @@ static uint64_t now_ms(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+static uint64_t now_us(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
 }
 static void status(enum NPState state, const char *text) {
     np.state = state;
@@ -55,6 +65,9 @@ static void end_session(const char *reason, bool error) {
         if (np.cb.stop) np.cb.stop();
     }
     np.registered = false;
+#ifdef NEXTUI_LINK_WIFI
+    Netplay_wifiEnd();
+#endif
     status(error ? NP_ERROR : NP_IDLE, reason);
 }
 void Netplay_stop(const char *reason) { end_session(reason ? reason : "Disconnected", false); }
@@ -141,7 +154,16 @@ static void core_send(int flags, const void *buf, size_t len, uint16_t to) {
     if ((to != RETRO_NETPACKET_BROADCAST && to != (np.host ? 1 : 0)) || (!buf && len)) {
         end_session("Invalid destination from core", true); return;
     }
-    if (buf && len) { packet(W_DATA, buf, len); np.sent++; }
+    if (buf && len) {
+        if (len >= 8 && !memcmp(buf, "RFU1", 4)) {
+            uint32_t type; memcpy(&type, (const unsigned char *)buf + 4, 4);
+            type = ntohl(type);
+            if (type < 8) np.rfu_sent[type]++;
+        }
+        packet(W_DATA, buf, len); np.sent++;
+        /* A request may already have an answer waiting: bypass empty-read backoff. */
+        np.next_core_read_us = 0;
+    }
     else flush();
 }
 void Netplay_pause(bool paused) {
@@ -165,7 +187,14 @@ static bool prepare(bool host) {
     np.relay = false;
     np.hello[159] = host ? 1 : 0;
     np.sent = np.received = 0;
+    np.next_core_read_us = np.core_polls = np.skipped_polls = np.socket_reads = 0;
+    memset(np.rfu_sent, 0, sizeof(np.rfu_sent));
+    memset(np.rfu_received, 0, sizeof(np.rfu_received));
     np.began = np.last_rx = now_ms();
+    np.last_report = np.began;
+#ifdef NEXTUI_LINK_WIFI
+    Netplay_wifiBegin();
+#endif
     return true;
 }
 bool Netplay_host(uint16_t port) {
@@ -211,6 +240,17 @@ bool Netplay_join(const char *ipv4, uint16_t port) { return connect_peer(ipv4, p
 bool Netplay_relay(const char *ipv4, uint16_t port, const char *room, bool host) {
     return connect_peer(ipv4, port, room, host);
 }
+/* RFU calls poll_receive repeatedly within one emulated frame. After an
+ * empty recv, avoid another syscall for 250us. Main/frame/menu polls and
+ * reads after a core send remain immediate; no sleeping on the core thread. */
+static void core_poll_receive(void) {
+    np.core_polls++;
+    if (np.next_core_read_us && now_us() < np.next_core_read_us) {
+        np.skipped_polls++;
+        return;
+    }
+    Netplay_poll();
+}
 static void start_core(void) {
     if (memcmp(np.peer, np.hello, 12)) { end_session("NextUI link protocol mismatch", true); return; }
     if (memcmp(np.peer + 12, np.hello + 12, 64)) { end_session("Core link version mismatch", true); return; }
@@ -220,7 +260,7 @@ static void start_core(void) {
     if (np.peer[159] != (np.host ? 0 : 1)) { end_session("Expected opposite host/join role", true); return; }
     status(NP_ACTIVE, "Link connected (2 players)");
     np.started = np.used = true;
-    np.cb.start(np.host ? 0 : 1, core_send, Netplay_poll);
+    np.cb.start(np.host ? 0 : 1, core_send, core_poll_receive);
     if (!Netplay_active()) return;
     if (np.host && np.cb.connected) {
         if (!np.cb.connected(1)) { end_session("Core rejected second player", true); return; }
@@ -261,6 +301,11 @@ static void consume(void) {
         if (type == W_DATA) {
             if (!valid_core_packet(np.rx + 8, len)) { end_session("Invalid gpSP RFU payload", true); return; }
             np.received++;
+            if (len >= 8 && !memcmp(np.rx + 8, "RFU1", 4)) {
+                uint32_t subtype; memcpy(&subtype, np.rx + 12, 4);
+                subtype = ntohl(subtype);
+                if (subtype < 8) np.rfu_received[subtype]++;
+            }
             np.cb.receive(np.rx + 8, len, np.host ? 1 : 0);
         } else if (type == W_PAUSE) {
             if (np.rx[8] > 1) { end_session("Invalid pause frame", true); return; }
@@ -302,13 +347,18 @@ void Netplay_poll(void) {
         unsigned char *dst = hello ? np.peer + np.hello_read : np.rx + np.rx_end;
         size_t cap = hello ? NP_HELLO - np.hello_read : sizeof(np.rx) - np.rx_end;
         if (!cap) { end_session("Link receive queue full", true); break; }
+        np.socket_reads++;
         ssize_t n = recv(np.fd, dst, cap, 0);
         if (n > 0) {
+            np.next_core_read_us = 0;
             np.last_rx = now;
             if (hello) { np.hello_read += (size_t)n; if (np.hello_read == NP_HELLO) start_core(); }
             else { np.rx_end += (size_t)n; consume(); }
         } else if (n < 0 && errno == EINTR) continue;
-        else if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) break;
+        else if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            np.next_core_read_us = now_us() + 250;
+            break;
+        }
         else { end_session("Peer disconnected", true); break; }
     }
     now = now_ms(); /* Handshake may have advanced began/last_ping during this poll. */
@@ -316,6 +366,16 @@ void Netplay_poll(void) {
         if (np.cb.poll) np.cb.poll();
         if (now - np.last_ping >= 1000) { packet(W_PING, NULL, 0); np.last_ping = now; }
         if (now - np.last_rx >= NP_TIMEOUT) end_session("Peer timed out", true);
+        if (Netplay_active() && now - np.last_report >= 5000) {
+            fprintf(stderr, "GBA Link traffic: sent=%llu received=%llu core_polls=%llu skipped=%llu socket_reads=%llu tx_queue=%zu RFU host_data=%llu/%llu client_data=%llu/%llu ack=%llu/%llu\n",
+                    (unsigned long long)np.sent, (unsigned long long)np.received,
+                    (unsigned long long)np.core_polls, (unsigned long long)np.skipped_polls,
+                    (unsigned long long)np.socket_reads, np.tx_end - np.tx_start,
+                    (unsigned long long)np.rfu_sent[5], (unsigned long long)np.rfu_received[5],
+                    (unsigned long long)np.rfu_sent[6], (unsigned long long)np.rfu_received[6],
+                    (unsigned long long)np.rfu_sent[7], (unsigned long long)np.rfu_received[7]);
+            np.last_report = now;
+        }
     } else if ((np.state == NP_CONNECTING || np.state == NP_HANDSHAKE) && now - np.began >= (np.relay && np.state == NP_HANDSHAKE ? 120000 : NP_TIMEOUT))
         end_session("Connection timed out", true);
     np.polling = false;

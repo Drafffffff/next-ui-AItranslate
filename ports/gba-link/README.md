@@ -10,7 +10,7 @@ Mac 的真实双核心测试、tg5040 ARM64 交叉编译、实际 ARM64 核心�
 
 测试 ROM 是本项目原创 ARM homebrew，它直接操作 GBA SIO 寄存器；不是前端伪造网络数据。附带原创 Link Duel 测试 ROM：A 攻击，红条是自己血量、蓝条是对手血量、绿色标记表示收到对端串口数据。它既验证双向串口，也验证真实 GBA 按键能经串口改变对端血量；不代表商业游戏已完成对战。电脑已有的《马里奥网球 力量之旅》BTME 已用两个独立 Mac gpSP 客户端进入真实无线 Exhibition：双方各自选角色、P2 移动、P1 发球得分并赢下一局、随后 P2 发球得分；两端比分一致。整场比赛结束尚未测到，商业 RFU 在 ARM64/Brick 上也未验收。《高级战争》汉化版仅完成菜单流程。结果与输入记录在更新包 `validation/`，复现步骤见随包 `GAME-VALIDATION.md`。测试游戏的红/蓝条分别表示本机/对手血量，A 每按一次攻击一次；绿色标记表示收到对端数据。测试 ROM 可从包内 `tests/link-probe.gba` 手动拷贝到 `Roms/GBA/`，两端核心 `Link Cable Connectivity` 选择 `Link Cable - Pokemon Gen3 mode`（内部值 mul_poke）再开联机。商业游戏 ROM、Nintendo BIOS 和用户存档不会进入更新包。
 
-还没有两台 Brick 真机、真实局域网或真实公网测试。容器 ARM64 测试不等于 Brick 性能测试；本机中继和 netem 不等于真实公网。显示、实体按键、功耗、Wi-Fi 干扰及完整游戏兼容仍需真机验收。
+2026-10-07 已在两台独立 Brick 上通过直接局域网 Link Duel 串口对战、交换主客位置及双方暂停恢复测试。《马里奥网球》在 NextUI 里完成 RFU 配对和选角，但进入球场开始场景后卡住，尚未确认得分或完整比赛。最新性能改动及证据见 [HARDWARE-VALIDATION.md](HARDWARE-VALIDATION.md)。真实公网、功耗、Wi-Fi 干扰及完整游戏兼容仍需验收。
 
 ## 蓝牙是否更合适
 
