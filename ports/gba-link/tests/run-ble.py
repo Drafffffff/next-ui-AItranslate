@@ -19,6 +19,8 @@ def main():
     parser.add_argument('--join', required=True)
     parser.add_argument('--peer-bt', required=True)
     parser.add_argument('--backend', choices=['bluez', 'raw-att'], default='bluez')
+    parser.add_argument('--duplex', action='store_true', help='Independent opaque messages in both directions; not echo')
+    parser.add_argument('--binary', type=Path, help='Explicit diagnostic ELF, snapshotted and hash verified before upload')
     parser.add_argument('--server-fd', action='store_true', help='Single-session host FD diagnostic')
     parser.add_argument('--event-length', type=int, default=0, choices=range(13), help='Informational controller hint in 625us units')
     parser.add_argument('--window', type=int, default=1, choices=range(1, 17), help='Bounded diagnostic pending messages')
@@ -31,6 +33,8 @@ def main():
     parser.add_argument('--run-for', type=int, default=0, help='Minimum measured seconds; requires a sufficient count limit')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if args.duplex and (args.backend != 'raw-att' or args.window != 1 or args.run_for or args.delay_ms or args.server_fd):
+        parser.error('Duplex benchmark uses raw ATT and its own bounded window; FD echo/pacing flags are not supported')
     if args.window > 1 and (not args.server_fd or args.window * args.bytes > 262144):
         parser.error('Window probe needs server FD and bounded bytes')
     if args.run_for < 0 or args.run_for > 1200 or (args.run_for and args.duration < args.run_for + 30):
@@ -59,7 +63,7 @@ def main():
 
 
 def run_test(args):
-    binary = ROOT / 'build/gba-link/bluetooth/ble-probe.elf'
+    binary = args.binary or ROOT / 'build/gba-link/bluetooth/ble-probe.elf'
     artifact = binary.read_bytes()
     artifact_hash = hashlib.sha256(artifact).hexdigest()
     args.probe_sha256 = artifact_hash
@@ -92,7 +96,9 @@ def run_test(args):
         args.created_logs = True
         # The SSH shell retains ownership of its child. A line on stdin ends the
         # probe gracefully; HUP/exit also cleans up this child only.
-        host_command = ('/tmp/nextui-gba-bluetooth/ble-probe.elf -role host '
+        host_role = 'duplex-host' if args.duplex else 'host'
+        host_command = ('/tmp/nextui-gba-bluetooth/ble-probe.elf -role ' + host_role + ' '
+                        + (f'-count {args.count} -bytes {args.bytes} ' if args.duplex else '') +
                         f'-duration {args.duration + 15}s ' + ('-server-fd ' if args.server_fd else '') + '& child=$!; '
                         'trap \'kill -TERM "$child" 2>/dev/null || true\' EXIT HUP INT TERM; '
                         'IFS= read -r finish || true; kill -TERM "$child" 2>/dev/null || true; wait "$child"')
@@ -101,6 +107,8 @@ def run_test(args):
         try:
             time.sleep(1)
             role = 'join-raw' if args.backend == 'raw-att' else 'join'
+            if args.duplex:
+                role = 'duplex-join'
             command = ('/tmp/nextui-gba-bluetooth/ble-probe.elf -role ' + role + ' '
                        f'-peer {shlex.quote(args.peer_bt)} -duration {args.duration}s '
                        f'-count {args.count} -bytes {args.bytes} -delay {args.delay_ms}ms')
@@ -126,9 +134,11 @@ def run_test(args):
             host_code = host.wait(timeout=30)
     content = (args.output / 'join.log').read_text()
     host_content = (args.output / 'host.log').read_text()
-    record = dict(transport='BLE ' + args.backend, server_fd=args.server_fd, return_codes=[host_code, join_code],
-                  passed=host_code == join_code == 0 and 'PASS exchanges=' in content,
+    transfer_passed = ('DUPLEX_PASS messages=' in content and 'DUPLEX_PASS messages=' in host_content) if args.duplex else 'PASS exchanges=' in content
+    record = dict(transport='BLE ' + args.backend, duplex=args.duplex, server_fd=args.server_fd, return_codes=[host_code, join_code],
+                  passed=host_code == join_code == 0 and transfer_passed,
                   metrics={key: int(value) for key, value in re.findall(r'(\w+)=(\d+)(?=\s|$)', content)},
+                  host_metrics={key: int(value) for key, value in re.findall(r'(\w+)=(\d+)(?=\s|$)', host_content)},
                   host_log=host_content, join_log=content, game_pids=game_pids,
                   completed_at=int(time.time()), probe_sha256=artifact_hash)
     (args.output / 'results.json').write_text(json.dumps(record, indent=2) + '\n')

@@ -27,6 +27,8 @@ type rawATT struct {
 	tx, rx uint16
 }
 
+func (a *rawATT) Close() error { return a.file.Close() }
+
 func (a *rawATT) SetReadDeadline(t time.Time) error  { return a.file.SetReadDeadline(t) }
 func (a *rawATT) SetWriteDeadline(t time.Time) error { return a.file.SetWriteDeadline(t) }
 func (a *rawATT) send(packet []byte) error {
@@ -408,6 +410,16 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 		payload = 512
 	}
 	fmt.Printf("RAW_ATT_READY mtu=%d payload=%d tx=%d rx=%d\n", att.mtu, payload, att.tx, att.rx)
+	if probeDuplex {
+		if err := att.SetReadDeadline(time.Time{}); err != nil {
+			return err
+		}
+		epoch, err := randomDuplexEpoch()
+		if err != nil {
+			return err
+		}
+		return duplexBenchmark(ctx, att, payload, epoch, count, length, false)
+	}
 	return probeDataExchange(ctx, att, att, payload, count, length, delay)
 }
 func syscallError(code int) error { return unix.Errno(code) }

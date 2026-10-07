@@ -53,6 +53,7 @@ type Peripheral struct {
 	files         []*os.File
 	notifyWriter  *os.File
 	writeAcquired bool
+	duplex        *peripheralPackets
 }
 type Characteristic struct {
 	Peripheral *Peripheral
@@ -74,6 +75,9 @@ func (c *Characteristic) StopNotify() *dbus.Error {
 	c.Peripheral.notifying = false
 	c.Peripheral.peer = ""
 	c.Peripheral.assembly = nil
+	if c.Peripheral.duplex != nil {
+		c.Peripheral.duplex.Close()
+	}
 	c.Peripheral.mu.Unlock()
 	fmt.Println("UNSUBSCRIBED")
 	return nil
@@ -97,6 +101,12 @@ func (c *Characteristic) WriteValue(value []byte, options map[string]dbus.Varian
 		p.peer = device
 		p.mtu = mtu
 		fmt.Printf("READY mtu=%d peer=%s\n", mtu, device)
+	}
+	if p.duplex != nil {
+		if err := p.duplex.accept(value); err != nil {
+			return dbus.NewError("org.bluez.Error.Failed", []any{err.Error()})
+		}
+		return nil
 	}
 	if len(value) <= frameHeader {
 		return dbus.NewError("org.bluez.Error.InvalidValueLength", nil)
@@ -155,6 +165,9 @@ func (p *Peripheral) closeFDs() {
 	p.notifying = false
 	p.assembly = nil
 	p.peer = ""
+	if p.duplex != nil {
+		p.duplex.Close()
+	}
 }
 
 var probeServerFD bool
@@ -187,6 +200,10 @@ func managed(ctx context.Context, conn *dbus.Conn) (objects, error) {
 }
 func host(ctx context.Context, conn *dbus.Conn) error {
 	p := &Peripheral{conn: conn}
+	return hostPeripheral(ctx, conn, p)
+}
+
+func hostPeripheral(ctx context.Context, conn *dbus.Conn, p *Peripheral) error {
 	defer p.closeFDs()
 	objs := objects{
 		service: {"org.bluez.GattService1": {"UUID": dbus.MakeVariant(serviceUUID), "Primary": dbus.MakeVariant(true), "Includes": dbus.MakeVariant([]dbus.ObjectPath{})}},
@@ -451,7 +468,7 @@ func main() {
 	}
 	probeRunDuration = *runFor
 	probeServerFD = *serverFD
-	if (*role != "host" && *role != "join" && *role != "join-raw") || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
+	if (*role != "host" && *role != "join" && *role != "join-raw" && *role != "duplex-host" && *role != "duplex-join") || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
 		fmt.Fprintln(os.Stderr, "invalid arguments")
 		os.Exit(2)
 	}
@@ -465,7 +482,12 @@ func main() {
 		os.Exit(1)
 	}
 	defer conn.Close()
-	if *role == "host" {
+	if *role == "duplex-host" {
+		err = duplexHost(ctx, conn, *count, *length)
+	} else if *role == "duplex-join" {
+		probeDuplex = true
+		err = centralRaw(ctx, conn, *peer, *count, *length, *delay)
+	} else if *role == "host" {
 		err = host(ctx, conn)
 	} else if *role == "join-raw" {
 		err = centralRaw(ctx, conn, *peer, *count, *length, *delay)

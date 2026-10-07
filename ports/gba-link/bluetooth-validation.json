@@ -1140,6 +1140,19 @@
       "count": 18,
       "evidence": "build/gba-link/test-results.json",
       "scope": "Own worktree pinned Mac gpSP and existing protocol 3 TCP/relay/save/compatibility/RFU regressions; no physical Bluetooth gameplay."
+    },
+    "duplex_worker": {
+      "offline_race_passed": true,
+      "offline_repeated_runs": 5,
+      "scope": "Independent simultaneous opaque message transport, negotiated fragmentation, per-fragment bootstrap, four-message window, bounded send/receive/control queues, CRC/order/session rejection and owned endpoint cancellation; physical test pending. Existing protocol 3 identity and RFU are not yet connected.",
+      "send_encoded_budget_bytes": 262144,
+      "receive_message_slots": 4,
+      "max_message_bytes": 65536,
+      "native_extended_tests": {
+        "passed": false,
+        "status": "upload_interrupted",
+        "reason": "Stopped this task owned SSH upload after it remained blocked during the long radio test; no native extended-suite pass claimed. The prior 19 native tests remain verified."
+      }
     }
   },
   "conclusion": "All 400 TCP and 400 repeated classic Bluetooth exchanges passed integrity checks. Classic 104-byte p50 ~33.8ms vs TCP ~4.3ms; classic is not selected as production default. Initial connection abort remains an unresolved transient, not relabelled as success. BLE GATT is still unmeasured.",
