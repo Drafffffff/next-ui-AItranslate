@@ -7,6 +7,9 @@ static uint64_t fake_us = 100;
 #include RFU_SOURCE
 
 u32 cpu_ticks;
+u32 reg[REG_MAX];
+u8 ewram[512 * 1024];
+
 u16 io_registers[512];
 void rand_seed(u32 seed) { (void)seed; }
 u16 rand_gen(void) { return 1234; }
@@ -66,6 +69,17 @@ static void host_wait(void) {
   write_ioreg(REG_SIOCNT, 0); // Wait armed, but don't consume response yet.
 }
 int main(void) {
+  setup(false);
+  rfu_watch_configure("BTME");
+  u32 pointer = 0x02002058;
+  memcpy(ewram + 0x33f0, &pointer, 4);
+  rfu_watch_write(0x020033f0, 0, 32, 0x08012344, 0);
+  assert(readaddress32(ewram, 0x33f0) == pointer && rfu_watch_dumped);
+  assert(rfu_watch_changes == 1);
+  rfu_reset();
+  assert(!rfu_watch_dumped && !rfu_watch_changes);
+  rfu_watch_configure(NULL);
+  puts("PASS: write watch records the fault without modifying guest memory; reset clears it");
   mailbox(false); mailbox(true);
   setup(false);
   stage(10); stage(20);

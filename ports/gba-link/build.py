@@ -40,7 +40,8 @@ def source(platform):
     patch = ROOT / 'ports/gba-link/patches/gpsp-rfu-queue.patch'
     if hashlib.sha256(patch.read_bytes()).hexdigest() != LOCK['gpsp_rfu_patch_sha256']:
         raise SystemExit('gpSP RFU patch checksum mismatch')
-    # Accept only the pinned upstream bytes or our exact reviewed RFU patch.
+    patched_files = LOCK.get('gpsp_patch_files', {'rfu.c': LOCK['gpsp_rfu_patched_sha256']})
+    # Accept only the pinned upstream bytes or exact reviewed patch files.
     # Unknown local changes must never silently enter an update package.
     with tarfile.open(archive) as tar:
         for entry in tar.getmembers():
@@ -50,18 +51,21 @@ def source(platform):
                     raise SystemExit('Cached gpSP source is missing: ' + entry.name)
                 actual = hashlib.sha256(cached.read_bytes()).hexdigest()
                 original = hashlib.sha256(tar.extractfile(entry).read()).hexdigest()
-                patched = LOCK['gpsp_rfu_patched_sha256'] if cached == core / 'rfu.c' else None
+                patched = patched_files.get(str(cached.relative_to(core)))
                 previous = LOCK.get('gpsp_rfu_previous_patched_sha256') if cached == core / 'rfu.c' else None
-                if actual not in (original, patched, previous):
+                prior_patch = LOCK.get('gpsp_previous_patch_files', {}).get(str(cached.relative_to(core)))
+                if actual not in (original, patched, previous, prior_patch):
                     raise SystemExit('Cached gpSP source was modified: ' + entry.name)
-    if hashlib.sha256((core / 'rfu.c').read_bytes()).hexdigest() != LOCK['gpsp_rfu_patched_sha256']:
-        # Upgrade only the exact previously reviewed patch; apply the new patch
-        # from pinned upstream rather than layering diffs on cached edits.
+    if any(hashlib.sha256((core / name).read_bytes()).hexdigest() != digest
+           for name, digest in patched_files.items()):
+        # Reapply every reviewed file from the pinned archive. Never layer diffs.
         with tarfile.open(archive) as tar:
-            (core / 'rfu.c').write_bytes(tar.extractfile(core.name + '/rfu.c').read())
+            for name in patched_files:
+                (core / name).write_bytes(tar.extractfile(core.name + '/' + name).read())
         run(['patch', '--batch', '--forward', '-p1', '-i', patch], core)
-    if hashlib.sha256((core / 'rfu.c').read_bytes()).hexdigest() != LOCK['gpsp_rfu_patched_sha256']:
-        raise SystemExit('Patched gpSP RFU source checksum mismatch')
+    for name, digest in patched_files.items():
+        if hashlib.sha256((core / name).read_bytes()).hexdigest() != digest:
+            raise SystemExit('Patched gpSP source checksum mismatch: ' + name)
     return core
 
 

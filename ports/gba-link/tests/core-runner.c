@@ -13,8 +13,8 @@
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *texture;
-static enum retro_pixel_format pixel_format;
 #endif
+static enum retro_pixel_format pixel_format;
 static unsigned char pixels[240*160*4];
 static unsigned pixel_width, pixel_height;
 static size_t pixel_pitch;
@@ -70,9 +70,7 @@ static bool env(unsigned cmd, void *data) {
     case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE: *(bool *)data = false; return true;
     case RETRO_ENVIRONMENT_GET_CAN_DUPE: *(bool *)data = true; return true;
     case RETRO_ENVIRONMENT_SET_PIXEL_FORMAT:
-#ifdef NP_SDL
         pixel_format = *(enum retro_pixel_format *)data;
-#endif
         return true;
     default: return false;
     }
@@ -81,6 +79,28 @@ static void video(const void *data, unsigned w, unsigned h, size_t pitch) {
     video_frames++;
     if (data && w <= 240 && h <= 160 && pitch*h <= sizeof(pixels)) {
         memcpy(pixels, data, pitch*h); pixel_width=w; pixel_height=h; pixel_pitch=pitch;
+        if (getenv("NP_CAPTURE_PPM") && frames && frames % 60 == 0) {
+            unsigned char rgb[240*160*3];
+            for (unsigned y=0;y<h;y++) for (unsigned x=0;x<w;x++) {
+                uint32_t c=0; unsigned at=(y*w+x)*3;
+                if (pixel_format==RETRO_PIXEL_FORMAT_XRGB8888) {
+                    memcpy(&c,pixels+y*pitch+x*4,4);
+                    rgb[at]=c>>16;rgb[at+1]=c>>8;rgb[at+2]=c;
+                } else {
+                    uint16_t v;memcpy(&v,pixels+y*pitch+x*2,2);
+                    rgb[at]=((v>>11)&31)*255/31;
+                    rgb[at+1]=((v>>5)&63)*255/63;rgb[at+2]=(v&31)*255/31;
+                }
+            }
+            char path[1024];snprintf(path,sizeof(path),"%s.tmp",getenv("NP_CAPTURE_PPM"));
+            FILE *shot=fopen(path,"wb");
+            if (shot) {
+                fprintf(shot,"P6\n%u %u\n255\n",w,h);fwrite(rgb,1,w*h*3,shot);fclose(shot);
+                rename(path,getenv("NP_CAPTURE_PPM"));
+                printf("SNAPSHOT frame=%u sent=%llu received=%llu\n",frames,
+                    (unsigned long long)Netplay_sent(),(unsigned long long)Netplay_received());
+            }
+        }
 #ifdef NP_SDL
         unsigned capture_every=getenv("NP_CAPTURE_EVERY") ? (unsigned)atoi(getenv("NP_CAPTURE_EVERY")) : 0;
         if (capture_every && getenv("NP_CAPTURE") && frames && frames % capture_every == 0) {
@@ -200,7 +220,7 @@ int main(int argc, char **argv) {
         clock_gettime(CLOCK_MONOTONIC, &iteration_start);
         if (getenv("NP_STOP_FILE") && access(getenv("NP_STOP_FILE"),F_OK)==0) break;
         Netplay_poll();
-        if (host && getenv("NP_PAUSE") && frames >= 60 && !pause_requested) {
+        if (host && getenv("NP_PAUSE") && frames >= (unsigned)(getenv("NP_PAUSE_FRAME") ? atoi(getenv("NP_PAUSE_FRAME")) : 60) && !pause_requested) {
             Netplay_pause(true); pause_requested = true;
             clock_gettime(CLOCK_MONOTONIC, &pause_time);
         }

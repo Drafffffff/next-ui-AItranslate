@@ -79,10 +79,67 @@
  } rfu_client;
 
  typedef struct {
-@@ -235,9 +274,13 @@
+@@ -175,6 +214,54 @@
+ #define NET_RFU_HOST_SEND       0x05    // Host to client data send
+ #define NET_RFU_CLIENT_SEND     0x06    // Client to host data send
+ #define NET_RFU_CLIENT_ACK      0x07    // Client ACKs host received data.
++
++/* Bounded, game-specific tracing of the addresses observed corrupt on Brick.
++ * Never changes guest values or resets the RFU to hide a stalled game. */
++static struct { u32 word, pc, state, cnt, plen, tick; } rfu_trace[64];
++static u32 rfu_trace_count, rfu_watch_changes, rfu_stall_frames, rfu_watch_prev_progress;
++static bool rfu_watch_dumped, rfu_watch_game;
++void rfu_watch_configure(const char *code) {
++  rfu_watch_game = code && !strcmp(code, "BTME");
++}
++static bool rfu_watch_enabled(void) {
++  return rfu_watch_game &&
++    (rfu_state == RFU_STATE_HOST || rfu_state == RFU_STATE_CLIENT);
++}
++static void rfu_watch_dump(const char *reason) {
++  if (rfu_watch_dumped) return;
++  rfu_watch_dumped = true;
++  fprintf(stderr, "GBA Link WATCH %s: pc=%08x pointer=%08x bg0=%04x siocnt=%04x com=%u cmd=%02x cnt=%u plen=%u\n",
++    reason, reg[REG_PC], readaddress32(ewram, 0x33f0), read_ioreg(REG_BG0CNT),
++    read_ioreg(REG_SIOCNT), rfu_comstate, rfu_cmd, rfu_cnt, rfu_plen);
++  u32 start = rfu_trace_count > 64 ? rfu_trace_count - 64 : 0;
++  for (u32 n = start; n < rfu_trace_count; n++) {
++    unsigned k = n & 63;
++    fprintf(stderr, "GBA Link SPI trace: pc=%08x word=%08x com=%u cnt=%u plen=%u ticks=%u\n",
++      rfu_trace[k].pc, rfu_trace[k].word, rfu_trace[k].state,
++      rfu_trace[k].cnt, rfu_trace[k].plen, rfu_trace[k].tick);
++  }
++}
++void rfu_watch_write(u32 address, u32 value, unsigned bits, u32 pc, unsigned source) {
++  if (!rfu_watch_enabled()) return;
++  u32 width = bits / 8, offset = address & 0x3ffff;
++  u32 old = 0, next = 0;
++  const char *name;
++  if ((address >> 24) == 2 && offset >= 0x33f0 && offset <= 0x33f3) {
++    old = readaddress32(ewram, 0x33f0); next = old;
++    for (u32 n = 0; n < width && offset + n <= 0x33f3; n++) {
++      u32 shift = (offset + n - 0x33f0) * 8;
++      next = (next & ~(255U << shift)) | (((value >> (n * 8)) & 255U) << shift);
++    }
++    name = "library-pointer";
++  } else if ((address >> 24) == 4 && (address & 0xffffff) == 8) {
++    old = read_ioreg(REG_BG0CNT); next = value & 0xdfff; name = "bg0-control";
++  } else return;
++  if (old == next) return;
++  if (rfu_watch_changes++ < 256)
++    fprintf(stderr, "GBA Link WRITE %s: pc=%08x addr=%08x bits=%u source=%u old=%08x new=%08x com=%u cmd=%02x cnt=%u plen=%u\n",
++      name, pc, address, bits, source, old, next, rfu_comstate, rfu_cmd, rfu_cnt, rfu_plen);
++  if (old && !next && (address >> 24) == 2) rfu_watch_dump(name);
++}
+
+ // Callbacks used to send and force-receive data.
+ void netpacket_send(uint16_t client_id, const void *buf, size_t len);
+@@ -235,9 +322,15 @@
    rfu_comstate = RFU_COMSTATE_RESET;
    rfu_timeout_cycles = 0;
    rfu_resp_timeout = 0;
++  rfu_trace_count = rfu_watch_changes = rfu_stall_frames = rfu_watch_prev_progress = 0;
++  rfu_watch_dumped = false;
 +  rfu_wait_started_us = 0;
 +  memset(&rfu_tx_buf, 0, sizeof(rfu_tx_buf));
    rfu_timeout = RFU_DEF_TIMEOUT;
@@ -93,7 +150,7 @@
 
    // Clear all the received broadcasts.
    memset(&rfu_peer_bcst, 0, sizeof(rfu_peer_bcst));
-@@ -276,6 +319,8 @@
+@@ -276,6 +369,8 @@
      // Contains the slave timeout and retransmit count.
      rfu_timeout = rfu_buf[0];
      rfu_rtx_max = rfu_buf[0] >> 8;
@@ -102,7 +159,7 @@
      return 0;
 
    case RFU_CMD_SYSVER:
-@@ -446,15 +491,24 @@
+@@ -446,15 +541,24 @@
    case RFU_CMD_SEND_DATA:
      if (!rfu_plen)
        return 0;
@@ -127,7 +184,7 @@
        memcpy(rfu_tx_buf.buf, &rfu_buf[1], (rfu_plen - 1)*sizeof(u32));
      }
 
-@@ -466,21 +520,18 @@
+@@ -466,21 +570,18 @@
                      rfu_tx_buf.blen, rfu_plen - 1);
        if (rfu_tx_buf.blen <= 90) {
          for (i = 0; i < 4; i++)
@@ -156,7 +213,7 @@
      }
      else
        return -1;   // We are not connected nor a host
-@@ -502,9 +553,7 @@
+@@ -502,9 +603,7 @@
            // Update byte count header for this client
            rfu_buf[0] |= dlen << (8 + i * 5);
            // Discard front packet
@@ -167,7 +224,7 @@
          }
        }
        // Copy data into words into the RFU buffer.
-@@ -521,8 +570,7 @@
+@@ -521,8 +620,7 @@
          rfu_buf[cnt++] = leupack32(&rfu_client.pkts[0].hdata[j*4]);
 
        // Move to the next packet
@@ -177,7 +234,20 @@
        return cnt;
      }
      break;
-@@ -644,8 +692,9 @@
+@@ -576,6 +674,12 @@
+ // Called whenever the game flips the SIOCNT:Start bit to transmit a value.
+ // We simulate the reception and response of said value (over the SPI bus).
+ u32 rfu_transfer(u32 sent_value) {
++  if (rfu_watch_enabled()) {
++    unsigned k = rfu_trace_count++ & 63;
++    rfu_trace[k].word = sent_value; rfu_trace[k].pc = reg[REG_PC];
++    rfu_trace[k].state = rfu_comstate; rfu_trace[k].cnt = rfu_cnt;
++    rfu_trace[k].plen = rfu_plen; rfu_trace[k].tick = cpu_ticks;
++  }
+   u32 retval = 0x80000000;
+
+   switch (rfu_comstate) {
+@@ -644,8 +748,9 @@
      // and reverse the clock roles (the RFU becomes master).
      if (rfu_cmd == RFU_CMD_WAIT || rfu_cmd == RFU_CMD_RTX_WAIT || rfu_cmd == RFU_CMD_SEND_DATAW) {
        rfu_comstate = RFU_COMSTATE_WAITEVENT;
@@ -189,10 +259,17 @@
      } else {
        rfu_comstate = rfu_plen ? RFU_COMSTATE_RESPDAT : RFU_COMSTATE_WAITCMD;
      }
-@@ -681,6 +730,19 @@
+@@ -681,6 +786,26 @@
 
  // Gets called every frame for basic device updates.
  void rfu_frame_update() {
++  if (rfu_watch_enabled()) {
++    u32 progress = (rfu_comstate << 24) | (rfu_cnt << 8) | rfu_plen;
++    if (rfu_comstate == RFU_COMSTATE_WAITDAT && progress == rfu_watch_prev_progress) {
++      if (++rfu_stall_frames == 180) rfu_watch_dump("partial-command-stalled");
++    } else rfu_stall_frames = 0;
++    rfu_watch_prev_progress = progress;
++  }
 +  if ((rfu_state == RFU_STATE_HOST || rfu_state == RFU_STATE_CLIENT) &&
 +      ++rfu_queue_stats.frames % 300 == 0) {
 +    fprintf(stderr, "GBA Link RFU queue: host_peak=%u client_peak=%u "
@@ -209,7 +286,7 @@
    // If device is in reset state, do nothing really.
    if (rfu_comstate != RFU_COMSTATE_RESET) {
      u32 i;
-@@ -807,50 +869,48 @@
+@@ -807,50 +932,48 @@
        break;
 
      case NET_RFU_HOST_SEND:
@@ -279,16 +356,14 @@
 +            rfu_host.clients[clid].pkts[0].datalen = blen;
            }
 -          RFU_DEBUG_LOG("Host dropped a client packet\n");
--        }
--      }
 +          rfu_queue_stats.host_peak = MAX(rfu_queue_stats.host_peak, !!blen);
-+        }
-+      }
+         }
+       }
 +      break; // A payload is not a transport confirmation.
 
      case NET_RFU_CLIENT_ACK:
        // Should only happen when hosting
-@@ -858,8 +918,12 @@
+@@ -858,8 +981,12 @@
          u32 devid = hdata & 0xffff;
          u32 clid = (hdata >> 16) & 0x3;
 
@@ -303,7 +378,7 @@
        }
      };
    } else {
-@@ -884,8 +948,8 @@
+@@ -884,8 +1011,8 @@
      netpacket_poll_receive();
 
      // Check if we are running our of time to respond.
@@ -314,7 +389,7 @@
 
      // Wait for GBA to go into slave mode before finishing the wait!
      if ((read_ioreg(REG_SIOCNT) & 0x1) == 0) {
-@@ -899,7 +963,9 @@
+@@ -899,7 +1026,9 @@
          rfu_comstate = RFU_COMSTATE_WAITRESP;
          RFU_DEBUG_LOG("Wait command resp: disconnect\n");
        }
@@ -325,7 +400,7 @@
          // Some event is available!
          rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_DATA;
          rfu_buf[1] = 0x80000000;
-@@ -907,17 +973,41 @@
+@@ -907,17 +1036,41 @@
          rfu_plen = 2;
          rfu_comstate = RFU_COMSTATE_WAITRESP;
        }
@@ -378,3 +453,88 @@
          // We ran out of time, just return an "error" code
          rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_TIMEO;
          rfu_buf[1] = 0x80000000;
+--- a/gba_memory.c
++++ b/gba_memory.c
+@@ -19,6 +19,8 @@
+
+ #include "common.h"
+ #include "streams/file_stream.h"
++extern void rfu_watch_write(u32, u32, unsigned, u32, unsigned);
++extern void rfu_watch_configure(const char *);
+
+ /* Sound */
+ #define gbc_sound_tone_control_low(channel, regn)                             \
+@@ -1038,6 +1040,7 @@
+ {
+   uint32_t ioreg = ((address & 0xffffff) >> 1);
+   value &= 0xffff;
++  if (ioreg == REG_BG0CNT) rfu_watch_write(0x04000000 | (address & 0x3ff), value, 16, reg[REG_PC], 0);
+   switch(ioreg)
+   {
+     case REG_DISPCNT:
+@@ -1842,18 +1845,24 @@
+
+ cpu_alert_type function_cc write_memory8(u32 address, u8 value)
+ {
++  if ((address >> 24) == 2 && ((address & 0x3fffc) == 0x33f0))
++    rfu_watch_write(address, value, 8, reg[REG_PC], 0);
+   write_memory(8);
+   return CPU_ALERT_NONE;
+ }
+
+ cpu_alert_type function_cc write_memory16(u32 address, u16 value)
+ {
++  if ((address >> 24) == 2 && ((address & 0x3fffc) == 0x33f0))
++    rfu_watch_write(address, value, 16, reg[REG_PC], 0);
+   write_memory(16);
+   return CPU_ALERT_NONE;
+ }
+
+ cpu_alert_type function_cc write_memory32(u32 address, u32 value)
+ {
++  if ((address >> 24) == 2 && ((address & 0x3fffc) == 0x33f0))
++    rfu_watch_write(address, value, 32, reg[REG_PC], 0);
+   write_memory(32);
+   return CPU_ALERT_NONE;
+ }
+@@ -1886,6 +1895,7 @@
+
+ static void load_game_config_over(const char *gamecode)
+ {
++  rfu_watch_configure(gamecode);
+   unsigned i = 0;
+   is_known_game = false;
+
+@@ -2096,6 +2106,8 @@
+   write_memory##tfsize(type##_ptr, read_value)                                \
+
+ #define dma_write_ewram(type, tfsize)                                         \
++  if ((type##_ptr & 0x3fffc) == 0x33f0)                                      \
++    rfu_watch_write(type##_ptr, read_value, tfsize, reg[REG_PC], 1);            \
+   address##tfsize(ewram, type##_ptr & 0x3FFFF) = eswap##tfsize(read_value);   \
+   if (address##tfsize(ewram, (type##_ptr & 0x3FFFF) + 0x40000))               \
+     alerts |= CPU_ALERT_SMC;                                                  \
+--- a/arm/arm64_stub.S
++++ b/arm/arm64_stub.S
+@@ -592,6 +592,10 @@
+   ret                                     /* return                        */;\
+                                                                              ;\
+ ext_store_ewram_u##store_type:                                               ;\
++  and w3, w0, #0x3fffc                                                       ;\
++  mov w4, #0x33f0                                                             ;\
++  cmp w3, w4                                                                 ;\
++  b.eq ext_store_u##store_type##_safe                                         ;\
+   and w0, w0, #(0x3ffff & ~stmask)        /* Mask to mirror memory (+align)*/;\
+   add x3, reg_base, #EWRAM_OFF            /* x3 = ewram base               */;\
+   str_op w1, [x0, x3]                     /* store data                    */;\
+@@ -715,6 +719,10 @@
+   str w1, [x0, x3]                        // store data
+   ret                                     // Return
+ ext_store_ewram_u32_safe:
++  and w3, w0, #0x3fffc
++  mov w4, #0x33f0
++  cmp w3, w4
++  b.eq ext_store_u32_safe
+   and w0, w0, #(0x3ffff)                  // Mask to mirror memory (no need to align!)
+   add x3, reg_base, #(EWRAM_OFF)          // x3 = ewram base
+   str w1, [x0, x3]                        // store data

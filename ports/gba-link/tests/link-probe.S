@@ -14,6 +14,30 @@ boot:
     ldr sp, =0x03007f00
     ldr r8, =0x04000120
     ldr r9, =0x02000000
+    /* Exercise watched ARM64 STR/STRB/STRH/STM paths without game data. */
+    ldr r4, =0x020033f0
+    ldr r0, =0x12345678
+    str r0, [r4]
+    ldr r1, [r4]
+    cmp r0, r1
+    bne watch_store_failed
+    mov r0, #0xab
+    strb r0, [r4, #3]
+    ldr r2, =0xab345678
+    ldr r1, [r4]
+    cmp r1, r2
+    bne watch_store_failed
+    ldr r0, =0xcdef
+    strh r0, [r4]
+    ldr r2, =0xab34cdef
+    ldr r1, [r4]
+    cmp r1, r2
+    bne watch_store_failed
+    ldr r0, =0x87654321
+    stmia r4, {r0}
+    ldr r1, [r4]
+    cmp r1, r0
+    bne watch_store_failed
     mov r0, #0
     str r0, [r9]
     str r0, [r9, #4]
@@ -193,3 +217,8 @@ indicator_pixel:
     blo indicator_row
     pop {r0-r7, pc}
     .ltorg
+
+watch_store_failed:
+    ldr r0, =0xdead0001
+    str r0, [r9]
+    b watch_store_failed
