@@ -161,7 +161,9 @@ func serveFrontend(ctx context.Context, conn *dbus.Conn, role, peer string, data
 	}
 	if err != nil && ctx.Err() == nil {
 		message := "Bluetooth link ended. Try again."
-		if role == "serve-scan" {
+		if errors.Is(err, errTransportVersion) {
+			message = "Update GBA Link on both consoles, then reopen the game."
+		} else if role == "serve-scan" {
 			if errors.Is(err, context.DeadlineExceeded) {
 				message = "No nearby rooms. Create a room on the other console."
 			} else {

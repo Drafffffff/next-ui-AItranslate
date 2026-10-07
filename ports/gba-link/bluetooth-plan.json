@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "installed_both_bricks_runtime_ui_and_gameplay_pending",
+  "status": "bluetooth_connected_user_reports_frequent_red_optimizing",
   "production_integration": true,
   "source_review": {
     "existing_prototype": "gba-netplay/workspace/all/minarch/ma_netplay_ble*.c (untracked)",
@@ -143,17 +143,17 @@
     "settings_modes": [
       {
         "id": "lan_wifi",
-        "label": "局域网 Wi-Fi",
+        "label": "\u5c40\u57df\u7f51 Wi-Fi",
         "flow": "Both Bricks use the same existing Wi-Fi network; retain current optimized transport."
       },
       {
         "id": "bluetooth",
-        "label": "蓝牙",
+        "label": "\u84dd\u7259",
         "flow": "Create room / find nearby room; no manual MAC address."
       },
       {
         "id": "wifi_hotspot",
-        "label": "Wi-Fi 热点",
+        "label": "Wi-Fi \u70ed\u70b9",
         "flow": "One Brick creates a game hotspot, the other finds and joins it; no external router or manual IP required."
       }
     ],
@@ -206,5 +206,22 @@
     "build_note": "Pinned package compiled, checksummed, installation/rollback tested and atomically installed on both consoles. Running old .91 frontend needs user-controlled normal reopen.",
     "obsolete_package": "34999bb6: do not deploy; superseded after reproducing and fixing second-discovery stall",
     "installed_revision": "da609b38f485adf91d667d1b377d4e99900d0010"
+  },
+  "live_game_optimization": {
+    "baseline": "User confirmed both consoles connected over Bluetooth; frequent in-game red indicator.",
+    "observed_host_ack_avg_us": 36461,
+    "observed_host_no_reply": 1829,
+    "observed_host_data": 3587,
+    "transport_queue_drops": 0,
+    "candidate": "Transport v3 trims trailing zero bytes in each bounded chunk, restores exact bytes before frontend; no changes to RFU deadlines or game state.",
+    "trace_estimate": {
+      "samples": 707,
+      "stream_bytes": 60232,
+      "encoded_stream_bytes": 27683,
+      "estimated_acl_packets_before": 3455,
+      "estimated_acl_packets_after": 2330,
+      "scope": "passive live trace; ACL estimate only, not latency measurement"
+    },
+    "validation": "Go race suite and four real Mac gpSP bridge/identity cases PASS. Physical latency and actual game acceptance pending."
   }
 }

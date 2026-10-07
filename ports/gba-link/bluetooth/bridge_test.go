@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
+	"math/rand"
 	"net"
 	"testing"
 	"time"
@@ -41,7 +42,11 @@ func TestBridgePreservesNextUIStreamAndMaxPacket(t *testing.T) {
 				binary.BigEndian.PutUint32(h[:], 1)
 				binary.BigEndian.PutUint32(h[4:], uint32(length))
 				wire.Write(h[:])
-				wire.Write(bytes.Repeat([]byte{tag}, length))
+				body := bytes.Repeat([]byte{tag}, length)
+				if length == 104 {
+					clear(body[24:])
+				}
+				wire.Write(body)
 			}
 			expected = append(expected, wire.Bytes())
 		}
@@ -154,5 +159,59 @@ func TestBridgeCancelAndMalformedLocalFrame(t *testing.T) {
 				t.Fatal("cancel blocked on local stream")
 			}
 		}
+	}
+}
+
+func TestBridgeZeroTailCodec(t *testing.T) {
+	rng := rand.New(rand.NewSource(73))
+	for _, length := range []int{1, 20, 104, 160, 4096} {
+		for _, tail := range []int{0, 1, length / 2, length} {
+			data := make([]byte, length)
+			rng.Read(data)
+			clear(data[length-tail:])
+			encoded, err := encodeBridgeChunk(data)
+			if err != nil {
+				t.Fatal(err)
+			}
+			decoded, err := decodeBridgeChunk(encoded)
+			if err != nil || !bytes.Equal(data, decoded) {
+				t.Fatalf("roundtrip length=%d tail=%d err=%v", length, tail, err)
+			}
+			if len(encoded) > length-tail+2 {
+				t.Fatal("zero padding retained")
+			}
+		}
+	}
+	for _, malformed := range [][]byte{nil, {0}, {0, 0}, {0, 1, 1, 2}, {0x10, 1}} {
+		if _, err := decodeBridgeChunk(malformed); err == nil {
+			t.Fatalf("accepted malformed %x", malformed)
+		}
+	}
+	for _, data := range [][]byte{nil, make([]byte, 4097)} {
+		if _, err := encodeBridgeChunk(data); err == nil {
+			t.Fatal("accepted invalid input size")
+		}
+	}
+}
+
+func TestBridgeRejectsOldTransportBeforeReadiness(t *testing.T) {
+	x, y := memoryPacketPair()
+	app, worker := net.Pipe()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	defer app.Close()
+	defer y.Close()
+	old, err := newDuplexLink(99, 512)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go old.Run(ctx, y)
+	if err := old.Send([]byte("NUIBLE2\x00")); err != nil {
+		t.Fatal(err)
+	}
+	ready := false
+	err = bridgeSession(ctx, x, 512, 99, true, worker, func() error { ready = true; return nil })
+	if err == nil || err.Error() != "BLE transport version mismatch" || ready {
+		t.Fatalf("old transport accepted ready=%t err=%v", ready, err)
 	}
 }

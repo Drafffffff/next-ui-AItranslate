@@ -11,7 +11,42 @@ import (
 )
 
 var errDuplexQueueFull = errors.New("duplex queue full")
-var transportHello = []byte("NUIBLE2\x00")
+var errTransportVersion = errors.New("BLE transport version mismatch")
+var transportHello = []byte("NUIBLE3\x00")
+
+// Legacy radios carry only 27 ACL bytes per packet. RFU messages often end
+// in zero-filled fixed-size buffers; omit that padding on the radio and restore
+// it before the frontend sees any bytes. The length and retained prefix remain
+// covered by the existing duplex CRC. Version 3 negotiates this codec before
+// forwarding the game identity; old workers fail before starting emulation.
+const bridgeChunkLimit = 4096
+
+func encodeBridgeChunk(data []byte) ([]byte, error) {
+	if len(data) == 0 || len(data) > bridgeChunkLimit {
+		return nil, fmt.Errorf("invalid bridge chunk length")
+	}
+	end := len(data)
+	for end > 0 && data[end-1] == 0 {
+		end--
+	}
+	encoded := make([]byte, 2+end)
+	binary.BigEndian.PutUint16(encoded, uint16(len(data)))
+	copy(encoded[2:], data[:end])
+	return encoded, nil
+}
+
+func decodeBridgeChunk(encoded []byte) ([]byte, error) {
+	if len(encoded) < 2 {
+		return nil, fmt.Errorf("short bridge chunk")
+	}
+	length := int(binary.BigEndian.Uint16(encoded))
+	if length == 0 || length > bridgeChunkLimit || len(encoded)-2 > length {
+		return nil, fmt.Errorf("invalid bridge chunk length")
+	}
+	data := make([]byte, length)
+	copy(data, encoded[2:])
+	return data, nil
+}
 
 type dataStream interface {
 	io.ReadWriteCloser
@@ -72,7 +107,7 @@ func bridgeSession(ctx context.Context, endpoint duplexEndpoint, payload int, ep
 			return fmt.Errorf("BLE channel ended before readiness")
 		}
 		if !bytes.Equal(hello, transportHello) {
-			return fmt.Errorf("BLE transport version mismatch")
+			return errTransportVersion
 		}
 	}
 	if host {
@@ -103,7 +138,11 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 			results <- err
 			return
 		}
-		if err := send(ctx, hello); err != nil {
+		encodedHello, err := encodeBridgeChunk(hello)
+		if err == nil {
+			err = send(ctx, encodedHello)
+		}
+		if err != nil {
 			results <- err
 			return
 		}
@@ -127,12 +166,16 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 				results <- err
 				return
 			}
-			for offset := 0; offset < len(packet); offset += 4096 {
-				end := offset + 4096
+			for offset := 0; offset < len(packet); offset += bridgeChunkLimit {
+				end := offset + bridgeChunkLimit
 				if end > len(packet) {
 					end = len(packet)
 				}
-				if err := send(ctx, packet[offset:end]); err != nil {
+				encoded, err := encodeBridgeChunk(packet[offset:end])
+				if err == nil {
+					err = send(ctx, encoded)
+				}
+				if err != nil {
 					results <- err
 					return
 				}
@@ -148,6 +191,11 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 			case message, ok := <-d.Messages():
 				if !ok {
 					results <- fmt.Errorf("BLE peer channel closed")
+					return
+				}
+				message, err := decodeBridgeChunk(message)
+				if err != nil {
+					results <- err
 					return
 				}
 				if err := stream.SetWriteDeadline(time.Now().Add(time.Second)); err != nil {
