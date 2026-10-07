@@ -56,3 +56,32 @@ gpSP 日志的 `GBA Link RFU queue` 显示队列峰值、实际丢弃次数、�
 ## RFU 交换模型修复
 
 后续修复已将旧 FIFO 改为实机的单包接收模型，并修正主机驱动和确认等待。`host_replaced/client_replaced` 表示未读取的旧交换被新交换替换，不能按旧 FIFO 的零丢弃标准解释。历史 32 包实验保留作为历史证据，当前实现与验收边界见 [RFU-EXCHANGE-FIX.md](RFU-EXCHANGE-FIX.md)。
+
+### 正式蓝牙组件的同工具对照与长测
+
+`tests/bluetooth-stream.c` 用前端原有私有 FD 生命周期启动指定的正式 helper，先搜索房间，再交换完整的合成 NextUI 字节流。不会打开模拟器或修改存档。它验证每个字节和顺序，每次只保留一个未完成交换，报告 RTT 分布、终止握手和应用层未完成交换数；不声称测得 helper 内部队列峰值，也不能代替真实游戏验收。可选择 `padded`（前 24 字节非零，尾部填零）或 `dense`。旧、新组件必须用同一个工具、包大小、负载和角色测量。
+
+构建 ARM64 工具时使用锁定的 tg5040 Docker 工具链，在工作区内执行：
+
+```sh
+${CROSS_COMPILE}gcc -std=c99 -Wall -Wextra -Werror -DNEXTUI_LINK_BT_TEST \
+  -DBIN_PATH='"/tmp"' -Iworkspace/all/minarch \
+  ports/gba-link/tests/bluetooth-stream.c workspace/all/minarch/ma_netplay_bt.c \
+  -o build/gba-link/bluetooth/stream.elf
+```
+
+运行短测，将 `--seconds 10` 改为 `--seconds 600` 进行十分钟长测：
+
+```sh
+python3 ports/gba-link/tests/run-ble-stream.py \
+  --host nextui-brick --join root@192.168.50.91 \
+  --peer-bt 22:22:1C:11:93:21 \
+  --known-hosts build/gba-link/bluetooth/verified-known-hosts \
+  --identity /Users/drafff/.ssh/id_ed25519 \
+  --seconds 10 --payload 104 --pattern padded \
+  --output build/gba-link/bluetooth/stream-comparison
+```
+
+`--helper` 可以指定两台上具有相同校验值的旧版备份副本，以避免替换正式安装。启动前会拒绝正在运行的正式蓝牙、Wi-Fi 联机或其他探针。离线游戏允许保持打开，进程与组件校验值会记录在结果中。运行期间不要开始游戏联机。所有子进程由本轮 SSH 的 stdin 控制，只取消测试自身及其私有 helper。
+
+Mac 上可将同一源码编译为 `stream-mac`，用 `NP_STREAM_FAKE=1` 并以自身路径作为 helper 做测量工具的回环自检。这不经过蓝牙，不计入双机验收。发现、上传、连接、终止握手或数据验证失败均会使测试失败，不把跳过项计为通过。

@@ -40,8 +40,13 @@ def run(args):
                 cached=subprocess.run(peer+['sha256sum '+REMOTE+'/'+name],capture_output=True,text=True,timeout=20)
                 digest=cached.stdout.split()[0] if cached.returncode==0 and cached.stdout.split() else ''
                 if digest!=hashes[name]:
-                    with path.open('rb') as source:
-                        subprocess.run(peer+['cat > '+REMOTE+'/'+name+'; chmod 700 '+REMOTE+'/'+name],stdin=source,check=True,timeout=45)
+                    installed={'nextui-gba-bluetooth.elf':'/mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf','gpsp_libretro.so':'/mnt/SDCARD/.system/tg5040/cores/gpsp_libretro.so'}.get(name)
+                    installed_hash=subprocess.run(peer+['sha256sum '+installed],capture_output=True,text=True,timeout=20) if installed else None
+                    if installed_hash and installed_hash.returncode==0 and installed_hash.stdout.startswith(hashes[name]):
+                        subprocess.run(peer+['cp '+installed+' '+REMOTE+'/'+name+'; chmod 700 '+REMOTE+'/'+name],check=True,timeout=20)
+                    else:
+                        with path.open('rb') as source:
+                            subprocess.run(peer+['cat > '+REMOTE+'/'+name+'; chmod 700 '+REMOTE+'/'+name],stdin=source,check=True,timeout=45)
                     digest=subprocess.check_output(peer+['sha256sum '+REMOTE+'/'+name],text=True,timeout=20).split()[0]
                 if digest!=hashes[name]:raise RuntimeError('Remote artifact checksum mismatch')
         for index,peer in enumerate(peers):
