@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-07",
+  "kind": "isolated_classic_l2cap_echo",
+  "gameplay_verified": false,
+  "samples_per_case": 100,
+  "wifi_power_save_during_probe": "off; restored to original on afterwards",
+  "results": [
+    {
+      "test": "ertm-32bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "mode": 3,
+        "imtu": 1024,
+        "omtu": 1024,
+        "exchanges": 100,
+        "bytes_each_way": 3200,
+        "rtt_us_min": 8440,
+        "p50": 31215,
+        "p95": 36218,
+        "p99": 82401,
+        "max": 82401
+      },
+      "host_log": "LISTENING PSM 1001 mode=ertm\nCONNECTED mode=3 imtu=1024 omtu=1024\nPASS exchanges=100 bytes_each_way=3200 rtt_us_min=8440 p50=31215 p95=36218 p99=82401 max=82401\n",
+      "join_log": "CONNECTED mode=3 imtu=1024 omtu=1024\nPASS verified 100 bidirectional exchanges\n"
+    },
+    {
+      "test": "ertm-104bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "mode": 3,
+        "imtu": 1024,
+        "omtu": 1024,
+        "exchanges": 100,
+        "bytes_each_way": 10400,
+        "rtt_us_min": 14963,
+        "p50": 33706,
+        "p95": 92371,
+        "p99": 159824,
+        "max": 159824
+      },
+      "host_log": "LISTENING PSM 1001 mode=ertm\nCONNECTED mode=3 imtu=1024 omtu=1024\nPASS exchanges=100 bytes_each_way=10400 rtt_us_min=14963 p50=33706 p95=92371 p99=159824 max=159824\n",
+      "join_log": "CONNECTED mode=3 imtu=1024 omtu=1024\nPASS verified 100 bidirectional exchanges\n"
+    },
+    {
+      "test": "ertm-104bytes-16667us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "mode": 3,
+        "imtu": 1024,
+        "omtu": 1024,
+        "exchanges": 100,
+        "bytes_each_way": 10400,
+        "rtt_us_min": 14598,
+        "p50": 33281,
+        "p95": 52078,
+        "p99": 83820,
+        "max": 83820
+      },
+      "host_log": "LISTENING PSM 1001 mode=ertm\nCONNECTED mode=3 imtu=1024 omtu=1024\nPASS exchanges=100 bytes_each_way=10400 rtt_us_min=14598 p50=33281 p95=52078 p99=83820 max=83820\n",
+      "join_log": "CONNECTED mode=3 imtu=1024 omtu=1024\nPASS verified 100 bidirectional exchanges\n"
+    },
+    {
+      "test": "ertm-256bytes-0us",
+      "return_codes": [
+        3,
+        1
+      ],
+      "metrics": {},
+      "host_log": "LISTENING PSM 1001 mode=ertm\n",
+      "join_log": "connect: Software caused connection abort\n"
+    }
+  ],
+  "tcp_comparison": "blocked by running game guard; not measured",
+  "ble_gatt": "not measured",
+  "conclusion": "Data integrity passed in three cases. Delays and one connection abort prevent production transport selection."
+}
