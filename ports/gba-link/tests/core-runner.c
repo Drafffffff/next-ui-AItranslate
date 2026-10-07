@@ -179,6 +179,8 @@ int main(int argc, char **argv) {
     bool pause_requested = false, pause_released = false;
     struct timespec pause_time = {0};
     while (frames < limit && Netplay_state() != NP_ERROR) {
+        struct timespec iteration_start;
+        clock_gettime(CLOCK_MONOTONIC, &iteration_start);
         if (getenv("NP_STOP_FILE") && access(getenv("NP_STOP_FILE"),F_OK)==0) break;
         Netplay_poll();
         if (host && getenv("NP_PAUSE") && frames >= 60 && !pause_requested) {
@@ -232,7 +234,18 @@ int main(int argc, char **argv) {
         if (Netplay_active() && !Netplay_paused()) { run(); frames++; }
         else if (++waiting > 1800) break;
         if (getenv("NP_FAST_UNTIL")) tick.tv_nsec=frames<(unsigned)atoi(getenv("NP_FAST_UNTIL")) ? 1000000 : 16666667;
-        nanosleep(&tick, NULL);
+        struct timespec sleep_time = tick;
+        if (getenv("NP_REALTIME")) {
+            /* Match a front end's total frame interval, rather than adding
+             * 16.7ms on top of the interpreter's execution time. Do not run
+             * catch-up frames, which would distort RFU network timing. */
+            struct timespec ended;
+            clock_gettime(CLOCK_MONOTONIC, &ended);
+            int64_t elapsed = (int64_t)(ended.tv_sec - iteration_start.tv_sec) * 1000000000LL +
+                              ended.tv_nsec - iteration_start.tv_nsec;
+            sleep_time.tv_nsec = elapsed < tick.tv_nsec ? tick.tv_nsec - elapsed : 0;
+        }
+        if (sleep_time.tv_nsec) nanosleep(&sleep_time, NULL);
     }
 #ifdef NP_SDL
 finished:

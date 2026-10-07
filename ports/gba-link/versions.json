@@ -6,5 +6,7 @@
   "gpSP_link_protocol": "gpSP v1.0",
   "libretro_common_commit": "0a2b63d903ea0cc7bac9e759af57db190b4aeadd",
   "libchdr_commit": "607694ca0812edfc9cc2030c64634fc2393668de",
-  "rcheevos_commit": "40d916de00fe757bab40fb4db41a7912193a48e3"
+  "rcheevos_commit": "40d916de00fe757bab40fb4db41a7912193a48e3",
+  "gpsp_rfu_patch_sha256": "4019455f551de505a2709ac26129258eab7d0ded803203b0a9ca5df3c145db05",
+  "gpsp_rfu_patched_sha256": "eb5a432908b8c7f505f86d458e96280447988f18b74433070c4ba4270ff8a3f5"
 }
