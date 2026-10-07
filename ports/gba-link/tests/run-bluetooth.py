@@ -19,6 +19,7 @@ def main():
     parser.add_argument('--host-bt', required=True, help='Host Bluetooth MAC')
     parser.add_argument('--transport', choices=['bluetooth', 'tcp'], default='bluetooth')
     parser.add_argument('--host-ip', help='IPv4 host address for TCP comparison')
+    parser.add_argument('--allow-running-game', action='store_true', help='Keep an offline game open to prevent sleep; record the load context')
     parser.add_argument('--known-hosts', required=True)
     parser.add_argument('--identity', required=True)
     parser.add_argument('--output', type=Path, default=ROOT / 'build/gba-link/bluetooth/matrix')
@@ -37,9 +38,21 @@ def main():
             '-i', args.identity]
     peers = [base + [args.host], base + [args.join]]
     binary = ROOT / 'build/gba-link/bluetooth/probe.elf'
+    game_pids = []
     for peer in peers:
-        # Do not compete with a game or an earlier probe. No service restarts.
-        subprocess.run(peer + ['! pidof minarch.elf >/dev/null && ! pidof probe.elf >/dev/null'], check=True)
+        # An offline game may keep the handheld awake. Never run alongside a
+        # production link or an earlier probe. No service/game manipulation.
+        subprocess.run(peer + ['! pidof probe.elf >/dev/null'], check=True)
+        pid = subprocess.check_output(peer + ['pidof minarch.elf || true'], text=True).strip()
+        if pid and not args.allow_running_game:
+            raise SystemExit('Game is open; use --allow-running-game only for an offline game')
+        game_pids.append(pid)
+        sockets = subprocess.check_output(peer + ['cat /proc/net/tcp /proc/net/tcp6'], text=True)
+        for line in sockets.splitlines():
+            fields = line.split()
+            if len(fields) > 3 and fields[3] in ('01', '0A'):
+                if any(int(endpoint.rsplit(':', 1)[1], 16) == 55435 for endpoint in fields[1:3]):
+                    raise SystemExit('Production GBA Link socket is active; leave the game open but disconnect its link first')
         with binary.open('rb') as source:
             subprocess.run(peer + ['mkdir -p /tmp/nextui-gba-bluetooth && cat > /tmp/nextui-gba-bluetooth/probe.elf && chmod 700 /tmp/nextui-gba-bluetooth/probe.elf'], stdin=source, check=True)
     results = []
@@ -77,6 +90,7 @@ def main():
         results.append(dict(test=label, return_codes=codes, metrics=metrics,
                             host_log=content, join_log=join_content,
                             probe_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
+                            game_pids_at_start=game_pids,
                             completed_at=int(time.time())))
         (args.output / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
         print(label, content.strip(), flush=True)

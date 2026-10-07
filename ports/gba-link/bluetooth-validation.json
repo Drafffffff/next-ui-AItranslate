@@ -80,7 +80,240 @@
       "join_log": "connect: Software caused connection abort\n"
     }
   ],
-  "tcp_comparison": "blocked by running game guard; not measured",
+  "tcp_comparison": [
+    {
+      "test": "tcp-32bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "over33ms": 0,
+        "over66ms": 0,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 3200,
+        "rtt_us_min": 3098,
+        "p50": 4453,
+        "p95": 16218,
+        "p99": 24593,
+        "max": 24593
+      },
+      "host_log": "LISTENING PSM 1001 mode=tcp\nCONNECTED TCP\nSTALLS over33ms=0 over66ms=0 over200ms=0\nPASS exchanges=100 bytes_each_way=3200 rtt_us_min=3098 p50=4453 p95=16218 p99=24593 max=24593\n",
+      "join_log": "CONNECTED TCP\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375941
+    },
+    {
+      "test": "tcp-104bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "over33ms": 0,
+        "over66ms": 0,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 10400,
+        "rtt_us_min": 3240,
+        "p50": 4312,
+        "p95": 11793,
+        "p99": 22488,
+        "max": 22488
+      },
+      "host_log": "LISTENING PSM 1001 mode=tcp\nCONNECTED TCP\nSTALLS over33ms=0 over66ms=0 over200ms=0\nPASS exchanges=100 bytes_each_way=10400 rtt_us_min=3240 p50=4312 p95=11793 p99=22488 max=22488\n",
+      "join_log": "CONNECTED TCP\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375943
+    },
+    {
+      "test": "tcp-104bytes-16667us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "over33ms": 3,
+        "over66ms": 2,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 10400,
+        "rtt_us_min": 3681,
+        "p50": 5476,
+        "p95": 30380,
+        "p99": 123949,
+        "max": 123949
+      },
+      "host_log": "LISTENING PSM 1001 mode=tcp\nCONNECTED TCP\nSTALLS over33ms=3 over66ms=2 over200ms=0\nPASS exchanges=100 bytes_each_way=10400 rtt_us_min=3681 p50=5476 p95=30380 p99=123949 max=123949\n",
+      "join_log": "CONNECTED TCP\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375946
+    },
+    {
+      "test": "tcp-256bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "over33ms": 0,
+        "over66ms": 0,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 25600,
+        "rtt_us_min": 3488,
+        "p50": 4421,
+        "p95": 15377,
+        "p99": 20361,
+        "max": 20361
+      },
+      "host_log": "LISTENING PSM 1001 mode=tcp\nCONNECTED TCP\nSTALLS over33ms=0 over66ms=0 over200ms=0\nPASS exchanges=100 bytes_each_way=25600 rtt_us_min=3488 p50=4421 p95=15377 p99=20361 max=20361\n",
+      "join_log": "CONNECTED TCP\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375948
+    }
+  ],
   "ble_gatt": "not measured",
-  "conclusion": "Data integrity passed in three cases. Delays and one connection abort prevent production transport selection."
+  "conclusion": "All 400 TCP and 400 repeated classic Bluetooth exchanges passed integrity checks. Classic 104-byte p50 ~33.8ms vs TCP ~4.3ms; classic is not selected as production default. Initial connection abort remains an unresolved transient, not relabelled as success. BLE GATT is still unmeasured.",
+  "bluetooth_repeat": [
+    {
+      "test": "bluetooth-32bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "mode": 3,
+        "imtu": 1024,
+        "omtu": 1024,
+        "over33ms": 17,
+        "over66ms": 0,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 3200,
+        "rtt_us_min": 8521,
+        "p50": 31251,
+        "p95": 38220,
+        "p99": 61239,
+        "max": 61239
+      },
+      "host_log": "LISTENING PSM 1001 mode=ertm\nCONNECTED mode=3 imtu=1024 omtu=1024\nSTALLS over33ms=17 over66ms=0 over200ms=0\nPASS exchanges=100 bytes_each_way=3200 rtt_us_min=8521 p50=31251 p95=38220 p99=61239 max=61239\n",
+      "join_log": "CONNECTED mode=3 imtu=1024 omtu=1024\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375963
+    },
+    {
+      "test": "bluetooth-104bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "mode": 3,
+        "imtu": 1024,
+        "omtu": 1024,
+        "over33ms": 99,
+        "over66ms": 1,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 10400,
+        "rtt_us_min": 31256,
+        "p50": 33764,
+        "p95": 39996,
+        "p99": 76207,
+        "max": 76207
+      },
+      "host_log": "LISTENING PSM 1001 mode=ertm\nCONNECTED mode=3 imtu=1024 omtu=1024\nSTALLS over33ms=99 over66ms=1 over200ms=0\nPASS exchanges=100 bytes_each_way=10400 rtt_us_min=31256 p50=33764 p95=39996 p99=76207 max=76207\n",
+      "join_log": "CONNECTED mode=3 imtu=1024 omtu=1024\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375968
+    },
+    {
+      "test": "bluetooth-104bytes-16667us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "mode": 3,
+        "imtu": 1024,
+        "omtu": 1024,
+        "over33ms": 96,
+        "over66ms": 0,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 10400,
+        "rtt_us_min": 32815,
+        "p50": 33301,
+        "p95": 38731,
+        "p99": 64206,
+        "max": 64206
+      },
+      "host_log": "LISTENING PSM 1001 mode=ertm\nCONNECTED mode=3 imtu=1024 omtu=1024\nSTALLS over33ms=96 over66ms=0 over200ms=0\nPASS exchanges=100 bytes_each_way=10400 rtt_us_min=32815 p50=33301 p95=38731 p99=64206 max=64206\n",
+      "join_log": "CONNECTED mode=3 imtu=1024 omtu=1024\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375974
+    },
+    {
+      "test": "bluetooth-256bytes-0us",
+      "return_codes": [
+        0,
+        0
+      ],
+      "metrics": {
+        "mode": 3,
+        "imtu": 1024,
+        "omtu": 1024,
+        "over33ms": 97,
+        "over66ms": 0,
+        "over200ms": 0,
+        "exchanges": 100,
+        "bytes_each_way": 25600,
+        "rtt_us_min": 17484,
+        "p50": 36240,
+        "p95": 41168,
+        "p99": 55031,
+        "max": 55031
+      },
+      "host_log": "LISTENING PSM 1001 mode=ertm\nCONNECTED mode=3 imtu=1024 omtu=1024\nSTALLS over33ms=97 over66ms=0 over200ms=0\nPASS exchanges=100 bytes_each_way=25600 rtt_us_min=17484 p50=36240 p95=41168 p99=55031 max=55031\n",
+      "join_log": "CONNECTED mode=3 imtu=1024 omtu=1024\nPASS verified 100 bidirectional exchanges\n",
+      "probe_sha256": "62cb5c6d6052960ff4d0d97c3bd7b55b43dc7783fd3240be3bc29bc9604bf9d8",
+      "game_pids_at_start": [
+        "5153",
+        "8172"
+      ],
+      "completed_at": 1791375979
+    }
+  ],
+  "load_context": "Both games kept open to prevent sleep; no production GBA Link TCP socket at start; game PIDs captured. Probe does not control games.",
+  "power_save_after_probe": "Read back on both devices: on"
 }

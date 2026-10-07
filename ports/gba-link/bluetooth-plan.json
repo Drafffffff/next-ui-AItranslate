@@ -73,6 +73,12 @@
       "Hardware UI validation: discovery, duplicate names, cancellation, timeout, mismatch and retry",
       "User validates Mario Tennis menus, selection and gameplay; no automated game controls",
       "Deploy only after production build, compatibility regression and explicit experimental mode identification"
-    ]
+    ],
+    "latest_comparison": {
+      "classic_104_continuous_p50_us": 33764,
+      "tcp_104_continuous_p50_us": 4312,
+      "gameplay_verified": false,
+      "classic_not_selected_as_default": true
+    }
   }
 }
