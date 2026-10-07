@@ -251,5 +251,35 @@
     "Mode rejection used the earlier helper before only max-profile-bound guard addition; core and ROM mismatch used final helper.",
     "BLE 4328 ten-minute measurements retain older exact hashes and are not attributed to the new full release.",
     "Top-tab native rendering and persistent IP page have compiled successfully but require user screen acceptance."
-  ]
+  ],
+  "installed_release_short_probe": {
+    "passed": false,
+    "scope": "Synthetic NextUI wire through production Bluetooth helpers over physical BLE, not commercial game acceptance",
+    "seconds": 600,
+    "payload": 104,
+    "pattern": "padded",
+    "helper_path": "/mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf",
+    "fixture_sha256": "8480c28a39fc170faf402c3262ddf6d3d140bf7598dfbf5ce8c00ae2da3c13c6",
+    "fixture_source_sha256": "1c4a63ba4b9d14fe0719128ea13ddbc2d4dc8cd54230a2881f56450a0f6cbb6a",
+    "uncommitted_test_source": false,
+    "source_revision": "44143440e7d5f11bd5709c92b6f8b0c75c0b94a8",
+    "game_pids": [
+      "",
+      "9995"
+    ],
+    "helper_sha256": [
+      "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10",
+      "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
+    ],
+    "completed_at": 1791392495,
+    "outcome": "stopped_early_by_user_request",
+    "reason": "User requested around two minutes and wanted to start own gameplay validation; own benchmark controller interrupted and both probe/helper processes confirmed absent.",
+    "last_completed_progress": {
+      "count": "8209",
+      "elapsed_ms": "205517",
+      "max_rtt_us": "123006",
+      "outstanding_limit": "1"
+    },
+    "ten_minute_requirement_satisfied_by_this_run": false
+  }
 }
