@@ -90,3 +90,16 @@ Wi-Fi 实测延迟波动明显：原会话八次采样 4.519–87.947 ms；关�
 `.70` 日志出现菜单相关 SRAM/overlay/sync 消息；之后 `core_polls=9812361`、`client_data sent=14797` 不再增加，host_data 收取及 ACK 发送继续，mailbox 覆盖增长。`.91` 记录 peer pause 和恢复，随后继续交换并报告未及时确认。日志不能确认花屏是在进入菜单前还是返回后才开始，用户回复“不确定”，因此不能认定暂停/恢复是触发原因。
 
 优先级应提升为联机稳定性问题：调查暂停/恢复与 RFU 事件状态、游戏数据消费停滞、ARM64 dynarec 与 Mac 解释器差异、图像输出/VRAM 状态。不能把这次问题当作仅需调整 Wi-Fi 的丢包。证据在私有忽略目录 `build/gba-link/exchange-fix/garbled-screen/`；本次没有操作掌机按键、重启游戏、改设置或部署。
+
+
+## RFU 真实时间等待候选部署（2026-10-07 18:35）
+
+用户确认两台已退出游戏，SSH 恢复。核对两台 MAC 身份、aarch64 与原版 `8c85f511` 文件哈希后，分别备份实际前端/核心到 Mac 与 SD，安装候选 `41bb748f7603cdcfc1937a20c931c50864bb9466`。两台动态库加载检查、目标 SHA256 与 `APPLIED` journal 均通过；安装没有启动游戏。两台回滚备份：`/mnt/SDCARD/.gba-link-backups/20261007-183542-41bb748f/`，Mac 记录为 `build/gba-link/dual-rfu-timing-deployment.json`。
+
+- minarch SHA256：`44364ceadc80df895d8aee845a1e709b1720749ead08a56f6dda9d7cdac139a0`
+- gpSP SHA256：`cf6e0215181e0d10ef6a59c2cb5e168b7199d6b69f6a4b9a4b6a4af28cd67ebf`
+- 更新包 zip SHA256：`5a9ad54081cda7ea1e539ee9854dbe07bba303726d64b977d26c0d9e86df22a0`
+
+改动与限制见 [RFU-TIMING-FIX.md](RFU-TIMING-FIX.md)。13 项 RFU ASan/UBSan 与 14 项生产 TCP/SIO 回归通过，安装/显式回滚/第二文件替换失败自动恢复均经过隔离测试。Mac 两独立核心在周期性 25ms 有序字节滞留下进入比赛，旧版双方到 30–0，候选双方到 40–0；候选 500ms 进程调度停顿后继续得分。它们不是掌机实战或 NextUI 暂停/恢复验证。
+
+真实双机体验由用户测试：菜单、选角、比赛移动/发球、持续红标、NextUI 菜单返回及花屏是否复发。不能在用户复测前宣称卡顿、真实丢包或花屏全部修复。旧花屏证据仍保留，新版增加实际等待与 RFU 状态诊断。
