@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile and exercise the actual RFU adapter with ASan and UBSan on Mac."""
+"""Exercise host-clocked RFU exchanges and mailboxes with ASan/UBSan on Mac."""
 import importlib.util
 from pathlib import Path
 import subprocess

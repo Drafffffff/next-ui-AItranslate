@@ -10,7 +10,7 @@ python3 ports/gba-link/tests/run-rfu-queue.py
 python3 ports/gba-link/tests/run-tests.py
 ```
 
-需要 Python、Apple clang、Homebrew OpenSSL 与 SDL2。第一条命令校验上游源码压缩包和本地 RFU 补丁的 SHA256；仅接受已知原始源码或完整补丁后的源码，拒绝其他缓存修改。RFU 测试使用真实 `rfu.c`，以 ASan / UBSan 检查双向突发、顺序、排空、容量边界和重置；外部 CPU 寄存器与网络回调为测试桩。
+需要 Python、Apple clang、Homebrew OpenSSL 与 SDL2。第一条命令校验上游源码压缩包和本地 RFU 补丁的 SHA256；仅接受已知原始源码或完整补丁后的源码，拒绝其他缓存修改。RFU 测试使用真实 `rfu.c`，以 ASan / UBSan 检查主机驱动交换、单包接收、确认、超时和重置；外部 CPU 寄存器与网络回调为测试桩。
 
 ## 一条命令打开双实例
 
@@ -52,3 +52,7 @@ gpSP 日志的 `GBA Link RFU queue` 显示队列峰值、实际丢弃次数、�
 两个独立 Mac gpSP 解释器采用 `7b0acfd` 的 RFU 补丁和生产网络代码，在 BTME 中配对、分别选择 Mario / Luigi，双方一致显示 Mario 30–0，P2 独立移动在两端可见。代理每两秒暂缓转发至多 150ms 后，两端实际队列峰值均为 9，队列丢弃计数均为 0。停止抖动后双方继续到 Mario 40–0。RFU 主机未及时收到回应的次数仍会增加；队列修复不能消除网络延迟，也不能据此声称所有红标已解决。
 
 完整比赛结束未验证。14 项既有回归、RFU 队列 ASan / UBSan 检查和双实例启动器的正常退出 / 原始 SRAM 保持检查均通过。tg5040 新核心和前端编译完成。随后两台 SSH 恢复，均已安装 `30d685bde7e7139868a589c662e6fe71479819ca`，目标文件 SHA256 和 `APPLIED` 安装日志均通过核对；掌机商业联机复测仍由用户操作，尚未验证。原始输入帧、截图、代理转发统计和 `rfu-local-validation.json` 留在本机 `build/gba-link/`，ROM 与 SRAM 不进更新包。
+
+## RFU 交换模型修复
+
+后续修复已将旧 FIFO 改为实机的单包接收模型，并修正主机驱动和确认等待。`host_replaced/client_replaced` 表示未读取的旧交换被新交换替换，不能按旧 FIFO 的零丢弃标准解释。历史 32 包实验保留作为历史证据，当前实现与验收边界见 [RFU-EXCHANGE-FIX.md](RFU-EXCHANGE-FIX.md)。

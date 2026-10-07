@@ -51,9 +51,14 @@ def source(platform):
                 actual = hashlib.sha256(cached.read_bytes()).hexdigest()
                 original = hashlib.sha256(tar.extractfile(entry).read()).hexdigest()
                 patched = LOCK['gpsp_rfu_patched_sha256'] if cached == core / 'rfu.c' else None
-                if actual not in (original, patched):
+                previous = LOCK.get('gpsp_rfu_previous_patched_sha256') if cached == core / 'rfu.c' else None
+                if actual not in (original, patched, previous):
                     raise SystemExit('Cached gpSP source was modified: ' + entry.name)
     if hashlib.sha256((core / 'rfu.c').read_bytes()).hexdigest() != LOCK['gpsp_rfu_patched_sha256']:
+        # Upgrade only the exact previously reviewed patch; apply the new patch
+        # from pinned upstream rather than layering diffs on cached edits.
+        with tarfile.open(archive) as tar:
+            (core / 'rfu.c').write_bytes(tar.extractfile(core.name + '/rfu.c').read())
         run(['patch', '--batch', '--forward', '-p1', '-i', patch], core)
     if hashlib.sha256((core / 'rfu.c').read_bytes()).hexdigest() != LOCK['gpsp_rfu_patched_sha256']:
         raise SystemExit('Patched gpSP RFU source checksum mismatch')
