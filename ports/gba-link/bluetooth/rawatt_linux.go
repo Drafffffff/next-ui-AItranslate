@@ -325,7 +325,7 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 	}
 	err = unix.Connect(fd, remote)
 	if err != nil && err != unix.EINPROGRESS {
-		return err
+		return fmt.Errorf("raw ATT connect: %w", err)
 	}
 	done := make(chan struct{})
 	defer close(done)
@@ -359,7 +359,23 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 			if code != 0 {
 				return syscallError(code)
 			}
-			break
+			// Tina can report writable with SO_ERROR=0 before ATT reaches
+			// BT_CONNECTED. L2CAP_CONNINFO validates the actual socket state.
+			_, infoErr := unix.GetsockoptString(fd, unix.SOL_L2CAP, 2)
+			if infoErr == nil {
+				break
+			}
+			if infoErr != nil && infoErr != unix.ENOTCONN && infoErr != unix.EAGAIN {
+				return fmt.Errorf("ATT connection state: %w", infoErr)
+			}
+			if ready[0].Revents&(unix.POLLHUP|unix.POLLERR|unix.POLLNVAL) != 0 {
+				return fmt.Errorf("ATT peer closed before connection completed")
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(100 * time.Millisecond):
+			}
 		}
 	}
 	// The kernel ATT socket established this new peer connection; clean up that
@@ -368,7 +384,7 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 	att := &rawATT{file: file, mtu: 517}
 	response, err := att.request([]byte{2, 5, 2}, 3)
 	if err != nil {
-		return err
+		return fmt.Errorf("raw ATT MTU negotiation: %w", err)
 	}
 	if len(response) != 3 {
 		return fmt.Errorf("invalid MTU response")
@@ -382,7 +398,7 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 	}
 	att.tx, att.rx, err = att.discover()
 	if err != nil {
-		return err
+		return fmt.Errorf("raw GATT discovery: %w", err)
 	}
 	if err := requestFastInterval(ctx, address); err != nil {
 		return err

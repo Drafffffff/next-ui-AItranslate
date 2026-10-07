@@ -104,8 +104,10 @@ func (c *Characteristic) WriteValue(value []byte, options map[string]dbus.Varian
 	if p.assembly == nil {
 		p.assembly = newAssembly(binary.BigEndian.Uint32(value[4:]))
 	}
+	expectedSequence := p.assembly.next
 	message, ack, err := p.assembly.accept(value)
 	if err != nil {
+		fmt.Printf("FRAME_REJECT expected=%d received=%d\n", expectedSequence, binary.BigEndian.Uint32(value[8:]))
 		return dbus.NewError("org.bluez.Error.Failed", []any{err.Error()})
 	}
 	// Echo only validated fragments. The extra completion ACK is emitted only

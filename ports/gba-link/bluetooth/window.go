@@ -24,7 +24,7 @@ type pendingEcho struct {
 // Bounded diagnostic pipelining, not an emulation transport. RTT includes time
 // spent behind other messages; throughput improvement alone is not smooth play.
 func probeWindowExchange(ctx context.Context, reader, writer packetEndpoint, payload, count, length int, delay time.Duration) error {
-	if probeRunDuration != 0 || probeWindow < 2 || probeWindow > 16 || probeWindow*length > 262144 {
+	if probeWindow < 2 || probeWindow > 16 || probeWindow*length > 262144 {
 		return fmt.Errorf("invalid window measurement bounds")
 	}
 	var nonce [4]byte
@@ -45,7 +45,20 @@ func probeWindowExchange(ctx context.Context, reader, writer packetEndpoint, pay
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		for len(pending) < probeWindow && sent < count {
+		if probeRunDuration > 0 && len(samples) > 0 && time.Since(started) >= probeRunDuration {
+			// Stop accepting new work, then drain every already-sent message.
+			count = sent
+			if len(samples) == count {
+				break
+			}
+		}
+		// AcquireWrite is created by the first inbound write. Establish and ACK
+		// one complete message before allowing a burst into that pending setup.
+		limit := probeWindow
+		if len(samples) == 0 {
+			limit = 1
+		}
+		for len(pending) < limit && sent < count {
 			data := make([]byte, length)
 			for j := range data {
 				data[j] = byte(sent + j)
@@ -63,11 +76,40 @@ func probeWindowExchange(ctx context.Context, reader, writer packetEndpoint, pay
 			}
 			item := pendingEcho{sequence: uint32(sent + 1), packets: packets, data: data, start: time.Now()}
 			for _, packet := range packets {
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
 				if err := writer.SetWriteDeadline(time.Now().Add(5 * time.Second)); err != nil {
 					return err
 				}
 				if n, err := writer.Write(packet); err != nil || n != len(packet) {
 					return fmt.Errorf("window write: %d %v", n, err)
+				}
+				if sent == 0 {
+					// At default MTU even the initial message is fragmented. Confirm
+					// the first FD write before queuing any following fragment.
+					if err := reader.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+						return err
+					}
+					n, err := reader.Read(response)
+					if err != nil {
+						return err
+					}
+					if !bytes.Equal(response[:n], packet) {
+						return fmt.Errorf("bootstrap fragment integrity/order mismatch")
+					}
+					message, _, err := echo.accept(response[:n])
+					if err != nil {
+						return err
+					}
+					item.fragment++
+					fragments++
+					if message != nil {
+						if !bytes.Equal(message, item.data) || item.fragment != len(item.packets) {
+							return fmt.Errorf("bootstrap whole-message integrity failure")
+						}
+						item.complete = true
+					}
 				}
 			}
 			pending = append(pending, item)
@@ -110,6 +152,9 @@ func probeWindowExchange(ctx context.Context, reader, writer packetEndpoint, pay
 			return fmt.Errorf("window completion ACK mismatch")
 		}
 		samples = append(samples, time.Since(item.start).Microseconds())
+		if probeRunDuration > 0 && len(samples)%1000 == 0 {
+			fmt.Printf("PROGRESS exchanges=%d elapsed_ms=%d pending=%d\n", len(samples), time.Since(started).Milliseconds(), len(pending))
+		}
 		cost := len(item.data)
 		for _, packet := range item.packets {
 			cost += len(packet)
@@ -127,6 +172,9 @@ func probeWindowExchange(ctx context.Context, reader, writer packetEndpoint, pay
 	}
 	if queued != 0 || len(pending) != 0 {
 		return fmt.Errorf("window queue failed to drain")
+	}
+	if probeRunDuration > 0 && time.Since(started) < probeRunDuration {
+		return fmt.Errorf("exchange limit reached before requested window duration")
 	}
 	sort.Slice(samples, func(i, j int) bool { return samples[i] < samples[j] })
 	fmt.Printf("PASS exchanges=%d fragments=%d bytes_each_way=%d elapsed_ms=%d window=%d max_pending=%d max_queued_bytes=%d final_queued_bytes=%d p50=%d p95=%d p99=%d max=%d\n", count, fragments, count*length, time.Since(started).Milliseconds(), probeWindow, maxPending, maxQueued, queued, samples[count/2], samples[count*95/100], samples[count*99/100], samples[count-1])

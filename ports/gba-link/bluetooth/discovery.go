@@ -65,7 +65,37 @@ func liveRoom(objs objects, fresh map[dbus.ObjectPath]time.Time, expected string
 	return ""
 }
 
+// The observed advertisement proves the current service. Device1.UUIDs can
+// instead reflect a cached, previously empty GATT server after role changes.
+func liveRadioRoom(objs objects, fresh map[string]radioRoom, expected string, now time.Time) dbus.ObjectPath {
+	for path, interfaces := range objs {
+		if !strings.HasPrefix(string(path), string(adapter)+"/dev_") {
+			continue
+		}
+		d := interfaces["org.bluez.Device1"]
+		address, _ := d["Address"].Value().(string)
+		if expected != "" && !strings.EqualFold(address, expected) {
+			continue
+		}
+		room, ok := fresh[strings.ToUpper(address)]
+		if !ok || now.Sub(room.seen) > 3*time.Second {
+			continue
+		}
+		typ, _ := d["AddressType"].Value().(string)
+		if (room.addressType == 0 && typ != "public") || (room.addressType == 1 && typ != "random") {
+			continue
+		}
+		return path
+	}
+	return ""
+}
+
 func findRoom(ctx context.Context, conn *dbus.Conn, expected string) (dbus.ObjectPath, error) {
+	radioUpdates, closeRadio, err := advertisementObserver(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer closeRadio()
 	propertyMatch := []dbus.MatchOption{dbus.WithMatchSender("org.bluez"), dbus.WithMatchInterface("org.freedesktop.DBus.Properties"), dbus.WithMatchMember("PropertiesChanged"), dbus.WithMatchArg(0, "org.bluez.Device1"), dbus.WithMatchPathNamespace(adapter)}
 	objectMatch := []dbus.MatchOption{dbus.WithMatchSender("org.bluez"), dbus.WithMatchInterface("org.freedesktop.DBus.ObjectManager"), dbus.WithMatchMember("InterfacesAdded")}
 	if err := conn.AddMatchSignal(propertyMatch...); err != nil {
@@ -88,6 +118,7 @@ func findRoom(ctx context.Context, conn *dbus.Conn, expected string) (dbus.Objec
 	}
 	defer call(context.Background(), conn, adapter, "org.bluez.Adapter1.StopDiscovery")
 	fresh := make(map[dbus.ObjectPath]time.Time)
+	radioFresh := make(map[string]radioRoom)
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -98,12 +129,28 @@ func findRoom(ctx context.Context, conn *dbus.Conn, expected string) (dbus.Objec
 			if path := freshDiscoveryPath(signal); path != "" {
 				fresh[path] = time.Now()
 			}
+		case room, ok := <-radioUpdates:
+			if !ok {
+				return "", fmt.Errorf("radio observation ended: %v", ctx.Err())
+			}
+			if expected != "" && !strings.EqualFold(expected, room.address) {
+				continue
+			}
+			if _, known := radioFresh[room.address]; known || len(radioFresh) < 256 {
+				radioFresh[room.address] = room
+			}
 		case <-ticker.C:
 			objs, err := managed(ctx, conn)
 			if err != nil {
 				return "", err
 			}
-			if path := liveRoom(objs, fresh, expected, time.Now()); path != "" {
+			path := dbus.ObjectPath("")
+			if radioUpdates != nil {
+				path = liveRadioRoom(objs, radioFresh, expected, time.Now())
+			} else {
+				path = liveRoom(objs, fresh, expected, time.Now())
+			}
+			if path != "" {
 				address, _ := objs[path]["org.bluez.Device1"]["Address"].Value().(string)
 				fmt.Printf("FOUND_FRESH address=%s path=%s\n", address, path)
 				return path, nil
@@ -111,6 +158,11 @@ func findRoom(ctx context.Context, conn *dbus.Conn, expected string) (dbus.Objec
 			for path, seen := range fresh {
 				if time.Since(seen) > 3*time.Second {
 					delete(fresh, path)
+				}
+			}
+			for address, room := range radioFresh {
+				if time.Since(room.seen) > 3*time.Second {
+					delete(radioFresh, address)
 				}
 			}
 		}

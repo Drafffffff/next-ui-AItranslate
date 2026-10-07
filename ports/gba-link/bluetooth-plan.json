@@ -99,10 +99,10 @@
       }
     },
     "remaining_experiments": [
-      "Server FD repeat and role-switch discovery with explicit legacy parameters",
-      "Matched Wi-Fi power-save-off BLE control",
-      "Per-connection event-length hints 0/6/12 with actual timing validation",
-      "Production-like bounded burst/pipeline comparison before transport selection"
+      "10-minute bounded window4 transfer with complete final draining",
+      "Production duplex worker and asynchronous frontend IPC integration",
+      "Matched Wi-Fi/BLE comparison under fixed game load",
+      "Actual game menus, selection and match validation by the user"
     ],
     "sources": [
       {
@@ -113,6 +113,12 @@
         "url": "https://nrfconnectdocs.nordicsemi.com/ncs/latest/nrfxlib/doxygen/html/group__HCI__VS__API_ga983adff8d1da7f0db2a16838df27c3f9.html",
         "finding": "Connection event lengths are informational hints; actual controller behavior may differ and needs measurement."
       }
+    ],
+    "measured_controls_completed": [
+      "Server FD repeated sessions and role switch",
+      "Power-save-off and event-length 0/6/12 controls (informational, not causal)",
+      "Window4 short transfer, 104/1024-byte payloads",
+      "Missing-room timeout and successful retry"
     ]
   }
 }

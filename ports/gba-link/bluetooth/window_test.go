@@ -64,3 +64,22 @@ func TestWindowRejectsEncodedQueueOverflow(t *testing.T) {
 		t.Fatal("oversize encoded queue not rejected before writing", err)
 	}
 }
+
+func TestTimedWindowDrainsAndRejectsEarlyLimit(t *testing.T) {
+	previousWindow, previousDuration := probeWindow, probeRunDuration
+	probeWindow = 4
+	probeRunDuration = 10 * time.Millisecond
+	defer func() { probeWindow = previousWindow; probeRunDuration = previousDuration }()
+	e := &echoEndpoint{packets: make(chan []byte, 1024)}
+	if err := probeWindowExchange(context.Background(), e, e, 512, 100000, 104, 0); err != nil {
+		t.Fatal(err)
+	}
+	if len(e.packets) != 0 {
+		t.Fatal("completed with pending responses")
+	}
+	probeRunDuration = time.Second
+	e = &echoEndpoint{packets: make(chan []byte, 1024)}
+	if err := probeWindowExchange(context.Background(), e, e, 512, 10, 104, 0); err == nil {
+		t.Fatal("early exchange limit counted as a timed pass")
+	}
+}

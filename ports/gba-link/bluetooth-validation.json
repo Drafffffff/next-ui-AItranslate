@@ -607,6 +607,494 @@
         "probe_sha256": "e54ac8a14b8852f8eb9f2f55a28280759a32b420c6921bd5b4b22ae0c3987046",
         "test": "raw-server-fd-10min",
         "scope": "104-byte stop-and-wait CRC echo plus completion ACK, queue depth one, Wi-Fi power save on; not gameplay"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 107,
+          "rx": 110,
+          "exchanges": 300,
+          "fragments": 300,
+          "bytes_each_way": 31200,
+          "elapsed_ms": 11116,
+          "p50": 36462,
+          "p95": 65066,
+          "p99": 86441,
+          "max": 113713
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=300 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=107 rx=110\nPASS exchanges=300 fragments=300 bytes_each_way=31200 elapsed_ms=11116 p50=36462 p95=65066 p99=86441 max=113713\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379483,
+        "probe_sha256": "e78fcf95766ed5305d9a553f0204f4db52f486c93cabb5cef7ef703486d25b3f",
+        "test": "raw-control-awake104",
+        "evidence_path": "build/gba-link/bluetooth/raw-control-awake104/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "units": 12,
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 119,
+          "rx": 122,
+          "exchanges": 300,
+          "fragments": 300,
+          "bytes_each_way": 31200,
+          "elapsed_ms": 8432,
+          "p50": 26192,
+          "p95": 38532,
+          "p99": 87960,
+          "max": 95646
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=300 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nEVENT_LENGTH_HINT units=12\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=119 rx=122\nPASS exchanges=300 fragments=300 bytes_each_way=31200 elapsed_ms=8432 p50=26192 p95=38532 p99=87960 max=95646\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379544,
+        "probe_sha256": "e78fcf95766ed5305d9a553f0204f4db52f486c93cabb5cef7ef703486d25b3f",
+        "test": "raw-control-ce12",
+        "evidence_path": "build/gba-link/bluetooth/raw-control-ce12/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "units": 6,
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 115,
+          "rx": 113,
+          "exchanges": 300,
+          "fragments": 300,
+          "bytes_each_way": 31200,
+          "elapsed_ms": 7929,
+          "p50": 24619,
+          "p95": 36368,
+          "p99": 48827,
+          "max": 92255
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=300 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nEVENT_LENGTH_HINT units=6\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=115 rx=113\nPASS exchanges=300 fragments=300 bytes_each_way=31200 elapsed_ms=7929 p50=24619 p95=36368 p99=48827 max=92255\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379514,
+        "probe_sha256": "e78fcf95766ed5305d9a553f0204f4db52f486c93cabb5cef7ef703486d25b3f",
+        "test": "raw-control-ce6",
+        "evidence_path": "build/gba-link/bluetooth/raw-control-ce6/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 143,
+          "rx": 146,
+          "exchanges": 300,
+          "fragments": 900,
+          "bytes_each_way": 307200,
+          "elapsed_ms": 16101,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 8416,
+          "final_queued_bytes": 0,
+          "p50": 210018,
+          "p95": 239928,
+          "p99": 255164,
+          "max": 261879
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=300 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=143 rx=146\nPASS exchanges=300 fragments=900 bytes_each_way=307200 elapsed_ms=16101 window=4 max_pending=4 max_queued_bytes=8416 final_queued_bytes=0 p50=210018 p95=239928 p99=255164 max=261879\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379823,
+        "probe_sha256": "2a828119810547b331a8f5574b050b627fb06a22a8f4c7276a2484a4f1cd71dc",
+        "test": "raw-control-fragment1024",
+        "evidence_path": "build/gba-link/bluetooth/raw-control-fragment1024/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "room discovery: context deadline exceeded\n",
+        "game_pids": [
+          "8172",
+          ""
+        ],
+        "completed_at": 1791379928,
+        "probe_sha256": "2a828119810547b331a8f5574b050b627fb06a22a8f4c7276a2484a4f1cd71dc",
+        "test": "raw-control-reverse-v2",
+        "evidence_path": "build/gba-link/bluetooth/raw-control-reverse-v2/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 125,
+          "rx": 128
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nSERVER_FD_ERROR out-of-order BLE message\nHOST_SUMMARY messages=0 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=125 rx=128\nread owned BLE ATT: i/o timeout\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379571,
+        "probe_sha256": "e78fcf95766ed5305d9a553f0204f4db52f486c93cabb5cef7ef703486d25b3f",
+        "test": "raw-control-window4",
+        "evidence_path": "build/gba-link/bluetooth/raw-control-window4/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 137,
+          "rx": 140,
+          "exchanges": 300,
+          "fragments": 300,
+          "bytes_each_way": 31200,
+          "elapsed_ms": 2794,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 928,
+          "final_queued_bytes": 0,
+          "p50": 33997,
+          "p95": 48318,
+          "p99": 56988,
+          "max": 122101
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=300 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=137 rx=140\nPASS exchanges=300 fragments=300 bytes_each_way=31200 elapsed_ms=2794 window=4 max_pending=4 max_queued_bytes=928 final_queued_bytes=0 p50=33997 p95=48318 p99=56988 max=122101\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379782,
+        "probe_sha256": "2a828119810547b331a8f5574b050b627fb06a22a8f4c7276a2484a4f1cd71dc",
+        "test": "raw-control-window4-v2",
+        "evidence_path": "build/gba-link/bluetooth/raw-control-window4-v2/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 131,
+          "rx": 134,
+          "exchanges": 300,
+          "fragments": 300,
+          "bytes_each_way": 31200,
+          "elapsed_ms": 2604,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 928,
+          "final_queued_bytes": 0,
+          "p50": 32043,
+          "p95": 40489,
+          "p99": 46355,
+          "max": 92273
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=300 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=131 rx=134\nPASS exchanges=300 fragments=300 bytes_each_way=31200 elapsed_ms=2604 window=4 max_pending=4 max_queued_bytes=928 final_queued_bytes=0 p50=32043 p95=40489 p99=46355 max=92273\n",
+        "game_pids": [
+          "",
+          "8172"
+        ],
+        "completed_at": 1791379694,
+        "probe_sha256": "94bc0f47920c305a185addd60932d576a697e36e40a1930da6e98ca17c36d1b2",
+        "test": "raw-window4-bootstrap",
+        "evidence_path": "build/gba-link/bluetooth/raw-window4-bootstrap/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "room discovery: context deadline exceeded\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791381493,
+        "probe_sha256": "af8425176770ff311a17deee50f4565372a2a06b1129cad7c622293679e177a7",
+        "test": "role-connected-proof-absent-timeout",
+        "evidence_path": "build/gba-link/bluetooth/role-connected-proof-absent-timeout/results.json",
+        "expected_timeout_verified": true
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 173,
+          "rx": 176,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "elapsed_ms": 1023,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 928,
+          "final_queued_bytes": 0,
+          "p50": 37163,
+          "p95": 52622,
+          "p99": 80784,
+          "max": 80784
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=173 rx=176\nPASS exchanges=100 fragments=100 bytes_each_way=10400 elapsed_ms=1023 window=4 max_pending=4 max_queued_bytes=928 final_queued_bytes=0 p50=37163 p95=52622 p99=80784 max=80784\n",
+        "game_pids": [
+          "",
+          ""
+        ],
+        "completed_at": 1791381433,
+        "probe_sha256": "af8425176770ff311a17deee50f4565372a2a06b1129cad7c622293679e177a7",
+        "test": "role-connected-proof-enable-host70",
+        "evidence_path": "build/gba-link/bluetooth/role-connected-proof-enable-host70/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 23,
+          "rx": 26,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "elapsed_ms": 2549,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 928,
+          "final_queued_bytes": 0,
+          "p50": 79778,
+          "p95": 222474,
+          "p99": 397065,
+          "max": 397065
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:64:D7:F4:74 path=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=23 rx=26\nPASS exchanges=100 fragments=100 bytes_each_way=10400 elapsed_ms=2549 window=4 max_pending=4 max_queued_bytes=928 final_queued_bytes=0 p50=79778 p95=222474 p99=397065 max=397065\n",
+        "game_pids": [
+          "18424",
+          ""
+        ],
+        "completed_at": 1791381456,
+        "probe_sha256": "af8425176770ff311a17deee50f4565372a2a06b1129cad7c622293679e177a7",
+        "test": "role-connected-proof-enable-host91",
+        "evidence_path": "build/gba-link/bluetooth/role-connected-proof-enable-host91/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 185,
+          "rx": 188,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "elapsed_ms": 908,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 928,
+          "final_queued_bytes": 0,
+          "p50": 30555,
+          "p95": 39360,
+          "p99": 90729,
+          "max": 90729
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=185 rx=188\nPASS exchanges=100 fragments=100 bytes_each_way=10400 elapsed_ms=908 window=4 max_pending=4 max_queued_bytes=928 final_queued_bytes=0 p50=30555 p95=39360 p99=90729 max=90729\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791381512,
+        "probe_sha256": "af8425176770ff311a17deee50f4565372a2a06b1129cad7c622293679e177a7",
+        "test": "role-connected-proof-retry-after-timeout",
+        "evidence_path": "build/gba-link/bluetooth/role-connected-proof-retry-after-timeout/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 167,
+          "rx": 170,
+          "exchanges": 100,
+          "fragments": 100,
+          "bytes_each_way": 10400,
+          "elapsed_ms": 1224,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 928,
+          "final_queued_bytes": 0,
+          "p50": 40396,
+          "p95": 67915,
+          "p99": 94734,
+          "max": 94734
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=100 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=167 rx=170\nPASS exchanges=100 fragments=100 bytes_each_way=10400 elapsed_ms=1224 window=4 max_pending=4 max_queued_bytes=928 final_queued_bytes=0 p50=40396 p95=67915 p99=94734 max=94734\n",
+        "game_pids": [
+          "",
+          ""
+        ],
+        "completed_at": 1791381093,
+        "probe_sha256": "059ff7a82d0fe061b7a60189f4a6c1c112f1883abf9c5ffdac3a1c7f8c5653ab",
+        "test": "role-radio-proof-enable-host70",
+        "evidence_path": "build/gba-link/bluetooth/role-radio-proof-enable-host70/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "FOUND_FRESH address=22:22:64:D7:F4:74 path=/org/bluez/hci0/dev_22_22_64_D7_F4_74\ntransport endpoint is not connected\n",
+        "game_pids": [
+          "",
+          ""
+        ],
+        "completed_at": 1791381114,
+        "probe_sha256": "059ff7a82d0fe061b7a60189f4a6c1c112f1883abf9c5ffdac3a1c7f8c5653ab",
+        "test": "role-radio-proof-enable-host91",
+        "evidence_path": "build/gba-link/bluetooth/role-radio-proof-enable-host91/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nLEGACY_ADVERTISEMENT_ENABLED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "room discovery: context deadline exceeded\n",
+        "game_pids": [
+          "13934",
+          ""
+        ],
+        "completed_at": 1791380771,
+        "probe_sha256": "23a85ec541eef0b52d5acabe10931320037127f6206be28063d7233dcf98674e",
+        "test": "rolepair-second91",
+        "evidence_path": "build/gba-link/bluetooth/rolepair-second91/results.json"
       }
     ],
     "long_run_verified": true,
@@ -624,23 +1112,35 @@
       "Host FD prototype retains exported FD copies until single-session teardown; not suitable for production reconnect.",
       "Current measurement has queue depth one; production burst/backpressure handling is not verified.",
       "Role-switch discovery had one timeout; explicit legacy parameter preparation passed one later connection but needs repetition.",
-      "Wi-Fi power save is on during current BLE measurements; classic/TCP earlier controls disabled it."
+      "Wi-Fi power save is on during current BLE measurements; classic/TCP earlier controls disabled it.",
+      "Repeated role switching is now verified, but reverse-role p99 reached 397065us under changed game load; this is not a controlled latency comparison.",
+      "Window4 improves throughput, but 1024-byte fragmentation still had p50 210018us; throughput is not a frame-rate guarantee."
     ],
     "linux_protocol_tests": {
-      "passed": 16,
-      "native_device": "192.168.50.91",
-      "physical_bluetooth_used": false,
-      "coverage": [
-        "Negotiated MTU framing and bounded whole-message CRC",
-        "Stale epoch, ACK identity, malformed ATT and unrelated HCI events",
-        "Owned interval completion and fresh discovery signals",
-        "FD peer guard, complete echo/ACK and duplicate acquisition",
-        "Bounded fragmented window, queue drain and stale ACK rejection"
-      ],
-      "mac_race_test": "passed",
-      "wifi_latency_regression": "16 checks passed under ASAN/UBSAN across pacing modes"
+      "passed": true,
+      "count": 19,
+      "scope": "Native ARM64 framing, ATT, timing, physical advertising proof, diagnostic FD, timed pipeline draining; before duplex worker addition."
     },
-    "production_burst_queue_verified": false
+    "production_burst_queue_verified": false,
+    "discovery_repair": {
+      "status": "both_roles_timeout_and_retry_verified",
+      "method": "Read-only current HCI advertising proof; map the fresh GBA service to the matching BlueZ address and address type, without requiring stale cached GATT UUIDs. No device removal or bluetoothd reset.",
+      "trace": "build/gba-link/bluetooth/rolepair-trace-70.log",
+      "socket_repair": "On Tina 4.9, writable plus SO_ERROR=0 is insufficient; require successful L2CAP_CONNINFO (BT_CONNECTED) before MTU/GATT requests.",
+      "source": "https://raw.githubusercontent.com/torvalds/linux/v4.9/net/bluetooth/l2cap_sock.c"
+    },
+    "pipeline_bootstrap": {
+      "status": "104-byte and 1024-byte window4 short tests passed",
+      "method": "Serialize initial fragments and verify echoes plus complete CRC ACK before enabling the bounded window.",
+      "root_cause": "Asynchronous first AcquireWrite initialization is a plausible cause of initial burst loss; exact BlueZ buffer lifetime cause remains unproven.",
+      "production_gameplay_verified": false
+    },
+    "core_regression": {
+      "passed": true,
+      "count": 18,
+      "evidence": "build/gba-link/test-results.json",
+      "scope": "Own worktree pinned Mac gpSP and existing protocol 3 TCP/relay/save/compatibility/RFU regressions; no physical Bluetooth gameplay."
+    }
   },
   "conclusion": "All 400 TCP and 400 repeated classic Bluetooth exchanges passed integrity checks. Classic 104-byte p50 ~33.8ms vs TCP ~4.3ms; classic is not selected as production default. Initial connection abort remains an unresolved transient, not relabelled as success. BLE GATT is still unmeasured.",
   "bluetooth_repeat": [

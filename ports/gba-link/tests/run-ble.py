@@ -31,8 +31,8 @@ def main():
     parser.add_argument('--run-for', type=int, default=0, help='Minimum measured seconds; requires a sufficient count limit')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    if args.window > 1 and (not args.server_fd or args.run_for or args.window * args.bytes > 262144):
-        parser.error('Window probe needs server FD, bounded bytes, and count-based measurement')
+    if args.window > 1 and (not args.server_fd or args.window * args.bytes > 262144):
+        parser.error('Window probe needs server FD and bounded bytes')
     if args.run_for < 0 or args.run_for > 1200 or (args.run_for and args.duration < args.run_for + 30):
         parser.error('Measurement duration must leave at least 30 seconds for setup')
     if not re.fullmatch(r'(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}', args.peer_bt):
