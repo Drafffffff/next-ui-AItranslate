@@ -50,7 +50,13 @@
       "Discard stale discovery/connect completion after cancellation",
       "Do not disconnect other Bluetooth users, reset bluetoothd or modify Mic permissions"
     ],
-    "health_indicator": "Separate host wait/peer pause/link loss from measured delay; do not label every delayed exchange as packet loss"
+    "health_indicator": "Separate host wait/peer pause/link loss from measured delay; do not label every delayed exchange as packet loss",
+    "simplicity": [
+      "No MAC or IP entry in Bluetooth mode",
+      "Host creates room; peer joins nearby room",
+      "Use a single compatible room directly after player chooses Join; show a short list when multiple rooms exist",
+      "Compatibility checks are automatic; never silently choose an incompatible room"
+    ]
   },
   "transport_selection": {
     "classic_l2cap": "Candidate only. ERTM ordered stream can reuse existing bounded framing, identity and receive callbacks; discovery still required.",

@@ -190,7 +190,28 @@
       "completed_at": 1791375948
     }
   ],
-  "ble_gatt": "not measured",
+  "ble_gatt": {
+    "status": "discovery verified; two-way transfer not yet verified",
+    "attempts": [
+      {
+        "host": ".70",
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nadvertise: Failed to register advertisement\n",
+        "join_log": "room discovery: context deadline exceeded\n"
+      },
+      {
+        "host": ".91",
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY fragments=0 mtu=0\n",
+        "join_log": "FOUND address=22:22:64:D7:F4:74 path=/org/bluez/hci0/dev_22_22_64_D7_F4_74\ncontext deadline exceeded\n"
+      }
+    ],
+    "current_external_condition": "First Brick has an existing LE connection to a BlueZ Device1 named Mac. Do not disconnect unrelated peers automatically. Retest after user releases it.",
+    "offline_validation": [
+      "go test -race ./... passed",
+      "go vet ./... passed",
+      "linux/arm64 CGO-disabled build succeeded"
+    ],
+    "scope": "Diagnostic acquired-fd GATT echo and negotiated fragmentation; not a production game stream or gameplay proof"
+  },
   "conclusion": "All 400 TCP and 400 repeated classic Bluetooth exchanges passed integrity checks. Classic 104-byte p50 ~33.8ms vs TCP ~4.3ms; classic is not selected as production default. Initial connection abort remains an unresolved transient, not relabelled as success. BLE GATT is still unmeasured.",
   "bluetooth_repeat": [
     {

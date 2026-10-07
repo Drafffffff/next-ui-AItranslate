@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""Run owned BLE probes without changing installed software or game state."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import re
+import shlex
+import subprocess
+import time
+
+ROOT = Path(__file__).resolve().parents[3]
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--host', required=True)
+    parser.add_argument('--join', required=True)
+    parser.add_argument('--peer-bt', required=True)
+    parser.add_argument('--known-hosts', required=True)
+    parser.add_argument('--identity', required=True)
+    parser.add_argument('--count', type=int, default=100)
+    parser.add_argument('--bytes', type=int, default=104)
+    parser.add_argument('--duration', type=int, default=60, help='Maximum seconds')
+    parser.add_argument('--delay-ms', type=int, default=0)
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    if not re.fullmatch(r'(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}', args.peer_bt):
+        parser.error('Invalid Bluetooth address')
+    if not (10 <= args.count <= 100000 and 8 <= args.bytes <= 65536 and 15 <= args.duration <= 1800 and 0 <= args.delay_ms <= 1000):
+        parser.error('Invalid test bounds')
+    args.output.mkdir(parents=True, exist_ok=True)
+    binary = ROOT / 'build/gba-link/bluetooth/ble-probe.elf'
+    base = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o',
+            'StrictHostKeyChecking=yes', '-o', 'UserKnownHostsFile=' + args.known_hosts,
+            '-i', args.identity]
+    peers = [base + [args.host], base + [args.join]]
+    game_pids = []
+    for peer in peers:
+        subprocess.run(peer + ['! pidof ble-probe.elf >/dev/null && ! pidof probe.elf >/dev/null'], check=True)
+        game_pids.append(subprocess.check_output(peer + ['pidof minarch.elf || true'], text=True).strip())
+        sockets = subprocess.check_output(peer + ['cat /proc/net/tcp /proc/net/tcp6'], text=True)
+        for line in sockets.splitlines():
+            fields = line.split()
+            if len(fields) > 3 and fields[3] in ('01', '0A'):
+                if any(int(endpoint.rsplit(':', 1)[1], 16) == 55435 for endpoint in fields[1:3]):
+                    raise SystemExit('Production GBA Link socket is active; do not compete with gameplay')
+        with binary.open('rb') as source:
+            subprocess.run(peer + ['mkdir -p /tmp/nextui-gba-bluetooth && cat > /tmp/nextui-gba-bluetooth/ble-probe.elf && chmod 700 /tmp/nextui-gba-bluetooth/ble-probe.elf'], stdin=source, check=True)
+    with (args.output / 'host.log').open('w') as host_log, (args.output / 'join.log').open('w') as join_log:
+        # The SSH shell retains ownership of its child. A line on stdin ends the
+        # probe gracefully; HUP/exit also cleans up this child only.
+        host_command = ('/tmp/nextui-gba-bluetooth/ble-probe.elf -role host '
+                        f'-duration {args.duration + 15}s & child=$!; '
+                        'trap \'kill -TERM "$child" 2>/dev/null || true\' EXIT HUP INT TERM; '
+                        'IFS= read -r finish || true; kill -TERM "$child" 2>/dev/null || true; wait "$child"')
+        host = subprocess.Popen(peers[0] + [host_command], stdin=subprocess.PIPE, stdout=host_log, stderr=subprocess.STDOUT)
+        join = None
+        try:
+            time.sleep(1)
+            command = ('/tmp/nextui-gba-bluetooth/ble-probe.elf -role join '
+                       f'-peer {shlex.quote(args.peer_bt)} -duration {args.duration}s '
+                       f'-count {args.count} -bytes {args.bytes} -delay {args.delay_ms}ms')
+            join = subprocess.Popen(peers[1] + [command], stdout=join_log, stderr=subprocess.STDOUT)
+            join_code = join.wait(timeout=args.duration + 20)
+        finally:
+            if join is not None and join.poll() is None:
+                join.terminate()
+                join.wait(timeout=15)
+            if host.stdin:
+                try:
+                    host.stdin.write(b'STOP\n')
+                    host.stdin.flush()
+                except BrokenPipeError:
+                    pass
+                host.stdin.close()
+            host_code = host.wait(timeout=30)
+    content = (args.output / 'join.log').read_text()
+    host_content = (args.output / 'host.log').read_text()
+    record = dict(transport='BLE GATT acquired fds', return_codes=[host_code, join_code],
+                  passed=host_code == join_code == 0 and 'PASS exchanges=' in content,
+                  metrics={key: int(value) for key, value in re.findall(r'(\w+)=(\d+)', content)},
+                  host_log=host_content, join_log=content, game_pids=game_pids,
+                  completed_at=int(time.time()), probe_sha256=hashlib.sha256(binary.read_bytes()).hexdigest())
+    (args.output / 'results.json').write_text(json.dumps(record, indent=2) + '\n')
+    print(json.dumps(record, indent=2), flush=True)
+    if not record['passed']:
+        raise SystemExit(1)
+
+
+if __name__ == '__main__':
+    main()
