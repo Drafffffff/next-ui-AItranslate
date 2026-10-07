@@ -1957,5 +1957,48 @@
       "core-discovery-trace-91.log"
     ],
     "gameplay_verified": false
+  },
+  "zero_tail_transport_comparison": {
+    "scope": "Sequential 10-second synthetic NextUI-wire echo, same physical devices/role/payload/pattern/tool; not actual game latency, not long-run acceptance",
+    "old": {
+      "passed": 1,
+      "role": "host",
+      "exchanges": 311,
+      "elapsed_ms": 10046,
+      "p50_us": 30613,
+      "p95_us": 43670,
+      "p99_us": 56540,
+      "max_us": 75515,
+      "data_errors": 0,
+      "final_outstanding": 0
+    },
+    "new": {
+      "passed": 1,
+      "role": "host",
+      "exchanges": 416,
+      "elapsed_ms": 10035,
+      "p50_us": 22725,
+      "p95_us": 31413,
+      "p99_us": 39337,
+      "max_us": 52642,
+      "data_errors": 0,
+      "final_outstanding": 0
+    },
+    "p50_reduction_percent": 25.8,
+    "p99_reduction_percent": 30.4,
+    "loads": {
+      "old": [
+        "",
+        "9995"
+      ],
+      "new": [
+        "",
+        "9995"
+      ]
+    },
+    "fixture_sha256": "1fa58d62703e7668dc7af4880e0b97de84ccb65d6ab37d509b9cf6ecd7f8d8ff",
+    "same_fixture": true,
+    "physical_game_acceptance": "pending",
+    "ten_minute_production_bridge": "pending"
   }
 }
