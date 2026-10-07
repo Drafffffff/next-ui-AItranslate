@@ -2006,6 +2006,13 @@
       "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
       "source_revision": "f6f811ba280676551520d67dafb209efcce40317",
       "evidence": "build/gba-link/bluetooth/zero-tail-physical-core-retry/results.json"
+    },
+    "load_matching_scope": "Same recorded minarch PIDs across short runs; other app activity, CPU load and Wi-Fi traffic were not held constant. Short sequential comparison is indicative, not a controlled radio-only performance claim.",
+    "long_run_observed_so_far": {
+      "passed": false,
+      "status": "still_running_not_accepted",
+      "observed_max_rtt_us": 464951,
+      "context": "Host concurrently running PocketJS app; client running offline NES. Snapshot CPU idle around 69-71%, 53-59C. No unrelated application or Bluetooth connection was stopped."
     }
   }
 }
