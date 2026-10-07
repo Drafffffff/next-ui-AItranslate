@@ -66,14 +66,36 @@ func bridgeSession(ctx context.Context, endpoint duplexEndpoint, payload int, ep
 	result := make(chan error, 1)
 	go func() { result <- d.Run(ctx, endpoint) }()
 	watchDone := make(chan struct{})
+	watchExited := make(chan struct{})
+	report := func(final bool) {
+		stats := d.Stats()
+		fmt.Printf("BLE stream queue: final=%t queued_bytes=%d peak_bytes=%d sent=%d confirmed=%d ack_max_us=%d\n", final, stats.QueuedBytes, stats.PeakQueuedBytes, stats.Sent, stats.Confirmed, stats.AckMaxUs)
+	}
 	go func() {
-		select {
-		case <-ctx.Done():
-			stream.Close()
-		case <-watchDone:
+		defer close(watchExited)
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				stream.Close()
+				return
+			case <-watchDone:
+				return
+			case <-ticker.C:
+				report(false)
+			}
 		}
 	}()
-	defer func() { cancel(); stream.Close(); <-result; close(watchDone) }()
+	defer func() {
+		cancel()
+		stream.Close()
+		<-result
+		close(watchDone)
+		<-watchExited
+		report(true)
+	}()
+
 	send := func(sendCtx context.Context, data []byte) error {
 		deadline := time.NewTimer(5 * time.Second)
 		defer deadline.Stop()

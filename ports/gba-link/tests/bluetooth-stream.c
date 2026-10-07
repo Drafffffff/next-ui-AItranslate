@@ -16,6 +16,11 @@
  * at a time, so an ever-growing application send backlog cannot mask stalls.
  * The controller owns this process and its helper, never a user's game process. */
 static volatile sig_atomic_t stopped;
+static unsigned data_errors;
+static int same_bytes(const void *expected,const void *actual,size_t length) {
+    if(!memcmp(expected,actual,length))return 1;
+    data_errors++;fprintf(stderr,"DATA_MISMATCH length=%zu\n",length);return 0;
+}
 static uint64_t clock_us(void) {
     struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);
     return (uint64_t)t.tv_sec*1000000+t.tv_nsec/1000;
@@ -101,24 +106,24 @@ int main(int argc,char **argv) {
     }
     if(fd<0)goto done;
     unsigned char hello[160]={0},peer[160];memcpy(hello,"SYNTHETIC-WIRE-PROBE-NO-GAME",28);
-    if(!transfer(fd,hello,sizeof(hello),1)||!transfer(fd,peer,sizeof(peer),0)||memcmp(hello,peer,sizeof(peer)))goto done;
+    if(!transfer(fd,hello,sizeof(hello),1)||!transfer(fd,peer,sizeof(peer),0)||!same_bytes(hello,peer,sizeof(peer)))goto done;
     printf("READY role=%s payload=%u pattern=%s\n",argv[2],length,argv[6]);
     uint64_t began=clock_us(),report=began,maximum=0;
     while(!stopped&&count<100000) {
         if(host) {
             if(count>=10&&clock_us()-began>=(uint64_t)duration*1000000) {
                 put32(out,2);put32(out+4,0);
-                if(!transfer(fd,out,8,1)||!transfer(fd,in,8,0)||memcmp(out,in,8))goto done;
+                if(!transfer(fd,out,8,1)||!transfer(fd,in,8,0)||!same_bytes(out,in,8))goto done;
                 success=1;break;
             }
             packet(out,length,count,padded);uint64_t start=clock_us();
-            if(!transfer(fd,out,length+8,1)||!transfer(fd,in,length+8,0)||memcmp(out,in,length+8))goto done;
+            if(!transfer(fd,out,length+8,1)||!transfer(fd,in,length+8,0)||!same_bytes(out,in,length+8))goto done;
             samples[count]=clock_us()-start;if(samples[count]>maximum)maximum=samples[count];
         } else {
             if(!transfer(fd,in,8,0))goto done;
             if(get32(in)==2&&get32(in+4)==0) {success=transfer(fd,in,8,1);break;}
             if(get32(in)!=1||get32(in+4)!=length||!transfer(fd,in+8,length,0))goto done;
-            packet(out,length,count,padded);if(memcmp(out,in,length+8)||!transfer(fd,in,length+8,1))goto done;
+            packet(out,length,count,padded);if(!same_bytes(out,in,length+8)||!transfer(fd,in,length+8,1))goto done;
         }
         count++;
         if(clock_us()-report>=5000000) {
@@ -126,8 +131,13 @@ int main(int argc,char **argv) {
         }
     }
     uint64_t elapsed=clock_us()-began;
+    uint64_t total=0;unsigned over33=0,over66=0,over100=0,over200=0;
+    if(host)for(unsigned i=0;i<count;i++) {
+        total+=samples[i];over33+=samples[i]>33334;over66+=samples[i]>66668;
+        over100+=samples[i]>100000;over200+=samples[i]>200000;
+    }
     if(host&&count)qsort(samples,count,sizeof(samples[0]),compare);
-    printf("RESULT passed=%d role=%s exchanges=%u elapsed_ms=%llu p50_us=%llu p95_us=%llu p99_us=%llu max_us=%llu data_errors=%u final_outstanding=%d\n",success,argv[2],count,(unsigned long long)(elapsed/1000),host&&count?(unsigned long long)samples[count/2]:0,host&&count?(unsigned long long)samples[count*95/100]:0,host&&count?(unsigned long long)samples[count*99/100]:0,(unsigned long long)maximum,success?0U:1U,success?0:1);
+    printf("RESULT passed=%d role=%s exchanges=%u elapsed_ms=%llu p50_us=%llu p95_us=%llu p99_us=%llu max_us=%llu data_errors=%u final_outstanding=%d mean_us=%llu over_33_ms=%u over_66_ms=%u over_100_ms=%u over_200_ms=%u\n",success,argv[2],count,(unsigned long long)(elapsed/1000),host&&count?(unsigned long long)samples[count/2]:0,host&&count?(unsigned long long)samples[count*95/100]:0,host&&count?(unsigned long long)samples[count*99/100]:0,(unsigned long long)maximum,data_errors,success?0:1,host&&count?(unsigned long long)(total/count):0,over33,over66,over100,over200);
 done:
     /* A successful write means accepted by the worker's Unix stream, not yet
      * delivered over the radio. Keep the endpoint alive for the terminal echo

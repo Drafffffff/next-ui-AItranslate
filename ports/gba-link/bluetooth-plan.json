@@ -223,5 +223,12 @@
       "scope": "passive live trace; ACL estimate only, not latency measurement"
     },
     "validation": "Go race suite and four real Mac gpSP bridge/identity cases PASS. Physical latency and actual game acceptance pending."
+  },
+  "receive_backpressure_fix": {
+    "status": "offline_validated_physical_pending",
+    "change": "Delay message confirmation until delivery to the bounded consumer queue. Keep dispatcher servicing reverse data and confirmations while the consumer is slow.",
+    "bounds": "4 consumer messages plus at most 4 staged messages, matching sender window; malicious ninth injection rejected. Send byte budget unchanged at 262144.",
+    "evidence": "Go race suite, 10 repeats of max-packet and slow-consumer reverse-traffic tests; Mac actual gpSP/identity bridge tests.",
+    "queue_telemetry": "Periodic send queued bytes, exact peak, sent/confirmed counts and message-confirmation maximum; final zero is cancellation cleanup, not evidence that all messages were confirmed."
   }
 }

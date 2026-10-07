@@ -95,6 +95,12 @@ func TestDuplexSimultaneousFragmentedTraffic(t *testing.T) {
 				time.Sleep(time.Millisecond)
 			}
 		}
+		for _, link := range []*duplexLink{a, b} {
+			stats := link.Stats()
+			if stats.Sent != 48 || stats.Confirmed != 48 || stats.QueuedBytes != 0 || stats.PeakQueuedBytes <= 0 || stats.PeakQueuedBytes > duplexBudget {
+				t.Fatalf("bounded completed traffic statistics: %+v", stats)
+			}
+		}
 		cancel()
 		for i := 0; i < 2; i++ {
 			select {
@@ -227,13 +233,15 @@ func TestDuplexMaxMessageAndReceiveOverflow(t *testing.T) {
 		}
 	}
 	// A peer cannot force the worker to grow its receive queue when the
-	// consumer stops. No partial message is ever exposed on overflow.
+	// consumer stops. Four delivered plus four staged messages are bounded;
+	// a sender bypassing the confirmation window cannot inject a ninth.
+	// No partial message is ever exposed on overflow.
 	x, y = memoryPacketPair()
 	d, _ := newDuplexLink(88, 512)
 	ctx, cancel = context.WithCancel(context.Background())
 	defer cancel()
 	go func() { results <- d.Run(ctx, x) }()
-	for seq := uint32(1); seq <= 5; seq++ {
+	for seq := uint32(1); seq <= 9; seq++ {
 		frames, _ := fragmentMessage(512, 88, seq, []byte{byte(seq)})
 		if _, err := y.Write(frames[0]); err != nil {
 			t.Fatal(err)
@@ -251,4 +259,73 @@ func TestDuplexMaxMessageAndReceiveOverflow(t *testing.T) {
 		t.Fatal("stale receive queue survived failure")
 	}
 	y.Close()
+}
+
+func TestDuplexSlowConsumerBackpressureStillServicesReverseTraffic(t *testing.T) {
+	x, y := memoryPacketPair()
+	a, _ := newDuplexLink(765, 512)
+	b, _ := newDuplexLink(765, 512)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	results := make(chan error, 2)
+	go func() { results <- a.Run(ctx, x) }()
+	go func() { results <- b.Run(ctx, y) }()
+	for i := 0; i < 8; i++ {
+		if err := a.Send([]byte{byte(i)}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	deadline := time.Now().Add(time.Second)
+	for len(b.out) < 4 || a.Stats().Confirmed < 4 {
+		if time.Now().After(deadline) {
+			t.Fatal("consumer queue never filled")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	time.Sleep(20 * time.Millisecond)
+	select {
+	case err := <-results:
+		t.Fatalf("slow consumer disconnected: %v", err)
+	default:
+	}
+	if a.Stats().Confirmed != 4 || a.QueuedBytes() == 0 {
+		t.Fatal("completion did not apply bounded backpressure")
+	}
+	// ACK/data in the other direction must keep moving while B does not consume.
+	if err := b.Send([]byte{99}); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case got := <-a.Messages():
+		if !bytes.Equal(got, []byte{99}) {
+			t.Fatal("reverse payload")
+		}
+	case <-ctx.Done():
+		t.Fatal("reverse direction deadlocked")
+	}
+	for i := 0; i < 8; i++ {
+		select {
+		case got := <-b.Messages():
+			if !bytes.Equal(got, []byte{byte(i)}) {
+				t.Fatal("delayed payload/order")
+			}
+		case <-ctx.Done():
+			t.Fatal("draining consumer did not restore progress")
+		}
+	}
+	deadline = time.Now().Add(time.Second)
+	for a.QueuedBytes() != 0 || b.QueuedBytes() != 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("confirmation queue did not drain")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	cancel()
+	for i := 0; i < 2; i++ {
+		select {
+		case <-results:
+		case <-time.After(time.Second):
+			t.Fatal("cancel leaked worker")
+		}
+	}
 }

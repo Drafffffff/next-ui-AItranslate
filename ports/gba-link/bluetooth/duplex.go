@@ -35,14 +35,17 @@ type duplexPending struct {
 }
 
 type duplexLink struct {
-	epoch   uint32
-	payload int
-	mu      sync.Mutex
-	queued  int
-	closed  bool
-	running bool
-	in      chan duplexMessage
-	out     chan []byte
+	epoch           uint32
+	payload         int
+	mu              sync.Mutex
+	queued          int
+	peakQueued      int
+	sent, confirmed uint64
+	ackMaxUs        int64
+	closed          bool
+	running         bool
+	in              chan duplexMessage
+	out             chan []byte
 }
 
 func newDuplexLink(epoch uint32, payload int) (*duplexLink, error) {
@@ -72,13 +75,37 @@ func (d *duplexLink) Send(message []byte) error {
 	select {
 	case d.in <- item:
 		d.queued += cost
+		d.sent++
+		if d.queued > d.peakQueued {
+			d.peakQueued = d.queued
+		}
 		return nil
 	default:
 		return fmt.Errorf("duplex message queue full: %w", errDuplexQueueFull)
 	}
 }
 
-func (d *duplexLink) retire(cost int)         { d.mu.Lock(); d.queued -= cost; d.mu.Unlock() }
+func (d *duplexLink) retire(cost int, elapsed time.Duration) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.queued -= cost
+	d.confirmed++
+	if elapsed.Microseconds() > d.ackMaxUs {
+		d.ackMaxUs = elapsed.Microseconds()
+	}
+}
+
+type duplexStats struct {
+	QueuedBytes, PeakQueuedBytes int
+	Sent, Confirmed              uint64
+	AckMaxUs                     int64
+}
+
+func (d *duplexLink) Stats() duplexStats {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return duplexStats{d.queued, d.peakQueued, d.sent, d.confirmed, d.ackMaxUs}
+}
 func (d *duplexLink) QueuedBytes() int        { d.mu.Lock(); defer d.mu.Unlock(); return d.queued }
 func (d *duplexLink) Messages() <-chan []byte { return d.out }
 
@@ -196,11 +223,22 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
 	writerBusy := false
 	received := newAssembly(d.epoch)
 	var pending []duplexPending
+	type delivery struct {
+		message, ack []byte
+		sequence     uint32
+	}
+	var deliveries []delivery
 	next := uint32(1)
 	bootstrap := true
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
+		var deliver chan<- []byte
+		var delivered []byte
+		if len(deliveries) > 0 {
+			deliver = d.out
+			delivered = deliveries[0].message
+		}
 		// Only the initial message is fragment-paced. This lets BlueZ finish
 		// asynchronous AcquireWrite before a following write arrives, even at
 		// default MTU 23. Completion opens the bounded four-message window.
@@ -235,6 +273,12 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
 			input = d.in
 		}
 		select {
+		case deliver <- delivered:
+			if err := write(deliveries[0].ack); err != nil {
+				return err
+			}
+			deliveries[0] = delivery{}
+			deliveries = deliveries[1:]
 		case output <- outgoing:
 			writerBusy = true
 			if dataIndex < 0 {
@@ -286,15 +330,27 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
 					}
 				}
 				if message != nil {
-					select {
-					case d.out <- message:
-					default:
-						return fmt.Errorf("duplex receive queue full")
+					// ACK only after handing the complete message to the bounded consumer
+					// queue. Withhold completion while it is full, but continue servicing
+					// outbound ACKs/data: blocking this dispatcher can deadlock both peers.
+					// Each compliant sender has at most four unconfirmed messages, so four
+					// staged deliveries plus the four-slot consumer queue remain bounded.
+					if len(deliveries) >= 4 {
+						return fmt.Errorf("duplex peer exceeded receive window")
 					}
-				}
-				if ack != nil {
-					if err := write(ack); err != nil {
-						return err
+					deliveries = append(deliveries, delivery{message, ack, seq})
+				} else if ack != nil {
+					queued := false
+					for _, item := range deliveries {
+						if item.sequence == seq {
+							queued = true
+							break
+						}
+					}
+					if !queued {
+						if err := write(ack); err != nil {
+							return err
+						}
 					}
 				}
 			case frameFragmentAck:
@@ -322,7 +378,7 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
 					}
 					return fmt.Errorf("invalid duplex completion ACK expected=%d received=%d fragments=%d/%d bootstrap_waiting=%t", expected, seq, index, total, waiting)
 				}
-				d.retire(pending[0].cost)
+				d.retire(pending[0].cost, time.Since(pending[0].started))
 				pending[0] = duplexPending{}
 				pending = pending[1:]
 				bootstrap = false

@@ -1999,7 +1999,44 @@
     "fixture_sha256": "1fa58d62703e7668dc7af4880e0b97de84ccb65d6ab37d509b9cf6ecd7f8d8ff",
     "same_fixture": true,
     "physical_game_acceptance": "pending",
-    "ten_minute_production_bridge": "pending",
+    "ten_minute_production_bridge": {
+      "passed": true,
+      "scope": "Synthetic NextUI wire through production Bluetooth helpers over physical BLE, not commercial game acceptance",
+      "results": [
+        {
+          "passed": 1,
+          "role": "host",
+          "exchanges": 24195,
+          "elapsed_ms": 600022,
+          "p50_us": 22640,
+          "p95_us": 35865,
+          "p99_us": 52783,
+          "max_us": 464951,
+          "data_errors": 0,
+          "final_outstanding": 0
+        },
+        {
+          "passed": 1,
+          "role": "join",
+          "exchanges": 24195,
+          "elapsed_ms": 599879,
+          "p50_us": 0,
+          "p95_us": 0,
+          "p99_us": 0,
+          "max_us": 0,
+          "data_errors": 0,
+          "final_outstanding": 0
+        }
+      ],
+      "helper_sha256": [
+        "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e",
+        "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
+      ],
+      "fixture_sha256": "1fa58d62703e7668dc7af4880e0b97de84ccb65d6ab37d509b9cf6ecd7f8d8ff",
+      "load": "Other software concurrently used, explicitly confirmed by user; qualifies coexistence continuity, not isolated fluid-gameplay acceptance.",
+      "queue_scope": "Exactly one application exchange outstanding; all bytes verified and final application outstanding zero. Helper internal queue peak not measured in this build.",
+      "evidence": "build/gba-link/bluetooth/zero-tail-stream-10min/results.json"
+    },
     "real_arm_core_sio": {
       "passed": true,
       "helper_sha256": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e",
@@ -2009,10 +2046,11 @@
     },
     "load_matching_scope": "Same recorded minarch PIDs across short runs; other app activity, CPU load and Wi-Fi traffic were not held constant. Short sequential comparison is indicative, not a controlled radio-only performance claim.",
     "long_run_observed_so_far": {
-      "passed": false,
-      "status": "still_running_not_accepted",
+      "passed": true,
+      "status": "completed_continuity_pass_latency_spikes_remain",
       "observed_max_rtt_us": 464951,
       "context": "Host concurrently running PocketJS app; client running offline NES. Snapshot CPU idle around 69-71%, 53-59C. No unrelated application or Bluetooth connection was stopped."
-    }
+    },
+    "user_load_clarification": "User reported testing other software during the long run; classify this run as concurrent application/Wi-Fi coexistence load, not an isolated radio baseline."
   }
 }
