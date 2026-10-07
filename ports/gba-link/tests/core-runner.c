@@ -3,6 +3,7 @@
 #include <dlfcn.h>
 #include <openssl/evp.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -33,8 +34,24 @@ static void (*deinit)(void);
 static void (*unload)(void);
 static void *(*memory)(unsigned);
 static size_t (*memory_size)(unsigned);
+static void core_log(enum retro_log_level level, const char *format, ...) {
+    if (level < RETRO_LOG_INFO) return;
+    va_list args;
+    va_start(args, format);
+    if (!strcmp(getenv("NP_CORE_LOG"), "link")) {
+        char message[4096];
+        vsnprintf(message, sizeof(message), format, args);
+        if (level >= RETRO_LOG_WARN || strstr(message, "GBA Wi-Fi Link"))
+            fputs(message, stderr);
+    } else vfprintf(stderr, format, args);
+    va_end(args);
+}
 static bool env(unsigned cmd, void *data) {
     switch (cmd) {
+    case RETRO_ENVIRONMENT_GET_LOG_INTERFACE:
+        if (!getenv("NP_CORE_LOG")) return false;
+        ((struct retro_log_callback *)data)->log = core_log;
+        return true;
     case RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE: {
         struct retro_netpacket_callback cb = *(struct retro_netpacket_callback *)data;
         if (getenv("NP_PROTOCOL")) cb.protocol_version = getenv("NP_PROTOCOL");

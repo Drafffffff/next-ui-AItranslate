@@ -45,6 +45,8 @@ python3 ports/gba-link/tests/jitter-proxy.py --port 55438 --target-port 55437 --
 
 gpSP 日志的 `GBA Link RFU queue` 显示队列峰值、实际丢弃次数、主机未及时收到回应及客机等待超时次数；前端日志记录收发数量和待发送字节。这些统计用于定位问题，不能把网络包收到了等同于游戏已消费或已进入比赛。
 
+比较其他 Netpacket 核心时，可为测试器设置 `NP_CORE_LOG=link` 接受 Libretro 日志接口，保留联机记录与警告；设为 `1` 记录全部 INFO 以上日志。候选架构、编译与性能限制见 [OPEN-SOURCE-COMPARISON.md](OPEN-SOURCE-COMPARISON.md)。
+
 ## 2026-10-07 本轮实测
 
 两个独立 Mac gpSP 解释器采用 `7b0acfd` 的 RFU 补丁和生产网络代码，在 BTME 中配对、分别选择 Mario / Luigi，双方一致显示 Mario 30–0，P2 独立移动在两端可见。代理每两秒暂缓转发至多 150ms 后，两端实际队列峰值均为 9，队列丢弃计数均为 0。停止抖动后双方继续到 Mario 40–0。RFU 主机未及时收到回应的次数仍会增加；队列修复不能消除网络延迟，也不能据此声称所有红标已解决。
