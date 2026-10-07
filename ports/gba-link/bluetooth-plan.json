@@ -136,5 +136,40 @@
       "Window4 short transfer, 104/1024-byte payloads",
       "Missing-room timeout and successful retry"
     ]
+  },
+  "accepted_followup": {
+    "requested_at": "2026-10-07",
+    "sequence": "Finish the current Bluetooth integration, installation, performance and user gameplay acceptance first; then implement Wi-Fi hotspot mode.",
+    "settings_modes": [
+      {
+        "id": "lan_wifi",
+        "label": "局域网 Wi-Fi",
+        "flow": "Both Bricks use the same existing Wi-Fi network; retain current optimized transport."
+      },
+      {
+        "id": "bluetooth",
+        "label": "蓝牙",
+        "flow": "Create room / find nearby room; no manual MAC address."
+      },
+      {
+        "id": "wifi_hotspot",
+        "label": "Wi-Fi 热点",
+        "flow": "One Brick creates a game hotspot, the other finds and joins it; no external router or manual IP required."
+      }
+    ],
+    "presentation": "Three modes are peer choices in the GBA Link settings. Show only options relevant to the selected mode, with consistent Create room / Join room / Disconnect actions.",
+    "relay_placement": "Preserve Public Relay in the Wi-Fi advanced options; it is not a fourth peer mode.",
+    "hotspot_requirements": [
+      "Verify the actual Brick driver and system support for AP mode before selecting an implementation; do not claim feasibility yet.",
+      "Keep existing protocol 3, ROM/core/serial identity, save guards, RFU and flower-screen fixes.",
+      "Use asynchronous hotspot setup and nearby-room discovery, visible progress, cancellation, timeout and retry.",
+      "Provide authenticated hotspot access without asking players to enter an IP address.",
+      "Snapshot network state before setup and restore it after failure, cancellation or disconnect; handle loss of the SSH path with a bounded recovery mechanism.",
+      "Do not overwrite saved Wi-Fi credentials or disrupt unrelated Bluetooth services.",
+      "Measure both role assignments, repeated connection and at least 10 minutes of transmission; user validates real Mario Tennis gameplay.",
+      "Include all three modes in the final compiled package, installation verification and rollback instructions."
+    ],
+    "implementation_started": false,
+    "hardware_ap_support_verified": false
   }
 }
