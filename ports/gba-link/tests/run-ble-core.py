@@ -17,7 +17,7 @@ REMOTE='/tmp/nextui-gba-bluetooth/core-test'
 
 def run(args):
     args.output.mkdir(parents=True,exist_ok=True)
-    base=['ssh','-o','BatchMode=yes','-o','ConnectTimeout=8','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2','-o','StrictHostKeyChecking=yes','-o','UserKnownHostsFile='+str(args.known_hosts),'-i',str(args.identity)]
+    base=['ssh','-C','-o','BatchMode=yes','-o','ConnectTimeout=8','-o','ServerAliveInterval=5','-o','ServerAliveCountMax=2','-o','StrictHostKeyChecking=yes','-o','UserKnownHostsFile='+str(args.known_hosts),'-i',str(args.identity)]
     peers=[base+[args.host],base+[args.join]]
     artifacts={'core-runner.elf':OUT/'bluetooth/core-runner-bluetooth-arm.elf',
                'nextui-gba-bluetooth.elf':OUT/'brick/nextui-gba-bluetooth.elf',
