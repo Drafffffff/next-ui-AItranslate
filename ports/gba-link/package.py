@@ -12,8 +12,10 @@ OUT=ROOT/'build/gba-link'
 FILES={'.system/tg5040/bin/minarch.elf':OUT/'brick/minarch.elf',
        '.system/tg5040/cores/gpsp_libretro.so':OUT/'brick/gpsp_libretro.so'}
 revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
-if subprocess.check_output(['git','status','--porcelain','--untracked-files=normal'],cwd=ROOT,text=True).strip():
+if subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=ROOT,text=True).strip():
     raise SystemExit('Commit the source before packaging; refuse an unrecorded source tree')
+# Source is exported exclusively with git archive below. Untracked work owned by
+# other tasks is excluded; it must neither block this package nor enter it.
 package=OUT/('nextui-gba-link-'+revision[:8])
 if package.exists():shutil.rmtree(package)
 package.mkdir();checksums={}
@@ -30,7 +32,7 @@ shutil.copy2(ROOT/'ports/gba-link/install.py',package/'install.py')
 shutil.copy2(ROOT/'ports/gba-link/README.md',package/'README.md')
 shutil.copy2(ROOT/'ports/gba-link/compatibility.md',package/'compatibility.md')
 shutil.copy2(ROOT/'ports/gba-link/GAME-VALIDATION.md',package/'GAME-VALIDATION.md')
-for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md'):
+for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md', 'RFU-EXCHANGE-FIX.md'):
     shutil.copy2(ROOT/'ports/gba-link'/name, package/name)
 source_dir=package/'source';source_dir.mkdir()
 (source_dir/'REVISION.txt').write_text(revision+'\n')
@@ -52,7 +54,8 @@ records=package/'validation';records.mkdir()
 for name in ('test-results.json','regression.log','arm-host.log','arm-join.log','arm-test.log','netem-test.log','netem-host.log','netem-join.log','game-validation.json','install-test.log','save-guard-test.log','tennis-wireless-host.log','tennis-wireless-join.log','tennis-wireless-host-input.txt','tennis-wireless-join-input.txt',
              'rfu-queue-before.log', 'rfu-queue-after.log', 'rfu-queue-regression.log',
              'rfu-local-validation.json', 'rfu-local-host.log', 'rfu-local-join.log',
-             'rfu-local-proxy.log', 'local-launcher-smoke.log'):
+             'rfu-local-proxy.log', 'local-launcher-smoke.log',
+             'rfu-exchange-validation.json', 'rfu-exchange-regression.log', 'rfu-exchange-adapter.log'):
     path=OUT/name
     if path.is_file():shutil.copy2(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'
