@@ -1,6 +1,8 @@
 # NextUI GBA Link 实验更新
 
-目标平台：TrimUI Brick / tg5040。研发分支：`feature/gba-netplay`。当前交付是 Wi-Fi 两人原生 GBA 联机，不是共享按键或两人控制同一个模拟器。每端运行自己的游戏、自己的存档；仅交换 gpSP 的模拟串口 / Wireless Adapter 数据。
+目标平台：TrimUI Brick / tg5040。研发分支：`feature/gba-bluetooth`（沿用 `feature/gba-netplay` 的 Wi-Fi 与 RFU 修复）。当前交付包含 Wi-Fi 和实验性蓝牙两人原生 GBA 联机，不是共享按键或两人控制同一个模拟器。每端运行自己的游戏、自己的存档；仅交换 gpSP 的模拟串口 / Wireless Adapter 数据。
+
+2026-10-07：蓝牙版本 `da609b38` 已编译、打包并安装到两台 Brick，安装文件与发布校验一致。真实 ARM gpSP 核心已通过自动搜索加入、双向串口按键计分、交换主客机、重复连接、ROM／核心／模式不一致拒绝；实际主机等待取消也已验证。任天堂商业游戏的蓝牙菜单、选角、比赛流畅度与花屏情况仍待用户验收，不能据此声称蓝牙对战已经完成。安装与验收状态见 `bluetooth-deployment.json`、`bluetooth-validation.json`。热点模式是后续工作，当前尚未提供。
 
 ## 当前结论
 
@@ -14,15 +16,15 @@ Mac 的真实双核心测试、tg5040 ARM64 交叉编译、实际 ARM64 核心�
 
 RFU 交换模型正在按实机记录修复：客机暂存、主机驱动、单包接收与独立确认；底层检查与既有回归通过。历史 32 包实验不能作为当前版本商业游戏验收。当前验证见 [RFU-EXCHANGE-FIX.md](RFU-EXCHANGE-FIX.md)，本地环境见 [LOCAL-TESTING.md](LOCAL-TESTING.md)。
 
-## 蓝牙是否更合适
+## 蓝牙连接与限制
 
-近距离两台 Brick，蓝牙作为不依赖路由器的连接方式有价值。已有项目真机记录显示 BlueZ 5.78、HCI 4.1、central/peripheral 角色，并已有 Brick Mic 的 BLE GATT 链路，这属于硬件/系统可行性证据，不是 Brick 到 Brick 对战证据。
+蓝牙模式不需要路由器、MAC 地址或配对码。进入游戏菜单 → Options → GBA Link → Mode → Bluetooth：第一台选择 Create Room，第二台选择 Join Room。一个附近房间会自动加入；多个房间才显示选择列表。主机等待界面与房间列表使用相同的短名称（例如 GBA Link 9321），方便区分设备。搜索、连接和内容校验自动进行，等待时按 B 取消；只有双向通道和 ROM／核心／串口模式校验完成后才显示已连接。随后仍需在游戏自身的联机入口配对。
 
-蓝牙仍需实现可靠、有序、分帧的双向传输，并验证连接间隔、MTU、拥塞、暂停与断线。经典蓝牙 RFCOMM 可考虑复用现有字节流协议，但必须先核实 Brick 的 BR/EDR/Profile/内核支持；BLE GATT 则需要明确的分片和流控，不能直接把 TCP socket 改成通知就认为完成。Mac 上两个软件进程无法模拟两颗实际蓝牙控制器，因此相关无线验收需两台机器。
+当前使用 BLE GATT、协商 MTU、可靠有序分片与有界双向队列，辅助进程通过私有文件描述符向现有联机协议转发数据。搜索和无线收发不在游戏或菜单线程执行；取消只清理本次辅助进程及其连接。选房后直接连接该房间，避免再次搜索时重复过滤导致等待。核心与存档护栏沿用 Wi-Fi 版本。
 
-建议先用已经有实际核心证据的 Wi-Fi 完成流程，再沿用核心回调、握手和存档护栏增加蓝牙传输。蓝牙用于身边对战；公网继续使用 Wi-Fi/IP。当前包尚未实现蓝牙。
+蓝牙仍是实验模式。此前同一对 Brick 的 104 字节连续交换中，Wi-Fi 中位往返约 4.3ms、经典蓝牙约 33.8ms、优化后 BLE 原始 ATT 约 30ms；BLE 的十分钟有界队列测试通过，但仍测到长延迟尖峰。这些传输测试不是游戏帧率或商业对战验收。游戏内的红色无线标志也不能直接作为底层丢包计数，应结合延迟、队列和实际断连日志判断。保持 Wi-Fi 可选，不承诺蓝牙已达到 Wi-Fi 的流畅度。
 
-官方 API： [BlueZ ProfileManager](https://github.com/bluez/bluez/blob/master/doc/org.bluez.ProfileManager.rst)、[Adapter](https://github.com/bluez/bluez/blob/master/doc/org.bluez.Adapter.rst)。本机硬件记录见项目 `docs/BRICK-MIC-PLAN.md`。
+两台需开启系统蓝牙。若更新时保留离线游戏运行，磁盘文件会原子替换，已运行的游戏仍使用旧版前端；正常退出并重新打开后才加载新菜单。掉线或结束已使用的联机会话后也需正常重新打开游戏，不能恢复未完整序列化的联机状态。公网仍走 Wi-Fi 中继；热点模式待蓝牙验收后实施。
 
 ## 开源路线比较
 
@@ -59,14 +61,15 @@ NAS 上名为“高级战争2”的文件实际 header 是 BGWJ（日版 1+2 合
 
 ## 无 SSH 安装：Mac + SD 卡
 
-先正常关机，将 SD 卡插入 Mac。解压本包；勿将整个研发工作目录或私有测试 ROM 拷贝到卡上。安装器只替换以下两项：
+先正常关机，将 SD 卡插入 Mac。解压本包；勿将整个研发工作目录或私有测试 ROM 拷贝到卡上。安装器只更新以下三项：
 
 ```
 .system/tg5040/bin/minarch.elf
 .system/tg5040/cores/gpsp_libretro.so
+.system/tg5040/bin/nextui-gba-bluetooth.elf
 ```
 
-它要求卡上已有对应 NextUI 文件，不是完整固件刷机工具。minarch 是其他模拟器也共用的前端，因此需要验收一次其他平台单人游戏。此包基于当前项目代码，保留 AI 翻译等现有功能；如果掌机的 NextUI 版本与本项目不一致，先检查版本差异。
+它要求卡上已有 minarch 与 gpSP；蓝牙辅助程序可以首次新增。此安装器不是完整固件刷机工具。minarch 是其他模拟器也共用的前端，因此需要验收一次其他平台单人游戏。此包基于当前项目代码，保留 AI 翻译等现有功能；如果掌机的 NextUI 版本与本项目不一致，先检查版本差异。
 
 在解压目录运行，替换实际卡名，路径加引号：
 
@@ -74,7 +77,7 @@ NAS 上名为“高级战争2”的文件实际 header 是 BGWJ（日版 1+2 合
 python3 install.py "/Volumes/你的SD卡" install
 ```
 
-安装器先验证包内 SHA256，再备份现有两个文件，校验备份，创建事务记录，最后逐项原子替换；异常时回滚。它拒绝目标路径中的符号链接；保留 `.gba-link-backups/`，不要只拷贝裸 payload 覆盖。安装成功后会输出明确的备份目录名。ROM、Saves、Bios、用户配置、API Key 和系统权限均不修改。
+安装器先验证包内 SHA256，再备份现有文件（记录蓝牙程序原先是否存在），校验备份，创建事务记录，最后逐项原子替换；异常时回滚；首次新增的蓝牙程序在回滚时删除，已有蓝牙程序则恢复原文件。它拒绝目标路径中的符号链接；保留 `.gba-link-backups/`，不要只拷贝裸 payload 覆盖。安装成功后会输出明确的备份目录名。ROM、Saves、Bios、用户配置、API Key 和系统权限均不修改。
 
 恢复命令使用安装时打印的目录名：
 
@@ -84,11 +87,18 @@ python3 install.py "/Volumes/你的SD卡" rollback --backup "实际备份目录�
 
 断电/拔卡导致中断后，重新接卡并按日志指定的备份名执行 rollback，再重新安装。不要覆盖或删除原备份。两台 Brick 安装同一个包，安全弹出卡后再开机。
 
+本次 SSH 更新的实际备份目录如下，仍由同一安装器识别：
+
+- 第一台（192.168.50.70）：`20261007-230908-da609b38`
+- 第二台（192.168.50.91）：`20261007-230932-da609b38`
+
+需回滚时先正常退出游戏并关机，将对应卡接入 Mac，再用该卡的目录名执行上述命令。两台备份名不同，不能交换使用。当前安装时第二台保留离线游戏运行以防休眠；更新采用原子替换，实测原进程 PID 和旧可执行映像保持不变。重新打开游戏才加载新版。
+
 ## 在 NextUI 中联机
 
 1. 两台开启 Wi-Fi 并连接同一局域网。启动相同 GBA 游戏，用 gpSP；核心 `Link Cable Connectivity` 初次建议 auto。
-2. 第一台打开游戏菜单 → Options → GBA Link → Host Link。菜单显示本机 IP 和固定 TCP 55435 端口。
-3. 第二台在 Host / Relay Address 里用十字键设置主机 IPv4，然后 Join Link。连接后双方继续在游戏自身的联机菜单操作。前端连上不等于游戏配对完成。
+2. 第一台打开游戏菜单 → Options → GBA Link → Mode → Wi-Fi，再选择 Create Room。菜单显示本机 IP 和固定 TCP 55435 端口。
+3. 第二台同样选择 Wi-Fi，在 Advanced → Host / Relay Address 里设置主机 IPv4，然后返回选择 Join Room。连接后双方继续在游戏自身的联机菜单操作。前端连上不等于游戏配对完成。
 4. 菜单或翻译会暂停双方；退出菜单恢复。联机中禁止快进、倒带、AI 自动玩、核心重置与修改核心选项。
 5. 一旦该次游戏运行启动过联机，直到退出并重新打开游戏都禁止即时存档/读档及自动恢复写入。联机状态不能完整序列化；之前的 resume 文件保留，但增加持久标记阻止下一次自动加载旧 resume，避免旧 RAM 覆盖联机后的本地进度；后续正常单人自动存档成功才清除此标记。手动读旧即时存档仍按用户选择执行。断线后请退出并重新打开游戏，再开始新会话。
 6. 正常游戏 SRAM 仍保存各自本地进度。每次开始连接前，在 `Saves/GBA/` 生成 `.gba-link-<ROM SHA前8位>-before-<时间>-<随机值>` 原始 SRAM 备份，不同步或覆盖对方存档。恢复 SRAM 需退出游戏后进行；若原配置使用压缩 SRM，先转换原始备份为相应格式，不能直接用原始字节冒充压缩 SRM。
@@ -104,11 +114,11 @@ python3 install.py "/Volumes/你的SD卡" rollback --backup "实际备份目录�
 python3 ports/gba-link/server/relay.py --bind 0.0.0.0 --port 55435
 ```
 
-两台选择 Connection = Public Relay，设置相同服务器 IPv4、六位 Room Code，一台 Host Link、一台 Join Link。服务器需允许 TCP 55435 入站；掌机只需出站。房间号用于配对，不是认证；此实验协议未增加 TLS、账号或访问控制。默认服务器只监听回环地址。当前适用于受控试验；公开服务的认证、加密与运行治理尚未实现。
+两台先选择 Mode = Wi-Fi，再进入 Advanced，设置 Connection = Public Relay、相同服务器 IPv4 和六位 Room Code；返回后一台 Create Room、一台 Join Room。服务器需允许 TCP 55435 入站；掌机只需出站。房间号用于配对，不是认证；此实验协议未增加 TLS、账号或访问控制。默认服务器只监听回环地址。当前适用于受控试验；公开服务的认证、加密与运行治理尚未实现。
 
 ## 复现构建与验证
 
-固定提交、源代码 SHA256、SDK 镜像 digest 和依赖提交在 `versions.json`。用 Homebrew 的 OpenSSL 3、可选 SDL2、Apple clang 与 Python3；Docker/Colima 用于 Brick 交叉编译及 ARM64 测试。
+固定提交、源代码 SHA256、SDK 镜像 digest 和依赖提交在 `versions.json`。用 Go（蓝牙依赖固定于 go.mod／go.sum）、Homebrew 的 OpenSSL 3、可选 SDL2、Apple clang 与 Python3；Docker/Colima 用于 Brick 交叉编译及 ARM64 测试。
 
 ```sh
 python3 ports/gba-link/build.py mac
