@@ -7,10 +7,16 @@
   "libretro_common_commit": "0a2b63d903ea0cc7bac9e759af57db190b4aeadd",
   "libchdr_commit": "607694ca0812edfc9cc2030c64634fc2393668de",
   "rcheevos_commit": "40d916de00fe757bab40fb4db41a7912193a48e3",
-  "gpsp_rfu_patch_sha256": "436f8c83e52d26d38fa851b9ed528a1157c58c001b6c84fd3abbd2aaf017bdf7",
-  "gpsp_rfu_patched_sha256": "df6047bedd87f116f6721c56528199383b647ee6b00ab0db1f349de9e6fcf10c",
+  "gpsp_rfu_patch_sha256": "b7aaed82e37f0c0e11990b7c29eb26e42c9a4434d0ff32b6c04a8a229f132577",
+  "gpsp_rfu_patched_sha256": "c11514ec85e49efcddaac15a36c7d9497bf9681f08937f77a75df1548582025b",
   "gpsp_rfu_previous_patched_sha256": "a330c573ffff150989e53da7cd34ac20e08f0390e08f92962e6225d9a7fbf86d",
   "gpsp_patch_files": {
+    "rfu.c": "c11514ec85e49efcddaac15a36c7d9497bf9681f08937f77a75df1548582025b",
+    "gba_memory.c": "bf31282a219a68c3f899e3aee40c25f7214d79522f7b58cdef4147cf37c0b849",
+    "cpu.cc": "8d9bc9fbdd2a1947a200ba9e287a37a53961a78b3d2fe684cd2f66360949be51",
+    "arm/arm64_stub.S": "7127eca77a6ed8cb251bd41e8a76941d7c608a1bd3b283a8f3052900afeb43a3"
+  },
+  "gpsp_previous_patch_files": {
     "rfu.c": "df6047bedd87f116f6721c56528199383b647ee6b00ab0db1f349de9e6fcf10c",
     "gba_memory.c": "c2ed3d7617ff8bebdaebd7b42e130eb4ebdcfc000ad0658128ce4d7f2d237e9c",
     "arm/arm64_stub.S": "7127eca77a6ed8cb251bd41e8a76941d7c608a1bd3b283a8f3052900afeb43a3"

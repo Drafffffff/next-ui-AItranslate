@@ -5,8 +5,9 @@ import pathlib, struct, subprocess, sys
 root = pathlib.Path(__file__).resolve().parent
 out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else 'build/gba-link/link-probe.gba')
 out.parent.mkdir(parents=True, exist_ok=True)
+source = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else root / 'link-probe.S'
 obj = out.with_suffix('.o')
-subprocess.run(['clang', '-target', 'armv4t-none-eabi', '-c', str(root / 'link-probe.S'), '-o', str(obj)], check=True)
+subprocess.run(['clang', '-target', 'armv4t-none-eabi', '-c', str(source), '-o', str(obj)], check=True)
 data = obj.read_bytes()
 assert data[:6] == b'\x7fELF\x01\x01'
 off = struct.unpack_from('<I', data, 32)[0]

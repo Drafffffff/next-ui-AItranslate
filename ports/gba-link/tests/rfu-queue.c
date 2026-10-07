@@ -75,9 +75,15 @@ int main(void) {
   memcpy(ewram + 0x33f0, &pointer, 4);
   rfu_watch_write(0x020033f0, 0, 32, 0x08012344, 0);
   assert(readaddress32(ewram, 0x33f0) == pointer && rfu_watch_dumped);
-  assert(rfu_watch_changes == 1);
+  assert(rfu_watch_pointer_changes == 1 && rfu_watch_changes == 0);
   rfu_reset();
-  assert(!rfu_watch_dumped && !rfu_watch_changes);
+  assert(!rfu_watch_dumped && !rfu_watch_changes && !rfu_watch_pointer_changes);
+  setup(false);
+  for (unsigned i = 0; i < 300; i++)
+    rfu_watch_write(0x04000008, 1, 16, 0x08012344, 0);
+  rfu_watch_write(0x020033f0, 0x11, 32, 0x08012348, 1);
+  assert(rfu_watch_dumped && rfu_watch_pointer_changes == 1);
+  assert(readaddress32(ewram, 0x33f0) == pointer);
   rfu_watch_configure(NULL);
   puts("PASS: write watch records the fault without modifying guest memory; reset clears it");
   mailbox(false); mailbox(true);

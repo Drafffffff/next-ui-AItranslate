@@ -50,6 +50,7 @@ for candidate in ('COPYING','LICENSE','LICENSE.txt'):
     if (gpsp/candidate).is_file():shutil.copy2(gpsp/candidate,licenses/('gpSP-'+candidate))
 tests=package/'tests';tests.mkdir()
 shutil.copy2(OUT/'link-probe.gba',tests/'link-probe.gba')
+if (OUT/'ime-probe.gba').is_file():shutil.copy2(OUT/'ime-probe.gba',tests/'ime-probe.gba')
 records=package/'validation';records.mkdir()
 for name in ('test-results.json','regression.log','arm-host.log','arm-join.log','arm-test.log','netem-test.log','netem-host.log','netem-join.log','game-validation.json','install-test.log','save-guard-test.log','tennis-wireless-host.log','tennis-wireless-join.log','tennis-wireless-host-input.txt','tennis-wireless-join-input.txt',
              'rfu-queue-before.log', 'rfu-queue-after.log', 'rfu-queue-regression.log',
@@ -58,7 +59,9 @@ for name in ('test-results.json','regression.log','arm-host.log','arm-join.log',
              'rfu-exchange-validation.json', 'rfu-exchange-regression.log', 'rfu-exchange-adapter.log',
              'rfu-timing-validation.json', 'rfu-timing-regression.log', 'rfu-timing-adapter.log',
              'rfu-flower-validation.json', 'rfu-flower-regression.log',
-             'rfu-flower-adapter.log', 'rfu-flower-arm-probe.log'):
+             'rfu-flower-adapter.log', 'rfu-flower-arm-probe.log',
+             'ime-before-mac.json', 'ime-after-mac.json', 'ime-before-arm.json', 'ime-after-arm.json',
+             'rfu-ime-validation.json', 'rfu-ime-regression.log', 'rfu-ime-adapter.log', 'rfu-ime-arm-probe.log'):
     path=OUT/name
     if path.is_file():shutil.copy2(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'
