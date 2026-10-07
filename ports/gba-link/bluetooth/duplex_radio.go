@@ -106,9 +106,16 @@ func (e *peripheralPackets) SetWriteDeadline(time.Time) error { return nil }
 func (e *peripheralPackets) Close() error                     { e.once.Do(func() { close(e.done) }); return nil }
 
 func duplexHost(ctx context.Context, conn *dbus.Conn, count, length int) error {
+	return peripheralSession(ctx, conn, nil, func(ctx context.Context, endpoint duplexEndpoint, payload int, epoch uint32) error {
+		return duplexBenchmark(ctx, endpoint, payload, epoch, count, length, true)
+	})
+}
+
+func peripheralSession(ctx context.Context, conn *dbus.Conn, roomReady func() error, handler func(context.Context, duplexEndpoint, int, uint32) error) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	p := &Peripheral{conn: conn}
+	p.roomReady = roomReady
 	e := newPeripheralPackets(p)
 	p.duplex = e
 	defer e.Close()
@@ -149,11 +156,9 @@ func duplexHost(ctx context.Context, conn *dbus.Conn, count, length int) error {
 			if payload > 512 {
 				payload = 512
 			}
-			err := duplexBenchmark(ctx, e, payload, epoch, count, length, true)
+			err := handler(ctx, e, payload, epoch)
 			result <- err
-			if err != nil {
-				cancel()
-			}
+			cancel()
 		}
 	}()
 	err := hostPeripheral(ctx, conn, p)

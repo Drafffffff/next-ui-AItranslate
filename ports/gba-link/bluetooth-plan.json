@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "duplex_radio_verified_frontend_integration_pending",
+  "status": "production_bridge_and_simple_menu_compiled_validation_pending",
   "production_integration": false,
   "source_review": {
     "existing_prototype": "gba-netplay/workspace/all/minarch/ma_netplay_ble*.c (untracked)",
@@ -171,5 +171,31 @@
     ],
     "implementation_started": false,
     "hardware_ap_support_verified": false
+  },
+  "frontend_integration": {
+    "source_status": "implemented_not_installed",
+    "menu": [
+      "Mode",
+      "Create Room",
+      "Join Room",
+      "Disconnect"
+    ],
+    "advanced": "Wi-Fi address and relay settings are inside Advanced; Bluetooth hides Advanced",
+    "discovery": "One fresh room connects automatically after a short discovery window; multiple rooms require selection",
+    "progress": "Automatic discovery, connect and compatibility checks with B cancel",
+    "verified": [
+      "Go race unit suite including stream framing and discovery validation",
+      "Four Mac real gpSP bridge cases: gameplay SIO, ROM mismatch, core build mismatch, serial mode mismatch",
+      "Full tg5040 frontend and pinned gpSP compilation",
+      "Existing TCP regression: 18 cases passed",
+      "Private helper lifecycle: FD isolation, malformed room control, nonblocking cancel, stale worker retry, child exit and cleanup passed on Mac",
+      "Eight installation regressions passed, including first helper installation/removal on rollback and legacy journal recovery"
+    ],
+    "pending": [
+      "Generate final revision-labelled build and installation package",
+      "Fresh ARM-native worker tests and actual-radio frontend integration",
+      "On-device menu acceptance and user-controlled Mario Tennis gameplay"
+    ],
+    "build_note": "Preliminary build passed; rebuild committed revision including the packaged helper before installation."
   }
 }

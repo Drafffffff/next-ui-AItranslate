@@ -282,6 +282,19 @@ func (a *rawATT) discover() (uint16, uint16, error) {
 }
 
 func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, length int, delay time.Duration) error {
+	return centralRawSession(ctx, conn, expected, nil, func(ctx context.Context, endpoint duplexEndpoint, payload int) error {
+		if probeDuplex {
+			epoch, err := randomDuplexEpoch()
+			if err != nil {
+				return err
+			}
+			return duplexBenchmark(ctx, endpoint, payload, epoch, count, length, false)
+		}
+		return probeDataExchange(ctx, endpoint, endpoint, payload, count, length, delay)
+	})
+}
+
+func centralRawSession(ctx context.Context, conn *dbus.Conn, expected string, progress func(byte, string) error, handler func(context.Context, duplexEndpoint, int) error) error {
 	device, err := findRoom(ctx, conn, expected)
 	if err != nil {
 		return err
@@ -295,6 +308,11 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 		return fmt.Errorf("peer already connected; raw probe will not reuse it")
 	}
 	address, _ := properties["Address"].Value().(string)
+	if progress != nil {
+		if err := progress('C', "Connecting to room..."); err != nil {
+			return err
+		}
+	}
 	parts := strings.Split(address, ":")
 	if len(parts) != 6 {
 		return fmt.Errorf("invalid discovered address")
@@ -412,16 +430,9 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 		payload = 512
 	}
 	fmt.Printf("RAW_ATT_READY mtu=%d payload=%d tx=%d rx=%d\n", att.mtu, payload, att.tx, att.rx)
-	if probeDuplex {
-		if err := att.SetReadDeadline(time.Time{}); err != nil {
-			return err
-		}
-		epoch, err := randomDuplexEpoch()
-		if err != nil {
-			return err
-		}
-		return duplexBenchmark(ctx, att, payload, epoch, count, length, false)
+	if err := att.SetReadDeadline(time.Time{}); err != nil {
+		return err
 	}
-	return probeDataExchange(ctx, att, att, payload, count, length, delay)
+	return handler(ctx, att, payload)
 }
 func syscallError(code int) error { return unix.Errno(code) }

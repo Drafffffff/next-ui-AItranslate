@@ -54,6 +54,7 @@ type Peripheral struct {
 	notifyWriter  *os.File
 	writeAcquired bool
 	duplex        *peripheralPackets
+	roomReady     func() error
 }
 type Characteristic struct {
 	Peripheral *Peripheral
@@ -249,6 +250,11 @@ func hostPeripheral(ctx context.Context, conn *dbus.Conn, p *Peripheral) error {
 	defer p.closeFDs()
 	if err := finishLegacy(ctx, conn); err != nil {
 		return err
+	}
+	if p.roomReady != nil {
+		if err := p.roomReady(); err != nil {
+			return err
+		}
 	}
 	fmt.Println("ROOM_READY")
 	<-ctx.Done()
@@ -446,6 +452,8 @@ func probeDataExchange(ctx context.Context, reader, writer packetEndpoint, paylo
 }
 
 func main() {
+	dataFD := flag.Int("data-fd", -1, "inherited frontend stream FD for serve roles")
+	controlFD := flag.Int("control-fd", -1, "inherited private frontend control FD")
 	window := flag.Int("window", 1, "maximum pending diagnostic messages, 1..16")
 	eventLength := flag.Uint("event-length", 0, "informational event length hint in 625us units, 0..12")
 	serverFD := flag.Bool("server-fd", false, "single-session server FD measurement backend")
@@ -473,21 +481,28 @@ func main() {
 	}
 	probeRunDuration = *runFor
 	probeServerFD = *serverFD
-	if (*role != "host" && *role != "join" && *role != "join-raw" && *role != "duplex-host" && *role != "duplex-join") || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
+	serving := *role == "serve-host" || *role == "serve-join" || *role == "serve-scan"
+	if (*role != "host" && *role != "join" && *role != "join-raw" && *role != "duplex-host" && *role != "duplex-join" && !serving) || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
 		fmt.Fprintln(os.Stderr, "invalid arguments")
 		os.Exit(2)
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
-	ctx, timeout := context.WithTimeout(ctx, *duration)
-	defer timeout()
+	if !serving {
+		var timeout context.CancelFunc
+		ctx, timeout = context.WithTimeout(ctx, *duration)
+		defer timeout()
+	}
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	defer conn.Close()
-	if *role == "duplex-host" {
+	if serving {
+		probeServerFD = true
+		err = serveFrontend(ctx, conn, *role, *peer, *dataFD, *controlFD)
+	} else if *role == "duplex-host" {
 		// D-Bus method handlers run concurrently. The acquired packet FD
 		// preserves command order for independent duplex data and ACKs.
 		probeServerFD = true

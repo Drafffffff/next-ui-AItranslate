@@ -39,6 +39,29 @@ class SDInstall(unittest.TestCase):
         for name in installer.FILES:self.assertEqual((self.card/name).read_bytes(),(self.package/'payload'/name).read_bytes())
         installer.rollback(self.card,backup);self.unchanged()
 
+    def test_first_helper_install_and_rollback(self):
+        helper=self.card/installer.HELPER;helper.unlink();self.old.pop(installer.HELPER)
+        installer.install(self.card)
+        self.assertTrue(helper.is_file())
+        backup=next((self.card/'.gba-link-backups').iterdir())
+        installer.rollback(self.card,backup)
+        self.assertFalse(helper.exists());self.unchanged()
+
+    def test_missing_helper_payload_rejected_before_change(self):
+        (self.package/'payload'/installer.HELPER).unlink()
+        with self.assertRaises(FileNotFoundError):installer.install(self.card)
+        self.unchanged()
+
+    def test_legacy_backup_rollback(self):
+        backup=self.card/'.gba-link-backups/legacy';backup.mkdir(parents=True)
+        old={}
+        for name in installer.BASE_FILES:
+            target=backup/name;target.parent.mkdir(parents=True,exist_ok=True)
+            target.write_bytes(self.old[name]);old[name]=installer.sha(target)
+            (self.card/name).write_bytes(b'changed')
+        (backup/'journal.json').write_text(json.dumps({'state':'APPLIED','old':old}))
+        installer.rollback(self.card,backup);self.unchanged()
+
     def test_corrupted_payload_never_modifies_card(self):
         (self.package/'payload'/installer.FILES[1]).write_bytes(b'tampered')
         with self.assertRaisesRegex(ValueError,'Package checksum mismatch'):installer.install(self.card)

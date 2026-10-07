@@ -9,11 +9,17 @@ import shutil
 import time
 
 PACKAGE = Path(__file__).resolve().parent
-FILES = ('.system/tg5040/bin/minarch.elf', '.system/tg5040/cores/gpsp_libretro.so')
+BASE_FILES = ('.system/tg5040/bin/minarch.elf', '.system/tg5040/cores/gpsp_libretro.so')
+HELPER = '.system/tg5040/bin/nextui-gba-bluetooth.elf'
+FILES = BASE_FILES + (HELPER,)
 
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def current_sha(path):
+    return sha(path) if path.is_file() else None
 
 
 def safe(root, relative):
@@ -48,19 +54,24 @@ def replace(source,destination):
 def rollback(root,backup):
     journal_path=backup/'journal.json'
     journal=json.loads(journal_path.read_text())
-    if set(journal['old'])!=set(FILES):raise ValueError('Invalid backup journal')
+    if set(journal['old']) not in (set(BASE_FILES),set(FILES)):raise ValueError('Invalid backup journal')
+    if any(value is None and name != HELPER for name,value in journal['old'].items()):
+        raise ValueError('Invalid missing backup file')
     if journal['state']=='PREPARING':
-        if any(sha(safe(root,name))!=checksum for name,checksum in journal['old'].items()):
+        if any(current_sha(safe(root,name))!=checksum for name,checksum in journal['old'].items()):
             raise ValueError('Current files changed during incomplete preparation; inspect before recovery')
         journal['state']='ROLLED_BACK';atomic_json(journal_path,journal)
         print('Preparation cancelled; installed files were never changed.');return
     for name,checksum in journal['old'].items():
-        if sha(safe(backup,name))!=checksum:raise ValueError('Backup checksum mismatch')
+        if checksum is not None and sha(safe(backup,name))!=checksum:raise ValueError('Backup checksum mismatch')
         safe(root,name)
     journal['state']='ROLLING_BACK';atomic_json(journal_path,journal)
-    for name in FILES:replace(safe(backup,name),safe(root,name))
+    for name,checksum in journal['old'].items():
+        destination=safe(root,name)
+        if checksum is None:destination.unlink(missing_ok=True)
+        else:replace(safe(backup,name),destination)
     journal['state']='ROLLED_BACK';atomic_json(journal_path,journal)
-    print('Rolled back both files. ROMs, saves and settings were untouched.')
+    print('Rolled back update files. ROMs, saves and settings were untouched.')
 
 
 def install(root):
@@ -68,17 +79,20 @@ def install(root):
     if set(manifest['files'])!=set(FILES):raise ValueError('Unexpected update contents')
     for name,checksum in manifest['files'].items():
         if sha(safe(PACKAGE/'payload',name))!=checksum:raise ValueError('Package checksum mismatch')
-        if not safe(root,name).is_file():raise ValueError('Expected existing NextUI file: '+name)
+        target=safe(root,name)
+        if not target.is_file() and (name != HELPER or target.exists()):
+            raise ValueError('Expected existing NextUI file: '+name)
     backups=safe(root,'.gba-link-backups');backups.mkdir(exist_ok=True)
     for journal_path in backups.glob('*/journal.json'):
         if json.loads(journal_path.read_text())['state'] not in ('APPLIED','ROLLED_BACK'):
             raise ValueError('Interrupted update: run rollback --backup '+journal_path.parent.name)
     backup=backups/(time.strftime('%Y%m%d-%H%M%S')+'-'+manifest['revision'][:8])
     backup.mkdir()  # Refuse an existing backup; never overwrite it.
-    journal={'schema':1,'state':'PREPARING','revision':manifest['revision'],'old':{name:sha(safe(root,name)) for name in FILES}}
+    journal={'schema':1,'state':'PREPARING','revision':manifest['revision'],'old':{name:current_sha(safe(root,name)) for name in FILES}}
     atomic_json(backup/'journal.json',journal)
     for name in FILES:
         source=safe(root,name);destination=safe(backup,name)
+        if journal['old'][name] is None:continue
         destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,destination)
         if sha(source)!=sha(destination):raise ValueError('Backup checksum mismatch')
         journal['old'][name]=sha(destination)

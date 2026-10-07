@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -39,5 +40,24 @@ func TestDiscoveryRequiresFreshAdapterUpdate(t *testing.T) {
 	base.Body = []any{"org.bluez.Device1"}
 	if freshDiscoveryPath(base) != "" {
 		t.Fatal("malformed signal accepted")
+	}
+}
+
+func TestRoomListRejectsStaleAndMalformedAddresses(t *testing.T) {
+	now := time.Now()
+	objs := objects{}
+	fresh := map[dbus.ObjectPath]time.Time{}
+	addresses := []string{"22:22:64:D7:F4:74", "22:22:1C:11:93:21", "GG:22:64:D7:F4:74", "22-22-64-D7-F4-74"}
+	for i, address := range addresses {
+		path := dbus.ObjectPath(fmt.Sprintf("/org/bluez/hci0/dev_%d", i))
+		objs[path] = map[string]map[string]dbus.Variant{"org.bluez.Device1": {"Address": dbus.MakeVariant(address), "UUIDs": dbus.MakeVariant([]string{serviceUUID})}}
+		fresh[path] = now
+	}
+	rooms := roomCandidates(objs, fresh, nil, false, now)
+	if len(rooms) != 2 || rooms[0].address != addresses[1] || rooms[1].address != addresses[0] || rooms[0].label != "GBA Link 9321" {
+		t.Fatal(rooms)
+	}
+	if len(roomCandidates(objs, fresh, nil, false, now.Add(4*time.Second))) != 0 {
+		t.Fatal("stale room remained visible")
 	}
 }

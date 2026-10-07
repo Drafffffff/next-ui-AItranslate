@@ -31,6 +31,8 @@ static struct {
     enum NPState state;
     int listener, fd;
     bool supported, host, started, registered, used, local_pause, remote_pause, polling, relay;
+    bool wifi_owned;
+    bool bt_owned, bt_pending;
     unsigned char preface[16];
     unsigned char hello[NP_HELLO], peer[NP_HELLO];
     size_t hello_read;
@@ -66,6 +68,10 @@ static void close_fd(int *fd) { if (*fd >= 0) close(*fd); *fd = -1; }
 static void end_session(const char *reason, bool error) {
     bool started = np.started;
     np.started = false;
+#ifdef NEXTUI_LINK_BT
+    Netplay_btStop();
+#endif
+    np.bt_owned = np.bt_pending = false;
     close_fd(&np.fd);
     close_fd(&np.listener);
     np.local_pause = np.remote_pause = false;
@@ -76,8 +82,9 @@ static void end_session(const char *reason, bool error) {
     }
     np.registered = false;
 #ifdef NEXTUI_LINK_WIFI
-    Netplay_wifiEnd();
+    if (np.wifi_owned) Netplay_wifiEnd();
 #endif
+    np.wifi_owned = false;
     status(error ? NP_ERROR : NP_IDLE, reason);
 }
 void Netplay_stop(const char *reason) { end_session(reason ? reason : "Disconnected", false); }
@@ -105,7 +112,12 @@ void Netplay_identity(const uint8_t sha[32], const uint8_t core_sha[32], const c
 }
 bool Netplay_supported(void) { return np.supported; }
 bool Netplay_active(void) { return np.state == NP_ACTIVE; }
-bool Netplay_busy(void) { return np.state >= NP_LISTENING && np.state <= NP_ACTIVE; }
+bool Netplay_busy(void) {
+#ifdef NEXTUI_LINK_BT
+    if (Netplay_btScanning()) return true;
+#endif
+    return np.state >= NP_LISTENING && np.state <= NP_ACTIVE;
+}
 bool Netplay_paused(void) { return np.local_pause || np.remote_pause; }
 bool Netplay_localPaused(void) { return np.local_pause; }
 bool Netplay_used(void) { return np.used; }
@@ -232,7 +244,7 @@ static void handshake(void) {
     queue_bytes(np.hello, NP_HELLO);
     flush();
 }
-static bool prepare(bool host) {
+static bool prepare_transport(bool host, bool wifi) {
     if (!np.supported) { status(NP_ERROR, "This core has no link interface"); return false; }
     Netplay_stop("Offline");
     np.host = host;
@@ -253,9 +265,49 @@ static bool prepare(bool host) {
     np.began = np.last_rx = now_ms();
     np.last_report = np.began;
 #ifdef NEXTUI_LINK_WIFI
-    Netplay_wifiBegin();
+    if (wifi) { Netplay_wifiBegin(); np.wifi_owned = true; }
+#else
+    (void)wifi;
 #endif
     return true;
+}
+static bool prepare(bool host) { return prepare_transport(host, true); }
+bool Netplay_attachTransport(int fd, bool host) {
+    if (fd < 0) return false;
+    if (Netplay_busy() || Netplay_used()) { close(fd); return false; }
+    if (!prepare_transport(host, false)) { close(fd); return false; }
+    np.fd = fd;
+    if (!configure_socket(fd)) {
+        end_session("Cannot configure local link transport", true); return false;
+    }
+    handshake();
+    return Netplay_state() == NP_HANDSHAKE;
+}
+bool Netplay_bluetooth(bool host, const char *peer) {
+#ifdef NEXTUI_LINK_BT
+    if (Netplay_busy() || Netplay_used() || !prepare_transport(host,false)) return false;
+    if (!Netplay_btStart(host,peer)) {
+        end_session("Bluetooth helper unavailable. Check the update.",true);return false;
+    }
+    np.bt_owned=np.bt_pending=true;
+    status(host?NP_LISTENING:NP_CONNECTING,host?"Preparing room...":"Searching for room...");
+    return true;
+#else
+    (void)host;(void)peer;status(NP_ERROR,"Bluetooth link is unavailable in this build");return false;
+#endif
+}
+bool Netplay_bluetoothScan(void) {
+#ifdef NEXTUI_LINK_BT
+    if (Netplay_busy()||Netplay_used()||!Netplay_supported()) return false;
+    return Netplay_btScan();
+#else
+    return false;
+#endif
+}
+void Netplay_bluetoothScanStop(void) {
+#ifdef NEXTUI_LINK_BT
+    if (Netplay_btScanning()) Netplay_btStop();
+#endif
 }
 bool Netplay_host(uint16_t port) {
     if (!port || !prepare(true)) return false;
@@ -397,6 +449,29 @@ static void consume(void) {
     }
 }
 void Netplay_poll(void) {
+    if (np.polling) return;
+#ifdef NEXTUI_LINK_BT
+    Netplay_btReap();
+    if (np.bt_owned || Netplay_btScanning()) {
+        struct NetplayBTEvent event;
+        for (int i=0;i<16&&Netplay_btEvent(&event);i++) {
+            if (!np.bt_owned) continue; // scanner owns its result/status panel
+            if (event.kind=='E') {end_session(event.text,true);break;}
+            if (event.kind=='H') {
+                if (!np.bt_pending||np.fd>=0) {if(event.fd>=0)close(event.fd);end_session("Invalid Bluetooth readiness",true);break;}
+                np.fd=event.fd;np.bt_pending=false;
+                if (!configure_socket(np.fd)) {end_session("Cannot configure Bluetooth stream",true);break;}
+                handshake();
+            } else if (np.bt_pending&&strchr("SWC",event.kind)) {
+                status(np.host?NP_LISTENING:NP_CONNECTING,event.text);
+            }
+        }
+    }
+    if (np.bt_pending) {
+        if (!np.host&&now_ms()-np.began>=60000) end_session("Bluetooth connection timed out. Search again.",true);
+        return;
+    }
+#endif
     if (np.polling || !Netplay_busy()) return;
     np.polling = true;
     uint64_t poll_us = now_us();

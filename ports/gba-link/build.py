@@ -131,6 +131,9 @@ def main():
              LOCK['toolchain'], '/bin/bash', '-lc', script])
         target = OUTPUT / 'brick'
         target.mkdir(exist_ok=True)
+        helper_env = dict(os.environ, GOOS='linux', GOARCH='arm64', CGO_ENABLED='0')
+        subprocess.run(['go', 'build', '-trimpath', '-o', str(target / 'nextui-gba-bluetooth.elf'), '.'],
+                       cwd=ROOT / 'ports/gba-link/bluetooth', env=helper_env, check=True)
         shutil.copy2(core / 'gpsp_libretro.so', target / 'gpsp_libretro.so')
         shutil.copy2(ROOT / 'workspace/all/minarch/build/tg5040/minarch.elf', target / 'minarch.elf')
     print('Built', args.target, 'in', OUTPUT)

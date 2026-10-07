@@ -37,7 +37,8 @@ CC = $(CROSS_COMPILE)gcc
 CFLAGS  += $(OPT)
 CFLAGS  += $(INCDIR) -DPLATFORM=\"$(PLATFORM)\" -std=gnu99
 ifeq ($(PLATFORM),tg5040)
-CFLAGS += -DNEXTUI_LINK_WIFI
+CFLAGS += -DNEXTUI_LINK_WIFI -DNEXTUI_LINK_BT
+SOURCE += ma_netplay_bt.c
 endif
 LDFLAGS	 += -lmsettings -lsamplerate
 

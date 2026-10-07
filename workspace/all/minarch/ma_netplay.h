@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "libretro.h"
+#include "ma_netplay_bt.h"
 
 /* Two consoles, two independent games/saves; only emulated link packets travel.
  * All callbacks run on the emulation thread. Wire protocol is NextUI-specific,
@@ -13,6 +14,12 @@ void Netplay_identity(const uint8_t rom_sha256[32], const uint8_t core_sha256[32
 bool Netplay_host(uint16_t port);
 bool Netplay_join(const char *ipv4, uint16_t port);
 bool Netplay_relay(const char *ipv4, uint16_t port, const char *room, bool host);
+/* Take ownership of an already connected local stream from a transport worker.
+ * Identity, RFU envelopes, callbacks and pacing remain on this core thread. */
+bool Netplay_attachTransport(int fd, bool host);
+bool Netplay_bluetooth(bool host, const char *peer);
+bool Netplay_bluetoothScan(void);
+void Netplay_bluetoothScanStop(void);
 void Netplay_poll(void);
 void Netplay_wait(unsigned microseconds); // existing pacing wait, with socket wakeups
 void Netplay_videoTiming(uint64_t elapsed_us, uint64_t present_us, bool core_pacing);

@@ -207,7 +207,12 @@ int main(int argc, char **argv) {
     if (getenv("NP_CORE_MISMATCH")) core_sha[0]^=1;
     Netplay_identity(sha, core_sha, serial);
     bool host = !strcmp(argv[3], "host");
-    bool ok = getenv("NP_ROOM") ? Netplay_relay(argv[4], (uint16_t)atoi(argv[5]), getenv("NP_ROOM"), host) :
+    bool ok;
+    if (getenv("NP_STREAM_FD")) {
+        char *end = NULL; long fd = strtol(getenv("NP_STREAM_FD"), &end, 10);
+        if (!end || *end || fd < 3 || fd > 1024) return 2;
+        ok = Netplay_attachTransport((int)fd, host);
+    } else ok = getenv("NP_ROOM") ? Netplay_relay(argv[4], (uint16_t)atoi(argv[5]), getenv("NP_ROOM"), host) :
               host ? Netplay_host((uint16_t)atoi(argv[5])) : Netplay_join(argv[4], (uint16_t)atoi(argv[5]));
     if (!ok) { fprintf(stderr,"%s\n",Netplay_status()); return 2; }
     enum NPState previous = NP_IDLE;

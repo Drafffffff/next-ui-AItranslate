@@ -66,7 +66,7 @@ func (d *duplexLink) Send(message []byte) error {
 		return fmt.Errorf("duplex link closed")
 	}
 	if d.queued+cost > duplexBudget {
-		return fmt.Errorf("duplex send queue full")
+		return fmt.Errorf("duplex send queue full: %w", errDuplexQueueFull)
 	}
 	item := duplexMessage{data: append([]byte{}, message...), cost: cost}
 	select {
@@ -74,7 +74,7 @@ func (d *duplexLink) Send(message []byte) error {
 		d.queued += cost
 		return nil
 	default:
-		return fmt.Errorf("duplex message queue full")
+		return fmt.Errorf("duplex message queue full: %w", errDuplexQueueFull)
 	}
 }
 

@@ -10,7 +10,8 @@ import zipfile
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'build/gba-link'
 FILES={'.system/tg5040/bin/minarch.elf':OUT/'brick/minarch.elf',
-       '.system/tg5040/cores/gpsp_libretro.so':OUT/'brick/gpsp_libretro.so'}
+       '.system/tg5040/cores/gpsp_libretro.so':OUT/'brick/gpsp_libretro.so',
+       '.system/tg5040/bin/nextui-gba-bluetooth.elf':OUT/'brick/nextui-gba-bluetooth.elf'}
 revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
 if subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=ROOT,text=True).strip():
     raise SystemExit('Commit the source before packaging; refuse an unrecorded source tree')
@@ -48,6 +49,12 @@ for candidate in ('LICENSE','LICENSE.md','LICENSE.txt','COPYING'):
 gpsp=next((OUT/'brick-source').glob('gpsp-*'))
 for candidate in ('COPYING','LICENSE','LICENSE.txt'):
     if (gpsp/candidate).is_file():shutil.copy2(gpsp/candidate,licenses/('gpSP-'+candidate))
+# The shipped helper statically links Go and its pinned BSD dependencies.
+goroot=Path(subprocess.check_output(['go','env','GOROOT'],text=True).strip())
+shutil.copy2(goroot/'LICENSE',licenses/'Go-LICENSE')
+for module,label in [('github.com/godbus/dbus/v5','godbus'),('golang.org/x/sys','x-sys')]:
+    info=json.loads(subprocess.check_output(['go','list','-m','-json',module],cwd=ROOT/'ports/gba-link/bluetooth',text=True))
+    shutil.copy2(Path(info['Dir'])/'LICENSE',licenses/(label+'-LICENSE'))
 tests=package/'tests';tests.mkdir()
 shutil.copy2(OUT/'link-probe.gba',tests/'link-probe.gba')
 if (OUT/'ime-probe.gba').is_file():shutil.copy2(OUT/'ime-probe.gba',tests/'ime-probe.gba')
@@ -64,6 +71,11 @@ for name in ('test-results.json','regression.log','arm-host.log','arm-join.log',
              'rfu-ime-validation.json', 'rfu-ime-regression.log', 'rfu-ime-adapter.log', 'rfu-ime-arm-probe.log',
              'rfu-latency-validation.json', 'rfu-latency-regression.log', 'rfu-latency-transport.log', 'rfu-auto-validation.json', 'rfu-auto-regression.log', 'rfu-auto-transport.log'):
     path=OUT/name
+    if path.is_file():shutil.copy2(path,records/name)
+for name in ('bluetooth-plan.json','bluetooth-validation.json'):
+    shutil.copy2(ROOT/'ports/gba-link'/name,records/name)
+for name in ('core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log'):
+    path=OUT/'bluetooth'/name
     if path.is_file():shutil.copy2(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'
                                       for p in sorted(package.rglob('*')) if p.is_file()))
