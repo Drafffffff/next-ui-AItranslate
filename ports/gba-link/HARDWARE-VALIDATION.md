@@ -72,3 +72,13 @@ Wi-Fi 实测延迟波动明显：原会话八次采样 4.519–87.947 ms；关�
 新 minarch SHA256：`3c04ca3c3db4d5a600b1982b06e56338675159a625e295b9945a5cee307abb76`；新 gpSP SHA256：`af8777650073efa9fa61bf0d2dd20bc8e811d669074ffed249dfbf6359ba5229`。新包 zip SHA256：`a5f1f71aede311921162573dbd43cb87ae76101efbc3c7324455b730e51a5f85`。
 
 协议更正及 Mac 计分/调度停顿验证见 [RFU-EXCHANGE-FIX.md](RFU-EXCHANGE-FIX.md)。单包 mailbox 的替换计数是实机模型的一部分，不能用旧 `*_dropped=0` 声称没有游戏数据替换。真实无线延迟仍可能引发未及时确认；本次不能宣称红标已消除或完整比赛已通过。
+
+## 修复版比赛阶段复测（2026-10-07 18:15–18:16）
+
+用户确认菜单明显改善，但比赛内仍严重卡顿/红标。只读 SSH 观测 18:16:04–18:16:35，未重启游戏、改设置或更新程序。`.91` 是游戏 RFU host，`.70` 是 child，与 TCP 主客相反。双方约 60.2–60.3 FPS、发送队列 0，连接持续。
+
+约 31 秒内，RFU host 新增 `host_no_reply=985`、`host_replaced=429`；child 新增 `client_replaced=62`，新增 `client_timeout=0`。两端旧 `*_dropped=0` 不能解释成零数据损失：mailbox 发生新交换覆盖未读取旧交换。主机数据发出 1807 次、确认收到 1809 次，说明本窗口大多数数据最终获得确认，但未及时确认事件频繁；该计数不是 IP 丢包率。
+
+无线驱动 retries 新增 `.70=2403`、`.91=413`，tx failed 均新增 0。各八次双向 ICMP ping 都返回，平均 RTT 6.539/6.883ms，最大 16.933/12.777ms；小样本不能排除无线丢包，也不是游戏应用 RTT。
+
+代码中的等待期限仍按模拟 CPU 周期消耗，与真实 TCP 交付/对方调度不同步。当前证据支持进一步核查确认的实际等待时间和帧调度，尚未证实唯一根因。新版本菜单改善不等于比赛同步通过。完整原始窗口与统计保存在 `build/gba-link/exchange-fix/match-live-window.json` 和 `match-live-summary.json`。
