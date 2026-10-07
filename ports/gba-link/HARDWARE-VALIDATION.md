@@ -43,3 +43,14 @@ Wi-Fi 实测延迟波动明显：原会话八次采样 4.519–87.947 ms；关�
 用户要求由自己完成后续掌机联机验证。更新后两台重新打开游戏，完成 Host/Join 与游戏 Link 配对，重点核对能否离开球场开始场景、双方按键、第一分与最终比分，以及菜单暂停后的恢复。若仍卡住，保留当前画面并读取两台 `GBA.txt` 的新诊断行，继续定位 RFU 数据是否停止推进。
 
 原始日志和截图在本机忽略目录 `build/gba-link/`：`dual-brick-validation.json`、`dual-brick-round*-*.log`、`dual-tennis-paired-*.png`、`dual-tennis-character-*.png`、`optimization-poll-benchmark.json`、`optimization-regression.log`。商业 ROM、用户存档和截图不进入公共更新包。
+
+## RFU 队列修订安装（2026-10-07 17:28）
+
+用户确认 SSH 恢复后，两台 MAC 地址、aarch64 架构与原版文件哈希均核对一致，模拟器已退出。两台通过两文件事务更新到 `30d685bde7e7139868a589c662e6fe71479819ca`；动态库加载检查、目标 SHA256 和 `APPLIED` 日志均通过。
+
+- minarch SHA256：`0a59a049241e0a036d9874f8692716fbc4089af57c8e9efb086805e3fc637bb4`
+- gpSP SHA256：`92057613827206c7cf6fa85336d68cfebba5af91bc5a5973020fd7bc76820277`
+- 每台 SD 原文件与回滚脚本：`/mnt/SDCARD/.gba-link-backups/20261007-172803-30d685bd/`
+- Mac 部署记录：`build/gba-link/dual-rfu-queue-deployment.json`，并保留各台经哈希校验的原文件。
+
+新 gpSP 扩大 RFU 接收队列以避免成批到包时丢弃已确认的数据，统计队列峰值、丢弃、未及时回应和等待超时。Mac 商业 ROM 的独立双实例与 150ms 抖动结果见 [LOCAL-TESTING.md](LOCAL-TESTING.md)。安装未修改 ROM、存档、SSH 配置或联机设置。没有启动掌机游戏或代按按键；新核心的实际双机红标、球场开始和得分验证仍待用户完成。
