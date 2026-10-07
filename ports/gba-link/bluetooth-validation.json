@@ -2052,5 +2052,28 @@
       "context": "Host concurrently running PocketJS app; client running offline NES. Snapshot CPU idle around 69-71%, 53-59C. No unrelated application or Bluetooth connection was stopped."
     },
     "user_load_clarification": "User reported testing other software during the long run; classify this run as concurrent application/Wi-Fi coexistence load, not an isolated radio baseline."
+  },
+  "receive_backpressure_candidate": {
+    "revision": "77eb427a9fa60f8ed3be35b892e57ba898873440",
+    "installed": false,
+    "offline_race_suite": true,
+    "max_packet_and_slow_consumer_repeats": 10,
+    "real_mac_core_and_identity_cases": true,
+    "actual_payload_install_and_rollback": true,
+    "real_arm_normal_core": true,
+    "real_arm_core_mismatch": {
+      "passed": false,
+      "host": "Core build mismatch, zero emulated frames",
+      "client": "Connection timed out, zero emulated frames",
+      "evidence": "build/gba-link/bluetooth/backpressure-core-core-mismatch/results.json",
+      "next_action": "Fix asynchronous BLE handshake teardown so the local identity is not dropped before the peer receives it. Keep ordinary cancellation and own-process cleanup nonblocking."
+    },
+    "pending": [
+      "ROM mismatch",
+      "mode mismatch",
+      "reverse roles",
+      "queue-instrumented long test",
+      "actual user Mario Tennis acceptance"
+    ]
   }
 }
