@@ -241,8 +241,8 @@
     "user_request": "2026-10-08: Bluetooth optimized enough to proceed. Three peer modes as top tabs; concise interaction.",
     "ui": "Bluetooth / Wi-Fi / Hotspot top tabs; L/R or left/right switches; Create Room and Join Room; Advanced only Wi-Fi. LAN Create Room holds an IP-address waiting screen until identity handshake or B cancel.",
     "hardware_readonly": "Native wlan1 AP works. AP+router concurrent ping measured 40% loss; additional managed aliases fail authentication. Dedicated AP with wlan0 disconnected was selected.",
-    "next": "Verify role reversal, current helper compatibility rejection and bounded cleanup; compile/package/install with backup. Actual top-tab and commercial game acceptance remains with user.",
-    "status": "implemented, validation in progress",
+    "next": "User normally reopens game to load new frontend, checks three tabs, LAN IP waiting, hotspot pairing and actual match. Do not equate SIO probe with commercial RFU acceptance.",
+    "status": "compiled, isolated native tests passed, both handhelds installed 94e0c736; user UI and actual game acceptance pending",
     "hotspot_password": "NextUI-GBA-Link; fixed WPA2 CCMP PSK, supplied automatically with no password input."
   }
 }
