@@ -48,7 +48,11 @@ func newPeripheralPackets(p *Peripheral) *peripheralPackets {
 }
 
 func (e *peripheralPackets) accept(packet []byte) error {
-	if len(packet) < frameHeader || len(packet) > int(e.p.mtu)-3 {
+	minimum := frameHeader
+	if e.started && bleTransportVersion == "4" && len(packet) > 0 && packet[0] == compactTag {
+		minimum = compactHeader
+	}
+	if len(packet) < minimum || len(packet) > int(e.p.mtu)-3 {
 		return fmt.Errorf("invalid peripheral packet")
 	}
 	if !e.started {

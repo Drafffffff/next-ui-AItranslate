@@ -206,7 +206,11 @@ func TestBridgeRejectsOldTransportBeforeReadiness(t *testing.T) {
 		t.Fatal(err)
 	}
 	go old.Run(ctx, y)
-	if err := old.Send([]byte("NUIBLE2\x00")); err != nil {
+	other := "2"
+	if bleTransportVersion == "4" {
+		other = "3"
+	}
+	if err := old.Send([]byte("NUIBLE" + other + "\x00")); err != nil {
 		t.Fatal(err)
 	}
 	ready := false
@@ -221,7 +225,11 @@ func TestBridgeRejectsOldTransportBeforeReadiness(t *testing.T) {
 type delayedIdentityEndpoint struct{ *memoryPackets }
 
 func (d delayedIdentityEndpoint) Write(packet []byte) (int, error) {
-	if len(packet) >= frameHeader && packet[1] == frameData && binary.BigEndian.Uint32(packet[8:]) == 2 {
+	normalized := packet
+	if len(packet) > 0 && packet[0] == compactTag {
+		normalized, _ = expandCompact(packet)
+	}
+	if len(normalized) >= frameHeader && normalized[1] == frameData && binary.BigEndian.Uint32(normalized[8:]) == 2 {
 		time.Sleep(120 * time.Millisecond)
 	}
 	return d.memoryPackets.Write(packet)

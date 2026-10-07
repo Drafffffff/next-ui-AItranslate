@@ -14,12 +14,15 @@ import (
 
 var errDuplexQueueFull = errors.New("duplex queue full")
 var errTransportVersion = errors.New("BLE transport version mismatch")
-var transportHello = []byte("NUIBLE3\x00")
+
+// Candidate builds opt in with -ldflags "-X main.bleTransportVersion=4".
+// Normal builds keep the installed v3 path until physical validation.
+var bleTransportVersion = "3"
 
 // Legacy radios carry only 27 ACL bytes per packet. RFU messages often end
 // in zero-filled fixed-size buffers; omit that padding on the radio and restore
 // it before the frontend sees any bytes. The length and retained prefix remain
-// covered by the existing duplex CRC. Version 3 negotiates this codec before
+// covered by the existing duplex CRC. Version 4 negotiates this codec before
 // forwarding the game identity; old workers fail before starting emulation.
 const bridgeChunkLimit = 4096
 
@@ -59,12 +62,17 @@ type dataStream interface {
 // accept a game identity or invoke core callbacks; the frontend still does
 // the protocol 3 ROM/core/serial-mode handshake on the emulation thread.
 func bridgeSession(ctx context.Context, endpoint duplexEndpoint, payload int, epoch uint32, host bool, stream dataStream, ready func() error) error {
+	if bleTransportVersion != "3" && bleTransportVersion != "4" {
+		return fmt.Errorf("unsupported BLE transport build")
+	}
+	transportHello := []byte("NUIBLE" + bleTransportVersion + "\x00")
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	d, err := newDuplexLink(epoch, payload)
 	if err != nil {
 		return err
 	}
+	d.compact = bleTransportVersion == "4"
 	result := make(chan error, 1)
 	go func() { result <- d.Run(ctx, endpoint) }()
 	watchDone := make(chan struct{})

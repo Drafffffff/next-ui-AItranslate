@@ -45,6 +45,7 @@ type duplexLink struct {
 	ackMaxUs        int64
 	closed          bool
 	running         bool
+	compact         bool
 	in              chan duplexMessage
 	out             chan []byte
 }
@@ -53,7 +54,7 @@ func newDuplexLink(epoch uint32, payload int) (*duplexLink, error) {
 	if epoch == 0 || payload <= frameHeader || payload > 512 {
 		return nil, fmt.Errorf("invalid duplex session or negotiated payload")
 	}
-	return &duplexLink{epoch: epoch, payload: payload, in: make(chan duplexMessage, 8), out: make(chan []byte, 4)}, nil
+	return &duplexLink{epoch: epoch, payload: payload, compact: bleTransportVersion == "4", in: make(chan duplexMessage, 8), out: make(chan []byte, 4)}, nil
 }
 
 // Send is bounded and never waits for the radio. The caller must treat any
@@ -309,13 +310,27 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) (runErr e
 			if next == ^uint32(0) {
 				return fmt.Errorf("duplex sequence exhausted")
 			}
-			frames, err := fragmentMessage(d.payload, d.epoch, next, item.data)
+			fragment := fragmentMessage
+			if d.compact {
+				fragment = compactFragments
+			}
+			frames, err := fragment(d.payload, d.epoch, next, item.data)
 			if err != nil {
 				return err
 			}
 			pending = append(pending, duplexPending{sequence: next, frames: frames, cost: item.cost, started: time.Now()})
 			next++
 		case packet := <-reads:
+			if len(packet) > 0 && packet[0] == compactTag {
+				if !d.compact {
+					return fmt.Errorf("compact format not negotiated")
+				}
+				var err error
+				packet, err = expandCompact(packet)
+				if err != nil {
+					return err
+				}
+			}
 			if len(packet) < frameHeader {
 				return fmt.Errorf("short duplex frame")
 			}

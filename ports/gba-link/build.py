@@ -95,6 +95,7 @@ def dependency_check():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('target', choices=['mac', 'brick'])
+    parser.add_argument('--ble-compact', action='store_true', help='Build experimental v4 compact BLE helper; default remains v3')
     parser.add_argument('--revision', help='Full manifest revision for exported source without Git metadata')
     args = parser.parse_args()
     if args.revision and (len(args.revision) != 40 or any(c not in '0123456789abcdef' for c in args.revision)):
@@ -132,10 +133,13 @@ def main():
         target = OUTPUT / 'brick'
         target.mkdir(exist_ok=True)
         helper_env = dict(os.environ, GOOS='linux', GOARCH='arm64', CGO_ENABLED='0')
-        subprocess.run(['go', 'build', '-trimpath', '-o', str(target / 'nextui-gba-bluetooth.elf'), '.'],
+        helper_command = ['go', 'build', '-trimpath']
+        if args.ble_compact: helper_command += ['-ldflags', '-X main.bleTransportVersion=4']
+        subprocess.run(helper_command + ['-o', str(target / 'nextui-gba-bluetooth.elf'), '.'],
                        cwd=ROOT / 'ports/gba-link/bluetooth', env=helper_env, check=True)
         shutil.copy2(core / 'gpsp_libretro.so', target / 'gpsp_libretro.so')
         shutil.copy2(ROOT / 'workspace/all/minarch/build/tg5040/minarch.elf', target / 'minarch.elf')
+        (target / 'build-variant.json').write_text(json.dumps({'ble_transport_version': 4 if args.ble_compact else 3, 'files': {name: hashlib.sha256((target / name).read_bytes()).hexdigest() for name in ('minarch.elf', 'gpsp_libretro.so', 'nextui-gba-bluetooth.elf')}}, indent=2) + '\n')
     print('Built', args.target, 'in', OUTPUT)
 
 
