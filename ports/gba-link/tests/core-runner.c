@@ -282,7 +282,10 @@ int main(int argc, char **argv) {
                               ended.tv_nsec - iteration_start.tv_nsec;
             sleep_time.tv_nsec = elapsed < tick.tv_nsec ? tick.tv_nsec - elapsed : 0;
         }
-        if (sleep_time.tv_nsec) nanosleep(&sleep_time, NULL);
+        if (sleep_time.tv_nsec) {
+            if (getenv("NP_NETWORK_WAIT")) Netplay_wait((unsigned)(sleep_time.tv_nsec / 1000));
+            else nanosleep(&sleep_time, NULL);
+        }
     }
 #ifdef NP_SDL
 finished:

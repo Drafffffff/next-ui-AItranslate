@@ -338,6 +338,7 @@ SDL_Color /*GFX_*/ uintToColour(uint32_t rgba);
 void GFX_startFrame(void);
 void GFX_flip(SDL_Surface* screen);
 void PLAT_flipHidden();
+void GFX_setFrameWaitCallback(void (*callback)(unsigned microseconds));
 void GFX_flip_fixed_rate(SDL_Surface* screen, double target_fps); // if target_fps is 0, then use the native screen FPS
 #define GFX_supportsOverscan PLAT_supportsOverscan // (void)
 void GFX_sync(void); // call this to maintain 60fps when not calling GFX_flip() this frame

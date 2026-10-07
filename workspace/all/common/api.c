@@ -812,6 +812,8 @@ void GFX_sync(void)
 	}
 }
 
+static void (*frame_wait_callback)(unsigned);
+void GFX_setFrameWaitCallback(void (*callback)(unsigned)) { frame_wait_callback = callback; }
 void GFX_flip_fixed_rate(SDL_Surface *screen, double target_fps)
 {
 	if (target_fps == 0.0)
@@ -871,7 +873,8 @@ void GFX_flip_fixed_rate(SDL_Surface *screen, double target_fps)
 			const useconds_t min_waiting_time = 2000;
 			if (time_to_sleep_us > min_waiting_time)
 			{
-				usleep(time_to_sleep_us - min_waiting_time);
+				if (frame_wait_callback) frame_wait_callback(time_to_sleep_us - min_waiting_time);
+                else usleep(time_to_sleep_us - min_waiting_time);
 			}
 
 			while (SDL_GetPerformanceCounter() < time_of_frame)

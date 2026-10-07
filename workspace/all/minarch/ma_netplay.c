@@ -1,4 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
+#if defined(__linux__)
+#define _DEFAULT_SOURCE 1
+#endif
 #include "ma_netplay.h"
 #include <arpa/inet.h>
 #include <errno.h>
@@ -21,6 +24,7 @@
 #define NP_MAX_PACKET 65536
 #define NP_QUEUE (1024 * 1024)
 #define NP_TIMEOUT 10000
+#define NP_ACK_SAMPLES 256
 enum { W_DATA = 1, W_PAUSE, W_PING };
 static struct {
     struct retro_netpacket_callback cb;
@@ -35,6 +39,9 @@ static struct {
     uint64_t last_rx, last_ping, began, sent, received;
     uint64_t next_core_read_us, core_polls, skipped_polls, socket_reads, last_report;
     uint64_t rfu_sent[8], rfu_received[8];
+    uint64_t ack_started[NP_ACK_SAMPLES], ack_samples, ack_us_sum, ack_us_max;
+    uint64_t ack_bins[5], ack_unmeasured, outstanding_peak, send_calls;
+    uint64_t last_poll_us, poll_gap_us_max, wait_packets;
     char status[160];
 } np = { .listener = -1, .fd = -1 };
 
@@ -131,8 +138,27 @@ static bool queue_bytes(const void *buf, size_t len) {
     np.tx_end += len;
     return true;
 }
+/* Ordered TCP has one RFU ACK per host exchange. The bounded ring records
+ * application round-trip timing (including pacing), not pure network RTT.
+ * Overflow never changes delivery or acknowledges a new exchange. */
+static void record_ack(void) {
+    uint64_t received = np.rfu_received[7], sent = np.rfu_sent[5];
+    if (!received || received > sent || sent - received >= NP_ACK_SAMPLES) {
+        np.ack_unmeasured++;
+        return;
+    }
+    uint64_t started = np.ack_started[(received - 1) % NP_ACK_SAMPLES];
+    if (!started) { np.ack_unmeasured++; return; }
+    uint64_t elapsed = now_us() - started;
+    np.ack_samples++; np.ack_us_sum += elapsed;
+    if (elapsed > np.ack_us_max) np.ack_us_max = elapsed;
+    unsigned bin = elapsed <= 16000 ? 0 : elapsed <= 33000 ? 1 :
+                   elapsed <= 66000 ? 2 : elapsed <= 200000 ? 3 : 4;
+    np.ack_bins[bin]++;
+}
 static void flush(void) {
     while (np.fd >= 0 && np.tx_start < np.tx_end) {
+        np.send_calls++;
         ssize_t n = send(np.fd, np.tx + np.tx_start, np.tx_end - np.tx_start, MSG_NOSIGNAL);
         if (n > 0) np.tx_start += (size_t)n;
         else if (n < 0 && errno == EINTR) continue;
@@ -146,10 +172,12 @@ static void packet(unsigned type, const void *buf, size_t len) {
     if (len > NP_MAX_PACKET) { end_session("Link packet too large", true); return; }
     uint32_t header[2] = { htonl(type), htonl((uint32_t)len) };
     if (queue_bytes(header, 8) && len) queue_bytes(buf, len);
-    flush();
+    /* receive() can emit an uplink immediately followed by its ACK. Keep both
+     * in one write, and flush before this poll returns: no extra frame/delay. */
+    if (!np.polling) flush();
 }
 static void core_send(int flags, const void *buf, size_t len, uint16_t to) {
-    (void)flags; /* All packets are reliable; every send flushes immediately. */
+    (void)flags; /* Reliable; receive-callback replies flush together in this poll. */
     if (!Netplay_active()) return;
     if ((to != RETRO_NETPACKET_BROADCAST && to != (np.host ? 1 : 0)) || (!buf && len)) {
         end_session("Invalid destination from core", true); return;
@@ -159,6 +187,12 @@ static void core_send(int flags, const void *buf, size_t len, uint16_t to) {
             uint32_t type; memcpy(&type, (const unsigned char *)buf + 4, 4);
             type = ntohl(type);
             if (type < 8) np.rfu_sent[type]++;
+            if (type == 5) {
+                uint64_t sent = np.rfu_sent[5];
+                np.ack_started[(sent - 1) % NP_ACK_SAMPLES] = now_us();
+                uint64_t outstanding = sent >= np.rfu_received[7] ? sent - np.rfu_received[7] : 0;
+                if (outstanding > np.outstanding_peak) np.outstanding_peak = outstanding;
+            }
         }
         packet(W_DATA, buf, len); np.sent++;
         /* A request may already have an answer waiting: bypass empty-read backoff. */
@@ -188,6 +222,10 @@ static bool prepare(bool host) {
     np.hello[159] = host ? 1 : 0;
     np.sent = np.received = 0;
     np.next_core_read_us = np.core_polls = np.skipped_polls = np.socket_reads = 0;
+    np.ack_samples = np.ack_us_sum = np.ack_us_max = np.ack_unmeasured = 0;
+    np.outstanding_peak = np.send_calls = np.last_poll_us = np.poll_gap_us_max = np.wait_packets = 0;
+    memset(np.ack_started, 0, sizeof(np.ack_started));
+    memset(np.ack_bins, 0, sizeof(np.ack_bins));
     memset(np.rfu_sent, 0, sizeof(np.rfu_sent));
     memset(np.rfu_received, 0, sizeof(np.rfu_received));
     np.began = np.last_rx = now_ms();
@@ -305,6 +343,7 @@ static void consume(void) {
                 uint32_t subtype; memcpy(&subtype, np.rx + 12, 4);
                 subtype = ntohl(subtype);
                 if (subtype < 8) np.rfu_received[subtype]++;
+                if (subtype == 7) record_ack();
             }
             np.cb.receive(np.rx + 8, len, np.host ? 1 : 0);
         } else if (type == W_PAUSE) {
@@ -320,6 +359,10 @@ static void consume(void) {
 void Netplay_poll(void) {
     if (np.polling || !Netplay_busy()) return;
     np.polling = true;
+    uint64_t poll_us = now_us();
+    if (np.last_poll_us && !Netplay_paused() && poll_us - np.last_poll_us > np.poll_gap_us_max)
+        np.poll_gap_us_max = poll_us - np.last_poll_us;
+    np.last_poll_us = poll_us;
     uint64_t now = now_ms();
     if (np.state == NP_LISTENING) {
         int fd = accept(np.listener, NULL, NULL);
@@ -354,6 +397,7 @@ void Netplay_poll(void) {
             np.last_rx = now;
             if (hello) { np.hello_read += (size_t)n; if (np.hello_read == NP_HELLO) start_core(); }
             else { np.rx_end += (size_t)n; consume(); }
+            flush(); /* Callback replies must leave before another read/wait. */
         } else if (n < 0 && errno == EINTR) continue;
         else if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             np.next_core_read_us = now_us() + 250;
@@ -364,6 +408,7 @@ void Netplay_poll(void) {
     now = now_ms(); /* Handshake may have advanced began/last_ping during this poll. */
     if (Netplay_active()) {
         if (np.cb.poll) np.cb.poll();
+        flush();
         if (now - np.last_ping >= 1000) { packet(W_PING, NULL, 0); np.last_ping = now; }
         if (now - np.last_rx >= NP_TIMEOUT) end_session("Peer timed out", true);
         if (Netplay_active() && now - np.last_report >= 5000) {
@@ -374,9 +419,54 @@ void Netplay_poll(void) {
                     (unsigned long long)np.rfu_sent[5], (unsigned long long)np.rfu_received[5],
                     (unsigned long long)np.rfu_sent[6], (unsigned long long)np.rfu_received[6],
                     (unsigned long long)np.rfu_sent[7], (unsigned long long)np.rfu_received[7]);
+            fprintf(stderr, "GBA Link latency: mono_ms=%llu ack_samples=%llu ack_avg_us=%llu ack_max_us=%llu ack_bins_16_33_66_200_over_ms=%llu/%llu/%llu/%llu/%llu ack_unmeasured=%llu outstanding=%llu peak=%llu poll_gap_max_us=%llu send_calls=%llu wait_packets=%llu\n",
+                (unsigned long long)now, (unsigned long long)np.ack_samples,
+                (unsigned long long)(np.ack_samples ? np.ack_us_sum / np.ack_samples : 0),
+                (unsigned long long)np.ack_us_max,
+                (unsigned long long)np.ack_bins[0], (unsigned long long)np.ack_bins[1],
+                (unsigned long long)np.ack_bins[2], (unsigned long long)np.ack_bins[3],
+                (unsigned long long)np.ack_bins[4], (unsigned long long)np.ack_unmeasured,
+                (unsigned long long)(np.rfu_sent[5] >= np.rfu_received[7] ? np.rfu_sent[5] - np.rfu_received[7] : 0),
+                (unsigned long long)np.outstanding_peak, (unsigned long long)np.poll_gap_us_max,
+                (unsigned long long)np.send_calls, (unsigned long long)np.wait_packets);
+#if defined(__linux__)
+            struct tcp_info info; socklen_t info_len = sizeof(info);
+            memset(&info, 0, sizeof(info));
+            if (getsockopt(np.fd, IPPROTO_TCP, TCP_INFO, &info, &info_len) == 0)
+                fprintf(stderr, "GBA Link TCP: mono_ms=%llu rtt_us=%u rttvar_us=%u rto_us=%u retrans_total=%u unacked=%u\n",
+                    (unsigned long long)now, info.tcpi_rtt, info.tcpi_rttvar,
+                    info.tcpi_rto, info.tcpi_total_retrans, info.tcpi_unacked);
+#endif
             np.last_report = now;
         }
     } else if ((np.state == NP_CONNECTING || np.state == NP_HANDSHAKE) && now - np.began >= (np.relay && np.state == NP_HANDSHAKE ? 120000 : NP_TIMEOUT))
         end_session("Connection timed out", true);
+    flush();
     np.polling = false;
+}
+
+/* Service the socket during an existing frame pacing wait on the core thread.
+ * Packet arrival wakes poll(), but never advances emulation or shortens pacing. */
+void Netplay_wait(unsigned microseconds) {
+    uint64_t deadline = now_us() + microseconds;
+    while (now_us() < deadline) {
+        if (Netplay_busy()) {
+            uint64_t before = np.received;
+            Netplay_poll();
+            np.wait_packets += np.received - before;
+        }
+        uint64_t now = now_us();
+        if (now >= deadline) break;
+        uint64_t left = deadline - now;
+        if (Netplay_busy() && np.fd >= 0 && left >= 1000) {
+            struct pollfd p = { .fd = np.fd, .events = POLLIN };
+            if (np.tx_start < np.tx_end) p.events |= POLLOUT;
+            /* A millisecond-bounded wait; callbacks remain on this thread. */
+            poll(&p, 1, (int)((left > 1000000 ? 1000000 : left) / 1000));
+        } else {
+            struct timespec delay = { .tv_sec = left / 1000000,
+                                      .tv_nsec = (left % 1000000) * 1000 };
+            nanosleep(&delay, NULL);
+        }
+    }
 }
