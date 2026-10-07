@@ -32,7 +32,7 @@ static struct {
     int listener, fd;
     bool supported, host, started, registered, used, local_pause, remote_pause, polling, relay;
     bool wifi_owned;
-    bool bt_owned, bt_pending;
+    bool bt_owned, bt_pending, hp_owned, hp_pending;
     unsigned char preface[16];
     unsigned char hello[NP_HELLO], peer[NP_HELLO];
     size_t hello_read;
@@ -71,7 +71,7 @@ static void end_session(const char *reason, bool error) {
 #ifdef NEXTUI_LINK_BT
     Netplay_btStop();
 #endif
-    np.bt_owned = np.bt_pending = false;
+    np.bt_owned = np.bt_pending = np.hp_owned = np.hp_pending = false;
     close_fd(&np.fd);
     close_fd(&np.listener);
     np.local_pause = np.remote_pause = false;
@@ -309,12 +309,13 @@ void Netplay_bluetoothScanStop(void) {
     if (Netplay_btScanning()) Netplay_btStop();
 #endif
 }
-bool Netplay_host(uint16_t port) {
-    if (!port || !prepare(true)) return false;
+static bool host_at(uint16_t port,const char *ipv4,bool prepared) {
+    if (!port || (!prepared&&!prepare(true))) return false;
     np.listener = socket(AF_INET, SOCK_STREAM, 0);
     int one = 1;
     setsockopt(np.listener, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
     struct sockaddr_in addr = { .sin_family = AF_INET, .sin_port = htons(port), .sin_addr.s_addr = htonl(INADDR_ANY) };
+    if (ipv4 && inet_pton(AF_INET,ipv4,&addr.sin_addr)!=1) {end_session("Invalid hotspot address",true);return false;}
     if (np.listener < 0 || !configure_socket(np.listener) ||
         bind(np.listener, (struct sockaddr *)&addr, sizeof(addr)) < 0 || listen(np.listener, 1) < 0) {
         end_session("Cannot host; check port or Wi-Fi", true); return false;
@@ -322,7 +323,27 @@ bool Netplay_host(uint16_t port) {
     status(NP_LISTENING, "Hosting: waiting for a second Brick");
     return true;
 }
-static bool connect_peer(const char *ipv4, uint16_t port, const char *room, bool host) {
+bool Netplay_hotspot(bool host,const char *peer) {
+#ifdef NEXTUI_LINK_BT
+    if (Netplay_busy()||Netplay_used()||!prepare_transport(host,false)) return false;
+    if (!Netplay_hpStart(host,peer)) {end_session("Hotspot helper unavailable. Check the update.",true);return false;}
+    np.hp_owned=np.hp_pending=true;
+    status(host?NP_LISTENING:NP_CONNECTING,host?"Creating hotspot room...":"Connecting to hotspot room...");
+    return true;
+#else
+    (void)host;(void)peer;status(NP_ERROR,"Hotspot unavailable in this build");return false;
+#endif
+}
+bool Netplay_hotspotScan(void) {
+#ifdef NEXTUI_LINK_BT
+    if (Netplay_busy()||Netplay_used()||!Netplay_supported()) return false;
+    return Netplay_hpScan();
+#else
+    return false;
+#endif
+}
+bool Netplay_host(uint16_t port) {return host_at(port,NULL,false);}
+static bool connect_peer(const char *ipv4, uint16_t port, const char *room, bool host,bool prepared) {
     struct sockaddr_in addr = { .sin_family = AF_INET, .sin_port = htons(port) };
     if (!ipv4 || !port || inet_pton(AF_INET, ipv4, &addr.sin_addr) != 1) {
         end_session("Enter a valid IPv4 address and port", true); return false;
@@ -332,7 +353,7 @@ static bool connect_peer(const char *ipv4, uint16_t port, const char *room, bool
             end_session("Room code must be six digits", true); return false;
         }
     }
-    if (!prepare(host)) return false;
+    if (!prepared&&!prepare(host)) return false;
     if (room) {
         np.relay = true;
         memcpy(np.preface, "NXRELAY1", 8);
@@ -348,9 +369,9 @@ static bool connect_peer(const char *ipv4, uint16_t port, const char *room, bool
     else { end_session("Cannot reach host", true); return false; }
     return true;
 }
-bool Netplay_join(const char *ipv4, uint16_t port) { return connect_peer(ipv4, port, NULL, false); }
+bool Netplay_join(const char *ipv4, uint16_t port) { return connect_peer(ipv4, port, NULL, false,false); }
 bool Netplay_relay(const char *ipv4, uint16_t port, const char *room, bool host) {
-    return connect_peer(ipv4, port, room, host);
+    return connect_peer(ipv4, port, room, host,false);
 }
 /* RFU calls poll_receive repeatedly within one emulated frame. After an
  * empty recv, avoid another syscall for 250us. Main/frame/menu polls and
@@ -461,20 +482,32 @@ void Netplay_poll(void) {
     if (np.polling) return;
 #ifdef NEXTUI_LINK_BT
     Netplay_btReap();
-    if (np.bt_owned || Netplay_btScanning()) {
+    if (np.bt_owned || np.hp_owned || Netplay_btScanning()) {
         struct NetplayBTEvent event;
         for (int i=0;i<16&&Netplay_btEvent(&event);i++) {
-            if (!np.bt_owned) continue; // scanner owns its result/status panel
+            if (!np.bt_owned&&!np.hp_owned) continue; // scanner owns its result/status panel
             if (event.kind=='E') {end_session(event.text,true);break;}
-            if (event.kind=='H') {
+            if (event.kind=='P') {
+                if (!np.hp_pending||np.fd>=0||np.listener>=0) {end_session("Invalid hotspot readiness",true);break;}
+                char *label=strchr(event.text,'\n');if(label)*label++=0;
+                if (strcmp(event.text,"192.168.241.1")) {end_session("Invalid hotspot address",true);break;}
+                np.hp_pending=false;
+                bool ok=np.host?host_at(55435,event.text,true):connect_peer(event.text,55435,NULL,false,true);
+                if (!ok) break;
+                if (np.host&&label) {char waiting[160];snprintf(waiting,sizeof(waiting),"%s\nWaiting for another Brick...",label);status(NP_LISTENING,waiting);}
+            } else if (event.kind=='H') {
                 if (!np.bt_pending||np.fd>=0) {if(event.fd>=0)close(event.fd);end_session("Invalid Bluetooth readiness",true);break;}
                 np.fd=event.fd;np.bt_pending=false;
                 if (!configure_socket(np.fd)) {end_session("Cannot configure Bluetooth stream",true);break;}
                 handshake();
-            } else if (np.bt_pending&&strchr("SWC",event.kind)) {
+            } else if ((np.bt_pending||np.hp_pending)&&strchr("SWC",event.kind)) {
                 status(np.host?NP_LISTENING:NP_CONNECTING,event.text);
             }
         }
+    }
+    if (np.hp_pending) {
+        if (!np.host&&now_ms()-np.began>=45000) end_session("Hotspot connection timed out. Search again.",true);
+        return;
     }
     if (np.bt_pending) {
         if (!np.host&&now_ms()-np.began>=60000) end_session("Bluetooth connection timed out. Search again.",true);

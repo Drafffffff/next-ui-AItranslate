@@ -482,16 +482,24 @@ func main() {
 	probeRunDuration = *runFor
 	probeServerFD = *serverFD
 	serving := *role == "serve-host" || *role == "serve-join" || *role == "serve-scan"
-	if (*role != "host" && *role != "join" && *role != "join-raw" && *role != "duplex-host" && *role != "duplex-join" && !serving) || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
+	hotspot := *role == "hotspot-host" || *role == "hotspot-join" || *role == "hotspot-scan"
+	if (*role != "host" && *role != "join" && *role != "join-raw" && *role != "duplex-host" && *role != "duplex-join" && !serving && !hotspot) || *count < 10 || *count > 100000 || *length < 8 || *length > 65536 || *delay < 0 {
 		fmt.Fprintln(os.Stderr, "invalid arguments")
 		os.Exit(2)
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
-	if !serving {
+	if !serving && !hotspot {
 		var timeout context.CancelFunc
 		ctx, timeout = context.WithTimeout(ctx, *duration)
 		defer timeout()
+	}
+	if hotspot {
+		if err := serveHotspot(ctx, *role, *peer, *dataFD, *controlFD); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
 	}
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {

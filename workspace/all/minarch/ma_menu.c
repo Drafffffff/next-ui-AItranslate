@@ -1028,6 +1028,9 @@ bool getAlias(char* path, char* alias) {
 int Menu_options(MenuList* list) {
 	MenuItem* items = list->items;
 	int type = list->type;
+	int tab_count = 0;
+	if (list->tabs) while (list->tabs[tab_count]) tab_count++;
+	int tab_height = tab_count ? SCALE1(BUTTON_SIZE + 6) : 0;
 
 	int dirty = 1;
 	int show_options = 1;
@@ -1036,6 +1039,7 @@ int Menu_options(MenuList* list) {
 	
 	// dependent on option list offset top and bottom, eg. the gray triangles
 	int max_visible_options = (screen->h - ((SCALE1(PADDING + PILL_SIZE) * 2) + SCALE1(BUTTON_SIZE))) / SCALE1(BUTTON_SIZE); // 7 for 480, 10 for 720
+	if (tab_count) max_visible_options = MAX(1, max_visible_options - 2);
 	
 	int count;
 	for (count=0; items[count].name; count++);
@@ -1070,6 +1074,15 @@ int Menu_options(MenuList* list) {
 		
 		GFX_startFrame();
 		PAD_poll();
+		if (tab_count && list->on_tab_change) {
+			int direction = 0;
+			if (PAD_justPressed(BTN_L1) || PAD_justRepeated(BTN_LEFT)) direction = -1;
+			else if (PAD_justPressed(BTN_R1) || PAD_justRepeated(BTN_RIGHT)) direction = 1;
+			if (direction) {
+				int next = (list->tab + tab_count + direction) % tab_count;
+				if (list->on_tab_change(list, next) == MENU_CALLBACK_EXIT || !show_menu) break;
+			}
+		}
 		if (PAD_justRepeated(BTN_UP)) {
 			selected -= 1;
 			if (selected<0) {
@@ -1191,6 +1204,24 @@ int Menu_options(MenuList* list) {
 		
 		GFX_clear(screen);
 		GFX_blitHardwareGroup(screen, show_settings);
+		if (tab_count) {
+			int gap = SCALE1(6);
+			int width = (screen->w - SCALE1(PADDING * 2) - gap * (tab_count - 1)) / tab_count;
+			int top = SCALE1(PADDING + PILL_SIZE);
+			for (int i = 0; i < tab_count; i++) {
+				int left = SCALE1(PADDING) + i * (width + gap);
+				SDL_Color color = COLOR_WHITE;
+				if (i == list->tab) {
+					GFX_blitPillDark(ASSET_BUTTON, screen, &(SDL_Rect){left, top, width, SCALE1(BUTTON_SIZE)});
+					color = uintToColour(THEME_COLOR5_255);
+				}
+				SDL_Surface* label = TTF_RenderUTF8_Blended(font.small, list->tabs[i], color);
+				if (label) {
+					SDL_BlitSurface(label, NULL, screen, &(SDL_Rect){left + (width - label->w) / 2, top + SCALE1(1)});
+					SDL_FreeSurface(label);
+				}
+			}
+		}
 		
 		char* desc = NULL;
 		SDL_Surface* text;
@@ -1212,6 +1243,7 @@ int Menu_options(MenuList* list) {
 			
 			int ox = (screen->w - mw) / 2;
 			int oy = SCALE1(PADDING + PILL_SIZE);
+			oy += tab_height;
 			int selected_row = selected - start;
 			for (int i=start,j=0; i<end; i++,j++) {
 				MenuItem* item = &items[i];
@@ -1414,6 +1446,11 @@ int Menu_options(MenuList* list) {
 		}
 		
 		if (!desc && list->desc) desc = list->desc;
+		char tab_desc[512];
+		if (tab_count) {
+			snprintf(tab_desc, sizeof(tab_desc), "%s%sL/R: MODE   B: BACK   A: SELECT", desc ? desc : "", desc ? "\n" : "");
+			desc = tab_desc;
+		}
 		
 		if (desc) {
 			int w,h;

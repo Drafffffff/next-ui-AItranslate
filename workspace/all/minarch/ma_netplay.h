@@ -19,6 +19,8 @@ bool Netplay_relay(const char *ipv4, uint16_t port, const char *room, bool host)
 bool Netplay_attachTransport(int fd, bool host);
 bool Netplay_bluetooth(bool host, const char *peer);
 bool Netplay_bluetoothScan(void);
+bool Netplay_hotspot(bool host, const char *peer);
+bool Netplay_hotspotScan(void);
 void Netplay_bluetoothScanStop(void);
 void Netplay_poll(void);
 void Netplay_wait(unsigned microseconds); // existing pacing wait, with socket wakeups

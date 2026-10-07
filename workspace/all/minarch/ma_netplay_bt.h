@@ -8,6 +8,8 @@ struct NetplayBTEvent { char kind, text[160]; int fd; };
 /* One private child per connection or scan. All operations are nonblocking. */
 bool Netplay_btStart(bool host, const char *peer);
 bool Netplay_btScan(void);
+bool Netplay_hpStart(bool host, const char *peer);
+bool Netplay_hpScan(void);
 void Netplay_btStop(void);
 /* Pre-game identity rejection only: bounded asynchronous queued-byte drain. */
 void Netplay_btDrainStop(void);

@@ -21,7 +21,9 @@ static int octets[4] = {192, 168, 1, 1};
 static char peer_address[32], address_desc[80], host_desc[80];
 static int via_relay, connection_mode;
 #ifdef NEXTUI_LINK_BT
-static char *mode_values[] = {"Wi-Fi", "Bluetooth", NULL};
+/* Keep persisted values: Wi-Fi=0, Bluetooth=1, Hotspot=2. */
+static char *mode_tabs[] = {"Bluetooth", "Wi-Fi", "Hotspot", NULL};
+static const int tab_modes[] = {1, 0, 2};
 #endif
 static char *connection_values[] = {"Direct Wi-Fi", "Public Relay", NULL};
 static int room_digits[6] = {1, 2, 3, 4, 5, 6};
@@ -54,7 +56,7 @@ static void load_connection(void) {
         for (int i = 0; i < 6; i++) room_digits[i] = room[i] - '0';
     }
     int mode = 0;
-    if (fscanf(f, "%d", &mode) == 1 && mode >= 0 && mode <= 1) connection_mode = mode;
+    if (fscanf(f, "%d", &mode) == 1 && mode >= 0 && mode <= 2) connection_mode = mode;
     fclose(f);
 }
 
@@ -119,7 +121,6 @@ static bool candidate_game(void) {
         if (!strcmp(code, netplay_candidate_codes[i])) return true;
     return false;
 }
-#ifdef NEXTUI_LINK_BT
 /* Native, cancellable progress panel. Game callbacks and menus stay on the
  * frontend thread; discovery and radio I/O remain in the private helper. */
 static void link_progress_draw(const char *text) {
@@ -130,7 +131,7 @@ static void link_progress_draw(const char *text) {
     GFX_flip(screen);
     hdmimon();
 }
-static bool bluetooth_wait(void) {
+static bool link_wait(bool host) {
     GFX_setMode(MODE_MAIN);
     bool connected = false;
     while (1) {
@@ -141,21 +142,31 @@ static bool bluetooth_wait(void) {
         if (!Netplay_busy()) break;
         int dirty = 1;
         PWR_update(&dirty, NULL, Menu_beforeSleep, Menu_afterSleep);
-        link_progress_draw(Netplay_status());
+        char waiting[256];
+        const char *text = Netplay_status();
+        if (host && connection_mode == 0 && !via_relay && Netplay_state() == NP_LISTENING) {
+            struct WIFI_connection wifi = {0};
+            WIFI_connectionInfo(&wifi);
+            snprintf(waiting, sizeof(waiting), "Room created\n%s : 55435\n\nWaiting for another Brick...",
+                wifi.ip[0] ? wifi.ip : "Wi-Fi address unavailable");
+            text = waiting;
+        }
+        link_progress_draw(text);
     }
     GFX_setMode(MODE_MENU);
     if (!connected && Netplay_state() == NP_ERROR)
         Menu_message((char *)Netplay_status(), (char*[]){"B", "BACK", NULL});
     return connected;
 }
+#ifdef NEXTUI_LINK_BT
 static int selected_room;
 static int select_room(MenuList *list, int index) {
     selected_room = index;
     return MENU_CALLBACK_EXIT;
 }
-static bool bluetooth_find(char peer[18]) {
-    if (!Netplay_bluetoothScan()) {
-        Menu_message("Cannot search for Bluetooth rooms.\nTry again.", (char*[]){"B", "BACK", NULL});
+static bool nearby_find(char peer[18]) {
+    if (!(connection_mode==2?Netplay_hotspotScan():Netplay_bluetoothScan())) {
+        Menu_message("Cannot search for rooms.\nCheck the selected radio and try again.", (char*[]){"B", "BACK", NULL});
         return false;
     }
     struct NetplayBTRoom rooms[NETPLAY_BT_ROOMS];
@@ -206,21 +217,22 @@ static int start_link(MenuList *list, int index) {
         return MENU_CALLBACK_NOP;
     }
     bool host = list->items[index].id == 0;
-#ifdef NEXTUI_LINK_BT
-    char bluetooth_peer[18] = {0};
-    if (connection_mode == 1 && !host && !bluetooth_find(bluetooth_peer)) return MENU_CALLBACK_NOP;
-#endif
     if (!candidate_game()) {
         Menu_message("No supported link mode for this ROM.\nSee the GBA Link compatibility list.", (char*[]){"B", "BACK", NULL});
         return MENU_CALLBACK_NOP;
     }
+#ifdef NEXTUI_LINK_BT
+    char bluetooth_peer[18] = {0};
+    if (connection_mode != 0 && !host && !nearby_find(bluetooth_peer)) return MENU_CALLBACK_NOP;
+#endif
     if (!identify_rom() || !backup_sram() || !State_prepareLink()) {
         Menu_message("Cannot prepare ROM/save/resume guard.\nLink was not started.", (char*[]){"B", "BACK", NULL});
         return MENU_CALLBACK_NOP;
     }
     bool ok;
 #ifdef NEXTUI_LINK_BT
-    if (connection_mode == 1) ok = Netplay_bluetooth(host, bluetooth_peer);
+    if (connection_mode == 2) ok = Netplay_hotspot(host, bluetooth_peer);
+    else if (connection_mode == 1) ok = Netplay_bluetooth(host, bluetooth_peer);
     else
 #endif
     ok = via_relay ? Netplay_relay(peer_address, 55435, room_code, host) :
@@ -229,9 +241,7 @@ static int start_link(MenuList *list, int index) {
         Menu_message((char *)Netplay_status(), (char*[]){"B", "BACK", NULL});
         return MENU_CALLBACK_NOP;
     }
-#ifdef NEXTUI_LINK_BT
-    if (connection_mode == 1 && !bluetooth_wait()) return MENU_CALLBACK_NOP;
-#endif
+    if (!link_wait(host)) return MENU_CALLBACK_NOP;
     AI_playStopFor("GBA Link started");
     fast_forward = ff_toggled = ff_hold_active = ff_paused_by_rewind_hold = 0;
     rewind_toggle = rewind_pressed = rewinding = 0;
@@ -289,22 +299,13 @@ static int advanced_menu(MenuList *list, int index) {
 #ifdef NEXTUI_LINK_BT
 static bool reopen_link_menu;
 static int mode_select(MenuList *list, int index) {
-    connection_mode = index;
-    save_connection();
-    return MENU_CALLBACK_EXIT;
-}
-static int mode_menu(MenuList *list, int index) {
     if (Netplay_busy()) {
         Menu_message("Disconnect the current link first.", (char*[]){"B", "BACK", NULL});
         return MENU_CALLBACK_NOP;
     }
-    MenuItem items[] = {
-        {.name="Wi-Fi", .on_confirm=mode_select},
-        {.name="Bluetooth", .on_confirm=mode_select},
-        {NULL}
-    };
-    MenuList menu = {.type=MENU_LIST, .items=items};
-    Menu_options(&menu);
+    if (index < 0 || index >= 3) return MENU_CALLBACK_NOP;
+    connection_mode = tab_modes[index];
+    save_connection();
     reopen_link_menu = true;
     return MENU_CALLBACK_EXIT;
 }
@@ -329,17 +330,19 @@ int OptionNetplay_openMenu(MenuList *list, int index) {
     do {
     reopen_link_menu = false;
 #endif
-    MenuItem items[] = {
-#ifdef NEXTUI_LINK_BT
-        {.name="Mode", .desc=mode_values[connection_mode], .on_confirm=mode_menu},
-#endif
+    MenuItem items[5] = {
         {.name="Create Room", .id=0, .desc=connection_mode ? "Wait for the other console" : host_desc, .on_confirm=start_link},
-        {.name="Join Room", .id=1, .desc=connection_mode ? "Find nearby rooms" : address_desc, .on_confirm=start_link},
-        {.name="Disconnect", .desc=(char *)Netplay_status(), .on_confirm=end_link},
-        {.name=connection_mode ? NULL : "Advanced", .on_confirm=advanced_menu},
-        {NULL}
+        {.name="Join Room", .id=1, .desc=connection_mode ? "Find nearby rooms" : address_desc, .on_confirm=start_link}
     };
+    int count = 2;
+    if (Netplay_busy()) items[count++] = (MenuItem){.name="Disconnect", .desc=(char *)Netplay_status(), .on_confirm=end_link};
+    if (connection_mode == 0) items[count++] = (MenuItem){.name="Advanced", .on_confirm=advanced_menu};
     MenuList menu = {.type=MENU_LIST, .items=items};
+#ifdef NEXTUI_LINK_BT
+    menu.tabs = mode_tabs;
+    menu.tab = connection_mode == 1 ? 0 : connection_mode == 0 ? 1 : 2;
+    menu.on_tab_change = mode_select;
+#endif
     Menu_options(&menu);
 #ifdef NEXTUI_LINK_BT
     } while (reopen_link_menu && show_menu);

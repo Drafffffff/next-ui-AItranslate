@@ -143,17 +143,17 @@
     "settings_modes": [
       {
         "id": "lan_wifi",
-        "label": "\u5c40\u57df\u7f51 Wi-Fi",
+        "label": "局域网 Wi-Fi",
         "flow": "Both Bricks use the same existing Wi-Fi network; retain current optimized transport."
       },
       {
         "id": "bluetooth",
-        "label": "\u84dd\u7259",
+        "label": "蓝牙",
         "flow": "Create room / find nearby room; no manual MAC address."
       },
       {
         "id": "wifi_hotspot",
-        "label": "Wi-Fi \u70ed\u70b9",
+        "label": "Wi-Fi 热点",
         "flow": "One Brick creates a game hotspot, the other finds and joins it; no external router or manual IP required."
       }
     ],
@@ -239,9 +239,10 @@
   },
   "hotspot_and_top_tabs": {
     "user_request": "2026-10-08: Bluetooth optimized enough to proceed. Three peer modes as top tabs; concise interaction.",
-    "ui": "Bluetooth / Wi-Fi / Hotspot tabs; Create Room and Join Room in each; addresses only in Wi-Fi advanced settings.",
-    "hardware_readonly": "Both xradio phys advertise AP+managed and two managed simultaneous virtual interfaces on one channel; hostapd present. Actual concurrency not yet tested.",
-    "next": "Probe private same-channel virtual AP/client without modifying saved networks or wlan0; verify cleanup and connectivity before UI integration.",
-    "status": "in progress"
+    "ui": "Bluetooth / Wi-Fi / Hotspot top tabs; L/R or left/right switches; Create Room and Join Room; Advanced only Wi-Fi. LAN Create Room holds an IP-address waiting screen until identity handshake or B cancel.",
+    "hardware_readonly": "Native wlan1 AP works. AP+router concurrent ping measured 40% loss; additional managed aliases fail authentication. Dedicated AP with wlan0 disconnected was selected.",
+    "next": "Verify role reversal, current helper compatibility rejection and bounded cleanup; compile/package/install with backup. Actual top-tab and commercial game acceptance remains with user.",
+    "status": "implemented, validation in progress",
+    "hotspot_password": "NextUI-GBA-Link; fixed WPA2 CCMP PSK, supplied automatically with no password input."
   }
 }

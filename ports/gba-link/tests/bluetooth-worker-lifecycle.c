@@ -86,6 +86,15 @@ int main(int argc,char **argv) {
     deadline=began+1500;
     while(milliseconds()<deadline){Netplay_btReap();tick();}
     errno=0;assert(waitpid(-1,NULL,WNOHANG)==-1&&errno==ECHILD);
+    /* Hotspot cleanup owns a longer grace period without blocking menus. */
+    setenv("BT_TEST_CASE","hang",1);assert(Netplay_hpStart(true,NULL));event('W');
+    began=milliseconds();stop();
+    deadline=began+2500;
+    while(milliseconds()<deadline){Netplay_btReap();tick();}
+    assert(waitpid(-1,NULL,WNOHANG)==0);
+    deadline=began+6500;
+    while(milliseconds()<deadline){Netplay_btReap();tick();}
+    errno=0;assert(waitpid(-1,NULL,WNOHANG)==-1&&errno==ECHILD);
     close(reserved);
     puts("PASS: private FDs, room decoding, invalid controls, nonblocking cancellation, retry isolation, exit detection and owned child cleanup");
     return 0;

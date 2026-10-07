@@ -18,11 +18,11 @@
 static struct {
     pid_t child;
     int data, control;
-    bool scanning, scan_failed;
+    bool scanning, scan_failed, hotspot;
     unsigned count;
     struct NetplayBTRoom rooms[NETPLAY_BT_ROOMS];
     char scan_status[160];
-    struct { pid_t pid; uint64_t began; bool drain, term_sent; int control; } retired[8];
+    struct { pid_t pid; uint64_t began; bool drain, term_sent, hotspot; int control; } retired[8];
 } bt = { .data=-1, .control=-1 };
 
 static uint64_t now_ms(void) {
@@ -46,7 +46,7 @@ void Netplay_btReap(void) {
         else if (bt.retired[i].drain&&!bt.retired[i].term_sent&&now-bt.retired[i].began>=1000) {
             kill(bt.retired[i].pid,SIGTERM);close_fd(&bt.retired[i].control);bt.retired[i].term_sent=true;
         }
-        else if (now-bt.retired[i].began>=2000) kill(bt.retired[i].pid,SIGKILL);
+        else if (now-bt.retired[i].began>=(bt.retired[i].hotspot?6000:2000)) kill(bt.retired[i].pid,SIGKILL);
     }
 }
 static void stop_worker(bool drain) {
@@ -55,7 +55,7 @@ static void stop_worker(bool drain) {
     if (bt.child>0) {
         if (!drain) kill(bt.child,SIGTERM);
         for (unsigned i=0;i<8;i++) if (!bt.retired[i].pid) {
-            bt.retired[i].pid=bt.child;bt.retired[i].began=now_ms();bt.retired[i].control=drain?bt.control:-1;if(drain)bt.control=-1;bt.retired[i].drain=drain;bt.retired[i].term_sent=!drain;bt.child=0;break;
+            bt.retired[i].pid=bt.child;bt.retired[i].hotspot=bt.hotspot;bt.retired[i].began=now_ms();bt.retired[i].control=drain?bt.control:-1;if(drain)bt.control=-1;bt.retired[i].drain=drain;bt.retired[i].term_sent=!drain;bt.child=0;break;
         }
     }
     close_fd(&bt.control);
@@ -104,7 +104,7 @@ static bool launch(const char *role,const char *peer,bool scanning) {
     }
     close(data[1]);close(control[1]);
     if (child<0) {close(data[0]);close(control[0]);return false;}
-    bt.child=child;bt.data=data[0];bt.control=control[0];bt.scanning=scanning;bt.scan_failed=false;bt.count=0;
+    bt.child=child;bt.data=data[0];bt.control=control[0];bt.scanning=scanning;bt.hotspot=!strncmp(role,"hotspot-",8);bt.scan_failed=false;bt.count=0;
     snprintf(bt.scan_status,sizeof(bt.scan_status),"Searching nearby rooms...");
     return true;
 }
@@ -113,6 +113,11 @@ bool Netplay_btStart(bool host,const char *peer) {
     return launch(host?"serve-host":"serve-join",peer,false);
 }
 bool Netplay_btScan(void) {return launch("serve-scan",NULL,true);}
+bool Netplay_hpStart(bool host,const char *peer) {
+    if (!host&&!address_valid(peer)) return false;
+    return launch(host?"hotspot-host":"hotspot-join",peer,false);
+}
+bool Netplay_hpScan(void) {return launch("hotspot-scan",NULL,true);}
 bool Netplay_btScanning(void) {return bt.scanning;}
 bool Netplay_btScanFailed(void) {return bt.scan_failed;}
 unsigned Netplay_btRooms(struct NetplayBTRoom rooms[NETPLAY_BT_ROOMS]) {
@@ -128,7 +133,7 @@ bool Netplay_btEvent(struct NetplayBTEvent *event) {
     ssize_t size=recv(bt.control,packet,sizeof(packet),0);
     if (size<0&&(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR)) {
         if (bt.child>0&&waitpid(bt.child,NULL,WNOHANG)==bt.child) {
-            bt.scan_failed=true;bt.child=0;event->kind='E';snprintf(event->text,sizeof(event->text),"Bluetooth helper stopped. Try again.");
+            bt.scan_failed=true;bt.child=0;event->kind='E';snprintf(event->text,sizeof(event->text),bt.hotspot?"Hotspot helper stopped. Try again.":"Bluetooth helper stopped. Try again.");
             snprintf(bt.scan_status,sizeof(bt.scan_status),"%s",event->text);
             return true;
         }
@@ -149,7 +154,7 @@ bool Netplay_btEvent(struct NetplayBTEvent *event) {
         }
         memcpy(bt.rooms,rooms,sizeof(rooms));bt.count=packet[1];return true;
     }
-    if (size>160||!event->kind||!strchr("SWCHEK",event->kind)) goto invalid;
+    if (size>160||!event->kind||!strchr("SWCHEKP",event->kind)) goto invalid;
     memcpy(event->text,packet+1,(size_t)size-1);
     if (event->kind=='H') {
         if (bt.scanning||bt.data<0) goto invalid;

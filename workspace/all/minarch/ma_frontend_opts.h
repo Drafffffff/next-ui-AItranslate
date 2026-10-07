@@ -44,6 +44,10 @@ typedef struct MenuList {
 	MenuItem* items;
 	MenuList_callback_t on_confirm;
 	MenuList_callback_t on_change;
+	/* Optional top-level mode tabs. Ordinary option menus remain unchanged. */
+	char** tabs;
+	int tab;
+	MenuList_callback_t on_tab_change;
 } MenuList;
 
 // -----------------------------------------------------------------------
