@@ -229,6 +229,8 @@ func hostPeripheral(ctx context.Context, conn *dbus.Conn, p *Peripheral) error {
 		}
 	}
 	adv := properties{"org.bluez.LEAdvertisement1": {"Type": dbus.MakeVariant("peripheral"), "ServiceUUIDs": dbus.MakeVariant([]string{serviceUUID}), "LocalName": dbus.MakeVariant("GBA Link"), "Discoverable": dbus.MakeVariant(true)}}
+	adv["org.bluez.LEAdvertisement1"]["MinInterval"] = dbus.MakeVariant(uint32(100))
+	adv["org.bluez.LEAdvertisement1"]["MaxInterval"] = dbus.MakeVariant(uint32(100))
 	if err := export(conn, advert, adv, &Advertisement{}, "org.bluez.LEAdvertisement1"); err != nil {
 		return err
 	}
@@ -245,6 +247,9 @@ func hostPeripheral(ctx context.Context, conn *dbus.Conn, p *Peripheral) error {
 	defer call(context.Background(), conn, adapter, "org.bluez.LEAdvertisingManager1.UnregisterAdvertisement", advert)
 	// Close local FDs before potentially slow D-Bus unregister calls.
 	defer p.closeFDs()
+	if err := finishLegacy(ctx, conn); err != nil {
+		return err
+	}
 	fmt.Println("ROOM_READY")
 	<-ctx.Done()
 	p.mu.Lock()
@@ -483,6 +488,9 @@ func main() {
 	}
 	defer conn.Close()
 	if *role == "duplex-host" {
+		// D-Bus method handlers run concurrently. The acquired packet FD
+		// preserves command order for independent duplex data and ACKs.
+		probeServerFD = true
 		err = duplexHost(ctx, conn, *count, *length)
 	} else if *role == "duplex-join" {
 		probeDuplex = true

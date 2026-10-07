@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/godbus/dbus/v5"
 	"testing"
 )
 
@@ -45,5 +46,23 @@ func TestPeripheralDuplexBootstrapAndQueueOwnership(t *testing.T) {
 	}
 	if _, err := e2.Read(buffer); err == nil {
 		t.Fatal("unsubscription left reader blocked")
+	}
+}
+
+func TestDuplexDisconnectTargetsOnlyOwnedPeer(t *testing.T) {
+	peer := dbus.ObjectPath("/org/bluez/hci0/dev_22_22_1C_11_93_21")
+	makeSignal := func(path dbus.ObjectPath, iface string, value any) *dbus.Signal {
+		return &dbus.Signal{Path: path, Name: "org.freedesktop.DBus.Properties.PropertiesChanged", Body: []any{iface, map[string]dbus.Variant{"Connected": dbus.MakeVariant(value)}, []string{}}}
+	}
+	if !ownedPeerDisconnected(makeSignal(peer, "org.bluez.Device1", false), peer) {
+		t.Fatal("owned disconnect missed")
+	}
+	for _, signal := range []*dbus.Signal{nil, makeSignal(peer+"_other", "org.bluez.Device1", false), makeSignal(peer, "org.bluez.Device1", true), makeSignal(peer, "org.bluez.Adapter1", false), makeSignal(peer, "org.bluez.Device1", "false")} {
+		if ownedPeerDisconnected(signal, peer) {
+			t.Fatal("unrelated/invalid event closed owned session")
+		}
+	}
+	if ownedPeerDisconnected(makeSignal(peer, "org.bluez.Device1", false), "") {
+		t.Fatal("unbound peer closed session")
 	}
 }

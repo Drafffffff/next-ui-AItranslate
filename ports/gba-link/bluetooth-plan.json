@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "transport_selection_pending_hardware_measurement",
+  "status": "duplex_radio_verified_frontend_integration_pending",
   "production_integration": false,
   "source_review": {
     "existing_prototype": "gba-netplay/workspace/all/minarch/ma_netplay_ble*.c (untracked)",
@@ -70,7 +70,7 @@
       },
       "initial_max_us": 3211698
     },
-    "conclusion": "BLE can maintain complete CRC-checked two-way data for 600 seconds, but the current 29ms median, 120ms p99 and 299ms maximum do not establish smooth GBA play. Retain Wi-Fi and complete matched radio/pacing/burst controls before choosing a production path.",
+    "conclusion": "Echo window4 is complete for 600 seconds and independent duplex FD bursts pass both roles and fragmentation. Delay spikes remain significant, especially for larger messages. Keep Wi-Fi available and do not claim fluid play or deploy a default Bluetooth mode before frontend/core and user gameplay validation.",
     "acceptance": [
       "No payload corruption or truncation across repeated sessions",
       "Measure p50/p95/p99/max, stalls above 33/66/200ms and queue growth over 10-minute runs",
@@ -96,11 +96,27 @@
         "p95": 71478,
         "p99": 119947,
         "max": 298754
+      },
+      "ble_window4_600sec": {
+        "passed": true,
+        "seconds": 600.046,
+        "exchanges": 47552,
+        "max_pending": 4,
+        "max_queued_bytes": 928,
+        "final_queued_bytes": 0,
+        "metrics_us": {
+          "p50": 42280,
+          "p95": 94518,
+          "p99": 146851,
+          "max": 465004
+        },
+        "gameplay_verified": false
       }
     },
     "remaining_experiments": [
-      "10-minute bounded window4 transfer with complete final draining",
-      "Production duplex worker and asynchronous frontend IPC integration",
+      "Actual duplex 10-minute run with bounded draining and cancel/peer-exit checks",
+      "Asynchronous frontend IPC and nearby-room selection/menu integration",
+      "Real gpSP serial/identity/RFU regression over the BLE worker",
       "Matched Wi-Fi/BLE comparison under fixed game load",
       "Actual game menus, selection and match validation by the user"
     ],

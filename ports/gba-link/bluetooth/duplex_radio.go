@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -16,6 +17,20 @@ import (
 )
 
 var probeDuplex bool
+
+func ownedPeerDisconnected(signal *dbus.Signal, peer dbus.ObjectPath) bool {
+	if signal == nil || peer == "" || signal.Path != peer || signal.Name != "org.freedesktop.DBus.Properties.PropertiesChanged" {
+		return false
+	}
+	var iface string
+	var values map[string]dbus.Variant
+	var invalid []string
+	if dbus.Store(signal.Body, &iface, &values, &invalid) != nil || iface != "org.bluez.Device1" {
+		return false
+	}
+	connected, ok := values["Connected"].Value().(bool)
+	return ok && !connected
+}
 
 // Dedicated single-session endpoint. The helper process owns the exported
 // GATT application and closes it on exit; it does not reuse diagnostic FDs.
@@ -97,6 +112,31 @@ func duplexHost(ctx context.Context, conn *dbus.Conn, count, length int) error {
 	e := newPeripheralPackets(p)
 	p.duplex = e
 	defer e.Close()
+	match := []dbus.MatchOption{dbus.WithMatchSender("org.bluez"), dbus.WithMatchInterface("org.freedesktop.DBus.Properties"), dbus.WithMatchMember("PropertiesChanged"), dbus.WithMatchArg(0, "org.bluez.Device1"), dbus.WithMatchPathNamespace(adapter)}
+	if err := conn.AddMatchSignal(match...); err != nil {
+		return err
+	}
+	defer conn.RemoveMatchSignal(match...)
+	updates := make(chan *dbus.Signal, 32)
+	conn.Signal(updates)
+	defer conn.RemoveSignal(updates)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case signal := <-updates:
+				p.mu.Lock()
+				owned := ownedPeerDisconnected(signal, p.peer)
+				p.mu.Unlock()
+				if owned {
+					fmt.Println("DUPLEX_OWNED_PEER_DISCONNECTED")
+					e.Close()
+					return
+				}
+			}
+		}
+	}()
 	result := make(chan error, 1)
 	go func() {
 		select {
@@ -135,7 +175,13 @@ func duplexBenchmark(ctx context.Context, endpoint duplexEndpoint, payload int, 
 	workerCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	result := make(chan error, 1)
-	go func() { result <- d.Run(workerCtx, endpoint) }()
+	go func() {
+		err := d.Run(workerCtx, endpoint)
+		if err != nil && !errors.Is(err, context.Canceled) {
+			fmt.Fprintf(os.Stderr, "DUPLEX_WORKER_ERROR host=%t error=%v\n", host, err)
+		}
+		result <- err
+	}()
 	defer func() { cancel(); <-result }()
 	data := func(sequence int, host bool) []byte {
 		b := make([]byte, length)

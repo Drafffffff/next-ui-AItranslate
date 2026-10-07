@@ -13,6 +13,16 @@ import time
 ROOT = Path(__file__).resolve().parents[3]
 
 
+def measured_metrics(log, duplex=False):
+    metrics = {key: int(value) for key, value in re.findall(r'(\w+)=(\d+)(?=\s|$)', log)}
+    # Teardown summaries must not overwrite the completed measurement's
+    # message count. Keep setup MTU/timing metadata, then prefer the PASS line.
+    prefix = 'DUPLEX_PASS' if duplex else 'PASS exchanges='
+    for line in log.splitlines():
+        if line.startswith(prefix):
+            metrics.update({key: int(value) for key, value in re.findall(r'(\w+)=(\d+)(?=\s|$)', line)})
+    return metrics
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--host', required=True)
@@ -135,10 +145,16 @@ def run_test(args):
     content = (args.output / 'join.log').read_text()
     host_content = (args.output / 'host.log').read_text()
     transfer_passed = ('DUPLEX_PASS messages=' in content and 'DUPLEX_PASS messages=' in host_content) if args.duplex else 'PASS exchanges=' in content
-    record = dict(transport='BLE ' + args.backend, duplex=args.duplex, server_fd=args.server_fd, return_codes=[host_code, join_code],
+    metrics = measured_metrics(content, args.duplex)
+    host_metrics = measured_metrics(host_content, args.duplex)
+    if args.duplex:
+        transfer_passed = transfer_passed and all(m.get('messages') == args.count and
+            m.get('bytes_each_direction') == args.count * args.bytes and
+            m.get('final_queued_bytes') == 0 for m in (metrics, host_metrics))
+    record = dict(transport='BLE ' + args.backend, duplex=args.duplex, server_fd=args.server_fd or args.duplex, return_codes=[host_code, join_code],
                   passed=host_code == join_code == 0 and transfer_passed,
-                  metrics={key: int(value) for key, value in re.findall(r'(\w+)=(\d+)(?=\s|$)', content)},
-                  host_metrics={key: int(value) for key, value in re.findall(r'(\w+)=(\d+)(?=\s|$)', host_content)},
+                  metrics=metrics, host_metrics=host_metrics,
+                  sample_kind='peer arrival since independent local batch submission; not echo RTT' if args.duplex else 'echo completion RTT including pending queue',
                   host_log=host_content, join_log=content, game_pids=game_pids,
                   completed_at=int(time.time()), probe_sha256=artifact_hash)
     (args.output / 'results.json').write_text(json.dumps(record, indent=2) + '\n')

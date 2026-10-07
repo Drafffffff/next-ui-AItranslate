@@ -329,6 +329,9 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 	if err != nil && err != unix.EINPROGRESS {
 		return fmt.Errorf("raw ATT connect: %w", err)
 	}
+	// A previously disconnected peer was checked above. From this accepted
+	// connect attempt onward, cleanup owns this peer even if ATT setup fails.
+	defer call(context.Background(), conn, device, "org.bluez.Device1.Disconnect")
 	done := make(chan struct{})
 	defer close(done)
 	go func() {
@@ -359,7 +362,7 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 				return err
 			}
 			if code != 0 {
-				return syscallError(code)
+				return fmt.Errorf("raw ATT connect SO_ERROR: %w", syscallError(code))
 			}
 			// Tina can report writable with SO_ERROR=0 before ATT reaches
 			// BT_CONNECTED. L2CAP_CONNINFO validates the actual socket state.
@@ -382,7 +385,6 @@ func centralRaw(ctx context.Context, conn *dbus.Conn, expected string, count, le
 	}
 	// The kernel ATT socket established this new peer connection; clean up that
 	// peer only, including BlueZ's automatic server-side bookkeeping.
-	defer call(context.Background(), conn, device, "org.bluez.Device1.Disconnect")
 	att := &rawATT{file: file, mtu: 517}
 	response, err := att.request([]byte{2, 5, 2}, 3)
 	if err != nil {

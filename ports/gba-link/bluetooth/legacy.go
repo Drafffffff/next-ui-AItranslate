@@ -71,3 +71,43 @@ func prepareLegacy(ctx context.Context, conn *dbus.Conn) error {
 	fmt.Println("LEGACY_ADVERTISEMENT_PREPARED")
 	return nil
 }
+
+// Linux 4.9's old MGMT Add Advertising does not carry MinInterval/MaxInterval.
+// It overwrites the prepared 100ms interval with 1280ms. A measured 2-second
+// LE create timeout then has very few opportunities to catch the room.
+// Only after our successful registration, with exactly this one advertising
+// instance and no connected device, adjust its legacy timing. No data, scan
+// filter, other application or existing connection is changed.
+func finishLegacy(ctx context.Context, conn *dbus.Conn) error {
+	if !legacyKernel() {
+		return nil
+	}
+	var instances dbus.Variant
+	if err := call(ctx, conn, adapter, "org.freedesktop.DBus.Properties.Get", "org.bluez.LEAdvertisingManager1", "ActiveInstances").Store(&instances); err != nil {
+		return err
+	}
+	if count, ok := instances.Value().(byte); !ok || count != 1 {
+		return fmt.Errorf("legacy timing requires our sole registered advertisement")
+	}
+	objs, err := managed(ctx, conn)
+	if err != nil {
+		return err
+	}
+	for _, interfaces := range objs {
+		if connected, _ := interfaces["org.bluez.Device1"]["Connected"].Value().(bool); connected {
+			fmt.Println("LEGACY_TIMING_SKIPPED connected=true")
+			return nil
+		}
+	}
+	if err := controllerCommand(0x200a, []byte{0}); err != nil {
+		return err
+	}
+	if err := controllerCommand(0x2006, []byte{0xa0, 0, 0xa0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0}); err != nil {
+		return err
+	}
+	if err := controllerCommand(0x200a, []byte{1}); err != nil {
+		return err
+	}
+	fmt.Println("LEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100")
+	return nil
+}

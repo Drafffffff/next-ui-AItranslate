@@ -311,7 +311,16 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
 				p.bootstrapWaiting = false
 			case frameAck:
 				if len(pending) == 0 || !validAck(packet, d.epoch, pending[0].sequence) || pending[0].index != len(pending[0].frames) || pending[0].bootstrapWaiting {
-					return fmt.Errorf("invalid duplex completion ACK")
+					expected := uint32(0)
+					index, total := 0, 0
+					waiting := false
+					if len(pending) > 0 {
+						expected = pending[0].sequence
+						index = pending[0].index
+						total = len(pending[0].frames)
+						waiting = pending[0].bootstrapWaiting
+					}
+					return fmt.Errorf("invalid duplex completion ACK expected=%d received=%d fragments=%d/%d bootstrap_waiting=%t", expected, seq, index, total, waiting)
 				}
 				d.retire(pending[0].cost)
 				pending[0] = duplexPending{}

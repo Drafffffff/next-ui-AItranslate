@@ -1095,6 +1095,404 @@
         "probe_sha256": "23a85ec541eef0b52d5acabe10931320037127f6206be28063d7233dcf98674e",
         "test": "rolepair-second91",
         "evidence_path": "build/gba-link/bluetooth/rolepair-second91/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 191,
+          "rx": 194,
+          "exchanges": 47552,
+          "elapsed_ms": 600046,
+          "pending": 4,
+          "fragments": 47552,
+          "bytes_each_way": 4945408,
+          "window": 4,
+          "max_pending": 4,
+          "max_queued_bytes": 928,
+          "final_queued_bytes": 0,
+          "p50": 42280,
+          "p95": 94518,
+          "p99": 146851,
+          "max": 465004
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nHOST_SUMMARY messages=47552 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=191 rx=194\nPROGRESS exchanges=1000 elapsed_ms=8327 pending=4\nPROGRESS exchanges=2000 elapsed_ms=16589 pending=4\nPROGRESS exchanges=3000 elapsed_ms=24916 pending=4\nPROGRESS exchanges=4000 elapsed_ms=33156 pending=4\nPROGRESS exchanges=5000 elapsed_ms=41748 pending=4\nPROGRESS exchanges=6000 elapsed_ms=52516 pending=4\nPROGRESS exchanges=7000 elapsed_ms=62950 pending=4\nPROGRESS exchanges=8000 elapsed_ms=75104 pending=4\nPROGRESS exchanges=9000 elapsed_ms=91229 pending=4\nPROGRESS exchanges=10000 elapsed_ms=105146 pending=4\nPROGRESS exchanges=11000 elapsed_ms=117668 pending=4\nPROGRESS exchanges=12000 elapsed_ms=131627 pending=4\nPROGRESS exchanges=13000 elapsed_ms=146325 pending=4\nPROGRESS exchanges=14000 elapsed_ms=164655 pending=4\nPROGRESS exchanges=15000 elapsed_ms=185130 pending=4\nPROGRESS exchanges=16000 elapsed_ms=201604 pending=4\nPROGRESS exchanges=17000 elapsed_ms=214815 pending=4\nPROGRESS exchanges=18000 elapsed_ms=228280 pending=4\nPROGRESS exchanges=19000 elapsed_ms=237488 pending=4\nPROGRESS exchanges=20000 elapsed_ms=254055 pending=4\nPROGRESS exchanges=21000 elapsed_ms=268429 pending=4\nPROGRESS exchanges=22000 elapsed_ms=280412 pending=4\nPROGRESS exchanges=23000 elapsed_ms=292626 pending=4\nPROGRESS exchanges=24000 elapsed_ms=305162 pending=4\nPROGRESS exchanges=25000 elapsed_ms=316842 pending=4\nPROGRESS exchanges=26000 elapsed_ms=329970 pending=4\nPROGRESS exchanges=27000 elapsed_ms=349624 pending=4\nPROGRESS exchanges=28000 elapsed_ms=365512 pending=4\nPROGRESS exchanges=29000 elapsed_ms=383103 pending=4\nPROGRESS exchanges=30000 elapsed_ms=396568 pending=4\nPROGRESS exchanges=31000 elapsed_ms=408827 pending=4\nPROGRESS exchanges=32000 elapsed_ms=417345 pending=4\nPROGRESS exchanges=33000 elapsed_ms=425756 pending=4\nPROGRESS exchanges=34000 elapsed_ms=434215 pending=4\nPROGRESS exchanges=35000 elapsed_ms=442492 pending=4\nPROGRESS exchanges=36000 elapsed_ms=450837 pending=4\nPROGRESS exchanges=37000 elapsed_ms=467046 pending=4\nPROGRESS exchanges=38000 elapsed_ms=485524 pending=4\nPROGRESS exchanges=39000 elapsed_ms=502338 pending=4\nPROGRESS exchanges=40000 elapsed_ms=515636 pending=4\nPROGRESS exchanges=41000 elapsed_ms=527068 pending=4\nPROGRESS exchanges=42000 elapsed_ms=537258 pending=4\nPROGRESS exchanges=43000 elapsed_ms=548542 pending=4\nPROGRESS exchanges=44000 elapsed_ms=560193 pending=4\nPROGRESS exchanges=45000 elapsed_ms=570309 pending=4\nPROGRESS exchanges=46000 elapsed_ms=583305 pending=4\nPROGRESS exchanges=47000 elapsed_ms=594692 pending=4\nPASS exchanges=47552 fragments=47552 bytes_each_way=4945408 elapsed_ms=600046 window=4 max_pending=4 max_queued_bytes=928 final_queued_bytes=0 p50=42280 p95=94518 p99=146851 max=465004\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791382402,
+        "probe_sha256": "af8425176770ff311a17deee50f4565372a2a06b1129cad7c622293679e177a7",
+        "test": "raw-window4-10min",
+        "scope": "CRC-checked echo with four bounded pending messages, not actual duplex/gameplay",
+        "load_note": "Game PID 18424 on .91 at start; concurrent Mac SSH/upload traffic observed during this run. This is a coexistence/stability measurement, not a controlled best-case latency comparison."
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 233,
+          "rx": 236,
+          "messages": 100,
+          "bytes_each_direction": 102400,
+          "elapsed_ms": 5630,
+          "window": 4,
+          "max_queued_bytes": 4320,
+          "final_queued_bytes": 0,
+          "p50": 160126,
+          "p95": 228737,
+          "p99": 397285,
+          "max": 397285
+        },
+        "host_metrics": {
+          "interval_ms": 100,
+          "mtu": 517,
+          "messages": 100,
+          "bytes_each_direction": 102400,
+          "elapsed_ms": 5545,
+          "window": 4,
+          "max_queued_bytes": 4320,
+          "final_queued_bytes": 0,
+          "p50": 129890,
+          "p95": 200127,
+          "p99": 219267,
+          "max": 219267
+        },
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT",
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nDUPLEX_PASS messages=100 bytes_each_direction=102400 elapsed_ms=5545 window=4 max_queued_bytes=4320 final_queued_bytes=0 p50=129890 p95=200127 p99=219267 max=219267\nDUPLEX_OWNED_PEER_DISCONNECTED\nDUPLEX_WORKER_ERROR host=true error=duplex receive: EOF\nHOST_SUMMARY messages=0 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=233 rx=236\nDUPLEX_PASS messages=100 bytes_each_direction=102400 elapsed_ms=5630 window=4 max_queued_bytes=4320 final_queued_bytes=0 p50=160126 p95=228737 p99=397285 max=397285\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791383037,
+        "probe_sha256": "e07b08c26c3a47d8ed073179affc3671fa0997ef1a7692eb8d07351890061c2e",
+        "test": "duplex-fd-fragment1024",
+        "evidence_path": "build/gba-link/bluetooth/duplex-fd-fragment1024/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 227,
+          "rx": 230,
+          "messages": 300,
+          "bytes_each_direction": 31200,
+          "elapsed_ms": 3326,
+          "window": 4,
+          "max_queued_bytes": 512,
+          "final_queued_bytes": 0,
+          "p50": 31804,
+          "p95": 43536,
+          "p99": 154467,
+          "max": 161055
+        },
+        "host_metrics": {
+          "interval_ms": 100,
+          "mtu": 517,
+          "messages": 300,
+          "bytes_each_direction": 31200,
+          "elapsed_ms": 3256,
+          "window": 4,
+          "max_queued_bytes": 512,
+          "final_queued_bytes": 0,
+          "p50": 14064,
+          "p95": 27210,
+          "p99": 38613,
+          "max": 53931
+        },
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT",
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nDUPLEX_PASS messages=300 bytes_each_direction=31200 elapsed_ms=3256 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=14064 p95=27210 p99=38613 max=53931\nDUPLEX_OWNED_PEER_DISCONNECTED\nDUPLEX_WORKER_ERROR host=true error=duplex receive: EOF\nHOST_SUMMARY messages=0 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=227 rx=230\nDUPLEX_PASS messages=300 bytes_each_direction=31200 elapsed_ms=3326 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=31804 p95=43536 p99=154467 max=161055\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791382984,
+        "probe_sha256": "e07b08c26c3a47d8ed073179affc3671fa0997ef1a7692eb8d07351890061c2e",
+        "test": "duplex-fd-host70",
+        "evidence_path": "build/gba-link/bluetooth/duplex-fd-host70/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": true,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 35,
+          "rx": 38,
+          "messages": 300,
+          "bytes_each_direction": 31200,
+          "elapsed_ms": 3339,
+          "window": 4,
+          "max_queued_bytes": 512,
+          "final_queued_bytes": 0,
+          "p50": 24811,
+          "p95": 40897,
+          "p99": 134070,
+          "max": 147455
+        },
+        "host_metrics": {
+          "interval_ms": 100,
+          "mtu": 517,
+          "messages": 300,
+          "bytes_each_direction": 31200,
+          "elapsed_ms": 3265,
+          "window": 4,
+          "max_queued_bytes": 512,
+          "final_queued_bytes": 0,
+          "p50": 23559,
+          "p95": 41528,
+          "p99": 50379,
+          "max": 51604
+        },
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT",
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nDUPLEX_PASS messages=300 bytes_each_direction=31200 elapsed_ms=3265 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=23559 p95=41528 p99=50379 max=51604\nDUPLEX_OWNED_PEER_DISCONNECTED\nDUPLEX_WORKER_ERROR host=true error=duplex receive: EOF\nHOST_SUMMARY messages=0 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:64:D7:F4:74 path=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=35 rx=38\nDUPLEX_PASS messages=300 bytes_each_direction=31200 elapsed_ms=3339 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=24811 p95=40897 p99=134070 max=147455\n",
+        "game_pids": [
+          "18424",
+          ""
+        ],
+        "completed_at": 1791383009,
+        "probe_sha256": "e07b08c26c3a47d8ed073179affc3671fa0997ef1a7692eb8d07351890061c2e",
+        "test": "duplex-fd-host91",
+        "evidence_path": "build/gba-link/bluetooth/duplex-fd-host91/results.json"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": false,
+        "return_codes": [
+          1,
+          1
+        ],
+        "passed": false,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 197,
+          "rx": 200
+        },
+        "host_metrics": {
+          "mtu": 517,
+          "messages": 0
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nHOST_SUMMARY messages=0 mtu=517\nduplex link closed\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=197 rx=200\nduplex worker stopped\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791382440,
+        "probe_sha256": "1634c69e4a7e5f4956b2643847ebe327aa13c539288355c420f17bea2cadcb49",
+        "test": "duplex-host70",
+        "evidence_path": "build/gba-link/bluetooth/duplex-host70/results.json",
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": false,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_metrics": {
+          "messages": 0,
+          "mtu": 0
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nraw ATT connect SO_ERROR: transport endpoint is not connected\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791382617,
+        "probe_sha256": "2e68cc0c6bd4076adaa06bae8a6d2ef5d48ef1bf79573fea18de45733f4a8d5c",
+        "test": "duplex-host70-cleanup",
+        "evidence_path": "build/gba-link/bluetooth/duplex-host70-cleanup/results.json",
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": false,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_metrics": {
+          "messages": 0,
+          "mtu": 0
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\ntransport endpoint is not connected\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791382519,
+        "probe_sha256": "4238146f9d1d7bab32d91b67ae4a1f492b18bbbc3154a34bb57c2104e9667897",
+        "test": "duplex-host70-errors",
+        "evidence_path": "build/gba-link/bluetooth/duplex-host70-errors/results.json",
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": false,
+        "return_codes": [
+          0,
+          0
+        ],
+        "passed": true,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 221,
+          "rx": 224,
+          "messages": 100,
+          "bytes_each_direction": 10400,
+          "elapsed_ms": 1215,
+          "window": 4,
+          "max_queued_bytes": 512,
+          "final_queued_bytes": 0,
+          "p50": 33811,
+          "p95": 53931,
+          "p99": 143367,
+          "max": 143367
+        },
+        "host_metrics": {
+          "interval_ms": 100,
+          "mtu": 517,
+          "messages": 100,
+          "bytes_each_direction": 10400,
+          "elapsed_ms": 1143,
+          "window": 4,
+          "max_queued_bytes": 512,
+          "final_queued_bytes": 0,
+          "p50": 12242,
+          "p95": 30752,
+          "p99": 40538,
+          "max": 40538
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nDUPLEX_PASS messages=100 bytes_each_direction=10400 elapsed_ms=1143 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=12242 p95=30752 p99=40538 max=40538\nUNSUBSCRIBED\nDUPLEX_WORKER_ERROR host=true error=duplex receive: EOF\nHOST_SUMMARY messages=0 mtu=517\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=221 rx=224\nDUPLEX_PASS messages=100 bytes_each_direction=10400 elapsed_ms=1215 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=33811 p95=53931 p99=143367 max=143367\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791382787,
+        "probe_sha256": "c6791e5b27da96366c321d9bcd04e84deb16f58a5b165473974e3bff769ca8f2",
+        "test": "duplex-host70-fastadv",
+        "evidence_path": "build/gba-link/bluetooth/duplex-host70-fastadv/results.json",
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": false,
+        "return_codes": [
+          0,
+          1
+        ],
+        "passed": false,
+        "metrics": {},
+        "host_metrics": {
+          "messages": 0,
+          "mtu": 0
+        },
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nROOM_READY\nHOST_SUMMARY messages=0 mtu=0\n",
+        "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nraw ATT connect SO_ERROR: transport endpoint is not connected\n",
+        "game_pids": [
+          "",
+          "18424"
+        ],
+        "completed_at": 1791382671,
+        "probe_sha256": "2e68cc0c6bd4076adaa06bae8a6d2ef5d48ef1bf79573fea18de45733f4a8d5c",
+        "test": "duplex-host70-traced",
+        "evidence_path": "build/gba-link/bluetooth/duplex-host70-traced/results.json",
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT"
+      },
+      {
+        "transport": "BLE raw-att",
+        "duplex": true,
+        "server_fd": false,
+        "return_codes": [
+          1,
+          1
+        ],
+        "passed": false,
+        "metrics": {
+          "handle": 0,
+          "actual_us": 7500,
+          "mtu": 517,
+          "payload": 512,
+          "tx": 29,
+          "rx": 32
+        },
+        "host_metrics": {
+          "interval_ms": 100,
+          "mtu": 517,
+          "messages": 0
+        },
+        "sample_kind": "peer arrival since independent local batch submission; not echo RTT",
+        "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSUBSCRIBED\nREADY mtu=517 peer=/org/bluez/hci0/dev_22_22_1C_11_93_21\nHOST_SUMMARY messages=0 mtu=517\nDUPLEX_WORKER_ERROR host=true error=invalid duplex completion ACK\nduplex link closed\n",
+        "join_log": "FOUND_FRESH address=22:22:64:D7:F4:74 path=/org/bluez/hci0/dev_22_22_64_D7_F4_74\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=29 rx=32\nDUPLEX_WORKER_ERROR host=false error=duplex acknowledgement timeout\nduplex worker stopped\n",
+        "game_pids": [
+          "18424",
+          ""
+        ],
+        "completed_at": 1791382864,
+        "probe_sha256": "c6791e5b27da96366c321d9bcd04e84deb16f58a5b165473974e3bff769ca8f2",
+        "test": "duplex-host91-fastadv",
+        "evidence_path": "build/gba-link/bluetooth/duplex-host91-fastadv/results.json"
       }
     ],
     "long_run_verified": true,
@@ -1144,15 +1542,57 @@
     "duplex_worker": {
       "offline_race_passed": true,
       "offline_repeated_runs": 5,
-      "scope": "Independent simultaneous opaque message transport, negotiated fragmentation, per-fragment bootstrap, four-message window, bounded send/receive/control queues, CRC/order/session rejection and owned endpoint cancellation; physical test pending. Existing protocol 3 identity and RFU are not yet connected.",
+      "scope": "Independent CRC-checked opaque message bursts in both directions. 300 x 104-byte messages for each role assignment and 100 x 1024-byte messages each direction passed. Protocol 3/core/ROM identity and RFU game traffic are not yet integrated.",
       "send_encoded_budget_bytes": 262144,
       "receive_message_slots": 4,
       "max_message_bytes": 65536,
       "native_extended_tests": {
+        "passed": true,
+        "returncode": 0,
+        "tests_passed": 25,
+        "artifact_sha256": "9135cafa07686114bf3e5ea2d4635a16b3abe0953e6eda818da490ee9f73d206",
+        "evidence": "build/gba-link/bluetooth/native-duplex-tests-v3.log"
+      },
+      "physical_short_tests_passed": true,
+      "physical_tests": [
+        "duplex-fd-host70",
+        "duplex-fd-host91",
+        "duplex-fd-fragment1024"
+      ],
+      "ordering": "Use acquired packet FDs because godbus v5.2.0 dispatches method calls in separate goroutines (conn.go:435); direct D-Bus write callbacks can be processed in a different order. This is the inferred cause of reverse-role bootstrap ACK rejection; FD trials passed.",
+      "disconnect": "Device1 Connected=false closes only the matching owned peer endpoint; verified in all three passing FD trial logs. Remote-FD lifetime stays scoped to one helper process/session; no reuse across reconnect.",
+      "limitations": [
+        "Independent peer-arrival measurements are not echo RTT and cannot establish game FPS.",
+        "1024-byte fragmented client arrival p50=160126us and maximum=397285us remains unsuitable evidence for fluid play.",
+        "Actual duplex 10-minute run, frontend IPC, nearby room list/menu, compatibility errors and user game validation remain pending."
+      ],
+      "previous_native_upload_attempt": {
         "passed": false,
         "status": "upload_interrupted",
         "reason": "Stopped this task owned SSH upload after it remained blocked during the long radio test; no native extended-suite pass claimed. The prior 19 native tests remain verified."
       }
+    },
+    "bounded_pipeline_long_run": {
+      "passed": true,
+      "seconds": 600.046,
+      "exchanges": 47552,
+      "max_pending": 4,
+      "max_queued_bytes": 928,
+      "final_queued_bytes": 0,
+      "metrics_us": {
+        "p50": 42280,
+        "p95": 94518,
+        "p99": 146851,
+        "max": 465004
+      },
+      "gameplay_verified": false
+    },
+    "advertising_timing_repair": {
+      "observed": "BlueZ/Linux4.9 old MGMT Add Advertising overwrote 100ms with 1280ms; LE Create Connection cancelled after about 2 seconds.",
+      "method": "Use BlueZ MinInterval/MaxInterval=100ms and an old-kernel shim after this application registers the sole advertisement; skip timing changes if any device is connected. No unrelated advertisement, Bluetooth service, connection or scan filter is changed.",
+      "verified_hci_trace": "build/gba-link/bluetooth/duplex-trace-70.log",
+      "baseline_hci_trace": "build/gba-link/bluetooth/duplex-slowadv-trace-70.log",
+      "source": "https://github.com/bluez/bluez/blob/5.78/src/advertising.c"
     }
   },
   "conclusion": "All 400 TCP and 400 repeated classic Bluetooth exchanges passed integrity checks. Classic 104-byte p50 ~33.8ms vs TCP ~4.3ms; classic is not selected as production default. Initial connection abort remains an unresolved transient, not relabelled as success. BLE GATT is still unmeasured.",
