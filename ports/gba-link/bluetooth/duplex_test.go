@@ -329,3 +329,50 @@ func TestDuplexSlowConsumerBackpressureStillServicesReverseTraffic(t *testing.T)
 		}
 	}
 }
+
+func TestDuplexRemoteEOFDeliversConfirmedBytesButCancelDiscards(t *testing.T) {
+	for _, remoteEOF := range []bool{true, false} {
+		x, y := memoryPacketPair()
+		d, _ := newDuplexLink(311, 512)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		result := make(chan error, 1)
+		go func() { result <- d.Run(ctx, x) }()
+		frames, _ := fragmentMessage(512, 311, 1, []byte("already received identity"))
+		if _, err := y.Write(frames[0]); err != nil {
+			t.Fatal(err)
+		}
+		buffer := make([]byte, 513)
+		for {
+			n, err := y.Read(buffer)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n >= frameHeader && buffer[1] == frameAck {
+				break
+			}
+		}
+		if remoteEOF {
+			y.Close()
+		} else {
+			cancel()
+		}
+		select {
+		case <-result:
+		case <-time.After(time.Second):
+			t.Fatal("terminal endpoint did not stop")
+		}
+		data, ok := <-d.Messages()
+		if remoteEOF {
+			if !ok || !bytes.Equal(data, []byte("already received identity")) {
+				t.Fatal("confirmed bytes discarded before consumer read")
+			}
+			if _, ok := <-d.Messages(); ok {
+				t.Fatal("terminal queue not closed")
+			}
+		} else if ok {
+			t.Fatal("cancel exposed a stale message")
+		}
+		cancel()
+		y.Close()
+	}
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -112,7 +113,8 @@ func (d *duplexLink) Messages() <-chan []byte { return d.out }
 // Each Run owns one endpoint and one session. Cancellation closes only this
 // endpoint, joins its reader, and retires every queue. Reconnect uses a fresh
 // worker and epoch, never old FDs or buffered messages.
-func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
+func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) (runErr error) {
+	parentCtx := ctx
 	d.mu.Lock()
 	if d.running || d.closed {
 		d.mu.Unlock()
@@ -190,6 +192,7 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
 		}
 	}()
 	defer func() {
+		preserveReceived := parentCtx.Err() == nil && errors.Is(runErr, io.EOF)
 		cancel()
 		endpoint.Close()
 		<-done
@@ -203,7 +206,7 @@ func (d *duplexLink) Run(ctx context.Context, endpoint duplexEndpoint) error {
 			<-d.in
 		}
 	drain:
-		for {
+		for !preserveReceived {
 			select {
 			case <-d.out:
 			default:

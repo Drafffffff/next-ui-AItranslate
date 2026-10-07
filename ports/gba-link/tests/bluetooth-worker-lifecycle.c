@@ -74,6 +74,18 @@ int main(int argc,char **argv) {
     deadline=milliseconds()+3500;
     while(milliseconds()<deadline){Netplay_btReap();tick();}
     errno=0;assert(waitpid(-1,NULL,WNOHANG)==-1&&errno==ECHILD);
+    /* Compatibility rejection drains asynchronously, with a bounded lifetime.
+     * Its worker survives the immediate call, then receives targeted SIGTERM;
+     * the ordinary cancellation checks above retain their immediate behavior. */
+    setenv("BT_TEST_CASE","ready",1);assert(Netplay_btStart(true,NULL));
+    e=event('H');close(e.fd);
+    uint64_t began=milliseconds();Netplay_btDrainStop();assert(milliseconds()-began<50);
+    deadline=began+250;
+    while(milliseconds()<deadline){Netplay_btReap();tick();}
+    assert(waitpid(-1,NULL,WNOHANG)==0);
+    deadline=began+1500;
+    while(milliseconds()<deadline){Netplay_btReap();tick();}
+    errno=0;assert(waitpid(-1,NULL,WNOHANG)==-1&&errno==ECHILD);
     close(reserved);
     puts("PASS: private FDs, room decoding, invalid controls, nonblocking cancellation, retry isolation, exit detection and owned child cleanup");
     return 0;

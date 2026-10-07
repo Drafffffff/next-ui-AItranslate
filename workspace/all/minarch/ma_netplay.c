@@ -363,13 +363,22 @@ static void core_poll_receive(void) {
     }
     Netplay_poll();
 }
+static void reject_identity(const char *reason) {
+#ifdef NEXTUI_LINK_BT
+    /* The frontend already sent its identity to the private stream. Give only
+     * this pre-game rejection's worker time to forward it; normal cancellation
+     * remains immediate and no core is started while it drains asynchronously. */
+    if (np.bt_owned) Netplay_btDrainStop();
+#endif
+    end_session(reason,true);
+}
 static void start_core(void) {
-    if (memcmp(np.peer, np.hello, 12)) { end_session("NextUI link protocol mismatch", true); return; }
-    if (memcmp(np.peer + 12, np.hello + 12, 64)) { end_session("Core link version mismatch", true); return; }
-    if (memcmp(np.peer + 76, np.hello + 76, 32)) { end_session("ROM mismatch: use identical ROM files", true); return; }
-    if (memcmp(np.peer + 108, np.hello + 108, 19)) { end_session("Link mode mismatch", true); return; }
-    if (memcmp(np.peer + 127, np.hello + 127, 32)) { end_session("Core build mismatch: install the same update", true); return; }
-    if (np.peer[159] != (np.host ? 0 : 1)) { end_session("Expected opposite host/join role", true); return; }
+    if (memcmp(np.peer, np.hello, 12)) { reject_identity("NextUI link protocol mismatch"); return; }
+    if (memcmp(np.peer + 12, np.hello + 12, 64)) { reject_identity("Core link version mismatch"); return; }
+    if (memcmp(np.peer + 76, np.hello + 76, 32)) { reject_identity("ROM mismatch: use identical ROM files"); return; }
+    if (memcmp(np.peer + 108, np.hello + 108, 19)) { reject_identity("Link mode mismatch"); return; }
+    if (memcmp(np.peer + 127, np.hello + 127, 32)) { reject_identity("Core build mismatch: install the same update"); return; }
+    if (np.peer[159] != (np.host ? 0 : 1)) { reject_identity("Expected opposite host/join role"); return; }
     status(NP_ACTIVE, "Link connected (2 players)");
     np.started = np.used = true;
     np.cb.start(np.host ? 0 : 1, core_send, core_poll_receive);

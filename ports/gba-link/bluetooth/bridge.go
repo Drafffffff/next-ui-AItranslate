@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"syscall"
 	"time"
 )
 
@@ -154,7 +156,9 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	results := make(chan error, 2)
+	outgoingDone := make(chan struct{})
 	go func() {
+		defer close(outgoingDone)
 		hello := make([]byte, 160)
 		if _, err := io.ReadFull(stream, hello); err != nil {
 			results <- err
@@ -240,19 +244,49 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 		}
 	}()
 	var err error
-	consumed := false
+	consumed := 0
 	select {
 	case err = <-results:
-		consumed = true
+		consumed = 1
 	case <-ctx.Done():
 		err = ctx.Err()
 	}
+	// EOF/closed frontend can be an identity rejection. Flush already enqueued
+	// bytes for at most 750ms in this helper, never on the UI/core thread. Ordinary
+	// cancel still cancels ctx immediately; malformed local frames are not drained.
+	if consumed == 1 && (errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) || errors.Is(err, syscall.EPIPE) || errors.Is(err, os.ErrClosed)) {
+		deadline := time.NewTimer(750 * time.Millisecond)
+		tick := time.NewTicker(time.Millisecond)
+	drain:
+		for {
+			outgoingFinished := false
+			select {
+			case <-outgoingDone:
+				outgoingFinished = true
+			default:
+			}
+			if outgoingFinished && d.QueuedBytes() == 0 {
+				break
+			}
+			select {
+			case <-ctx.Done():
+				break drain
+			case <-deadline.C:
+				break drain
+			case <-tick.C:
+			case <-results:
+				consumed++
+			}
+		}
+		tick.Stop()
+		deadline.Stop()
+	}
 	cancel()
 	stream.Close()
-	// If cancellation won the select, both pumps still need to be joined.
-	if !consumed {
+	for consumed < 2 {
 		<-results
+		consumed++
 	}
-	<-results
+
 	return err
 }

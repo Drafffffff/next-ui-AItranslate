@@ -215,3 +215,53 @@ func TestBridgeRejectsOldTransportBeforeReadiness(t *testing.T) {
 		t.Fatalf("old transport accepted ready=%t err=%v", ready, err)
 	}
 }
+
+// Hold only the sender's first frontend identity behind a slow radio write.
+// Frontend rejection/close must not cancel those bytes before the peer sees them.
+type delayedIdentityEndpoint struct{ *memoryPackets }
+
+func (d delayedIdentityEndpoint) Write(packet []byte) (int, error) {
+	if len(packet) >= frameHeader && packet[1] == frameData && binary.BigEndian.Uint32(packet[8:]) == 2 {
+		time.Sleep(120 * time.Millisecond)
+	}
+	return d.memoryPackets.Write(packet)
+}
+func TestBridgeFrontendRejectPreservesQueuedIdentity(t *testing.T) {
+	x, y := memoryPacketPair()
+	a, aw := net.Pipe()
+	b, bw := net.Pipe()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	ready := make(chan bool, 2)
+	results := make(chan error, 2)
+	go func() {
+		results <- bridgeSession(ctx, delayedIdentityEndpoint{x}, 512, 46, true, aw, func() error { ready <- true; return nil })
+	}()
+	go func() {
+		results <- bridgeSession(ctx, y, 512, 46, false, bw, func() error { ready <- false; return nil })
+	}()
+	for i := 0; i < 2; i++ {
+		select {
+		case <-ready:
+		case <-ctx.Done():
+			t.Fatal("readiness")
+		}
+	}
+	local := bytes.Repeat([]byte{0x51}, 160)
+	go func() { a.Write(local); a.Close() }()
+	go func() { b.Write(bytes.Repeat([]byte{0x72}, 160)) }()
+	b.SetReadDeadline(time.Now().Add(time.Second))
+	peer := make([]byte, 160)
+	if _, err := io.ReadFull(b, peer); err != nil || !bytes.Equal(peer, local) {
+		t.Fatalf("identity discarded on rejection: %v", err)
+	}
+	b.Close()
+	cancel()
+	for i := 0; i < 2; i++ {
+		select {
+		case <-results:
+		case <-time.After(time.Second):
+			t.Fatal("rejection left pump running")
+		}
+	}
+}

@@ -225,11 +225,16 @@
     "validation": "Go race suite and four real Mac gpSP bridge/identity cases PASS. Physical latency and actual game acceptance pending."
   },
   "receive_backpressure_fix": {
-    "status": "physical_normal_core_pass_mismatch_teardown_race_found_not_installed",
+    "status": "identity_teardown_fixed_six_physical_cases_pass_release_build_pending",
     "change": "Delay message confirmation until delivery to the bounded consumer queue. Keep dispatcher servicing reverse data and confirmations while the consumer is slow.",
     "bounds": "4 consumer messages plus at most 4 staged messages, matching sender window; malicious ninth injection rejected. Send byte budget unchanged at 262144.",
     "evidence": "Go race suite, 10 repeats of max-packet and slow-consumer reverse-traffic tests; Mac actual gpSP/identity bridge tests.",
     "queue_telemetry": "Periodic send queued bytes, exact peak, sent/confirmed counts and message-confirmation maximum; final zero is cancellation cleanup, not evidence that all messages were confirmed.",
-    "blocking_case": "Host correct core-mismatch rejection closes private frontend stream / cancels helper before its queued local identity reaches client. Client sees timeout. Need bounded asynchronous handshake teardown preserving pending identity, without delaying ordinary user cancel."
+    "blocking_case": "Resolved with bounded asynchronous identity drain on pre-game rejection only. Preserve fully received messages on remote EOF; explicit cancellation still discards its own session."
+  },
+  "identity_rejection_cleanup": {
+    "frontend": "Immediate explicit mismatch status, no emulation or UI wait. Only mismatch retires worker with private control FD alive; targeted TERM at 1s, KILL at 2s if needed. Ordinary cancel remains immediate TERM.",
+    "helper": "Drain already queued frontend bytes at most 750ms on local EOF/closed stream; ordinary signal cancellation interrupts immediately.",
+    "validation": "Delayed-radio identity delivery, EOF preservation versus cancel discard, repeated race tests, private worker lifecycle, real physical core/ROM/mode mismatch, normal and reverse-role cases."
   }
 }

@@ -2069,11 +2069,82 @@
       "next_action": "Fix asynchronous BLE handshake teardown so the local identity is not dropped before the peer receives it. Keep ordinary cancellation and own-process cleanup nonblocking."
     },
     "pending": [
-      "ROM mismatch",
-      "mode mismatch",
-      "reverse roles",
       "queue-instrumented long test",
       "actual user Mario Tennis acceptance"
-    ]
+    ],
+    "identity_teardown_fix": {
+      "physical_passes": [
+        {
+          "case": "identity-drain-verified-core-mismatch",
+          "passed": true,
+          "hashes": {
+            "core-runner.elf": "43fc4fcbbcfcff568e95e8e1d902b3c8e43c53d402b3f1b9a5282a6664e19dd5",
+            "nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9",
+            "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+          },
+          "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance"
+        },
+        {
+          "case": "identity-drain-verified-rom-mismatch",
+          "passed": true,
+          "hashes": {
+            "core-runner.elf": "43fc4fcbbcfcff568e95e8e1d902b3c8e43c53d402b3f1b9a5282a6664e19dd5",
+            "nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9",
+            "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+          },
+          "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance"
+        },
+        {
+          "case": "identity-drain-verified-mode-mismatch",
+          "passed": true,
+          "hashes": {
+            "core-runner.elf": "43fc4fcbbcfcff568e95e8e1d902b3c8e43c53d402b3f1b9a5282a6664e19dd5",
+            "nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9",
+            "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+          },
+          "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance"
+        },
+        {
+          "case": "identity-drain-verified-normal",
+          "passed": true,
+          "hashes": {
+            "core-runner.elf": "43fc4fcbbcfcff568e95e8e1d902b3c8e43c53d402b3f1b9a5282a6664e19dd5",
+            "nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9",
+            "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+          },
+          "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance"
+        },
+        {
+          "case": "identity-drain-reverse-core-mismatch",
+          "passed": true,
+          "hashes": {
+            "core-runner.elf": "43fc4fcbbcfcff568e95e8e1d902b3c8e43c53d402b3f1b9a5282a6664e19dd5",
+            "nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9",
+            "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+          },
+          "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance"
+        },
+        {
+          "case": "identity-drain-reverse-normal",
+          "passed": true,
+          "hashes": {
+            "core-runner.elf": "43fc4fcbbcfcff568e95e8e1d902b3c8e43c53d402b3f1b9a5282a6664e19dd5",
+            "nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9",
+            "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+          },
+          "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance"
+        }
+      ],
+      "race_suite": true,
+      "delayed_identity_and_remote_eof_repeats": 10,
+      "private_worker_lifecycle_mac": true,
+      "wifi_tcp_real_core_regression": "18 checks PASS"
+    }
   }
 }

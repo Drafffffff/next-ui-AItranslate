@@ -22,7 +22,7 @@ static struct {
     unsigned count;
     struct NetplayBTRoom rooms[NETPLAY_BT_ROOMS];
     char scan_status[160];
-    struct { pid_t pid; uint64_t began; } retired[8];
+    struct { pid_t pid; uint64_t began; bool drain, term_sent; int control; } retired[8];
 } bt = { .data=-1, .control=-1 };
 
 static uint64_t now_ms(void) {
@@ -42,21 +42,27 @@ void Netplay_btReap(void) {
     uint64_t now=now_ms();
     for (unsigned i=0;i<8;i++) if (bt.retired[i].pid) {
         pid_t result=waitpid(bt.retired[i].pid,NULL,WNOHANG);
-        if (result>0 || (result<0&&errno==ECHILD)) bt.retired[i].pid=0;
+        if (result>0 || (result<0&&errno==ECHILD)) { close_fd(&bt.retired[i].control);bt.retired[i].pid=0; }
+        else if (bt.retired[i].drain&&!bt.retired[i].term_sent&&now-bt.retired[i].began>=1000) {
+            kill(bt.retired[i].pid,SIGTERM);close_fd(&bt.retired[i].control);bt.retired[i].term_sent=true;
+        }
         else if (now-bt.retired[i].began>=2000) kill(bt.retired[i].pid,SIGKILL);
     }
 }
-void Netplay_btStop(void) {
-    close_fd(&bt.data); close_fd(&bt.control);
+static void stop_worker(bool drain) {
+    close_fd(&bt.data); if (!drain) close_fd(&bt.control);
     bt.scanning=false;
     if (bt.child>0) {
-        kill(bt.child,SIGTERM);
+        if (!drain) kill(bt.child,SIGTERM);
         for (unsigned i=0;i<8;i++) if (!bt.retired[i].pid) {
-            bt.retired[i].pid=bt.child;bt.retired[i].began=now_ms();bt.child=0;break;
+            bt.retired[i].pid=bt.child;bt.retired[i].began=now_ms();bt.retired[i].control=drain?bt.control:-1;if(drain)bt.control=-1;bt.retired[i].drain=drain;bt.retired[i].term_sent=!drain;bt.child=0;break;
         }
     }
+    close_fd(&bt.control);
     Netplay_btReap();
 }
+void Netplay_btStop(void) { stop_worker(false); }
+void Netplay_btDrainStop(void) { stop_worker(true); }
 static bool launch(const char *role,const char *peer,bool scanning) {
     Netplay_btReap();
     if (bt.child || bt.control>=0) return false;
