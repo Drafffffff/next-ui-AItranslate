@@ -2069,7 +2069,6 @@
       "next_action": "Fix asynchronous BLE handshake teardown so the local identity is not dropped before the peer receives it. Keep ordinary cancellation and own-process cleanup nonblocking."
     },
     "pending": [
-      "queue-instrumented long test",
       "actual user Mario Tennis acceptance"
     ],
     "identity_teardown_fix": {
@@ -2144,7 +2143,97 @@
       "race_suite": true,
       "delayed_identity_and_remote_eof_repeats": 10,
       "private_worker_lifecycle_mac": true,
-      "wifi_tcp_real_core_regression": "18 checks PASS"
+      "wifi_tcp_real_core_regression": "18 checks PASS",
+      "private_worker_lifecycle_arm": true
+    },
+    "current_release_revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
+    "current_release_installed": true,
+    "queue_instrumented_long_test": {
+      "passed": true,
+      "revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
+      "test": {
+        "passed": true,
+        "scope": "Synthetic NextUI wire through production Bluetooth helpers over physical BLE, not commercial game acceptance",
+        "seconds": 600,
+        "payload": 104,
+        "pattern": "padded",
+        "helper_path": "/tmp/nextui-gba-bluetooth/core-test/nextui-gba-bluetooth.elf",
+        "fixture_sha256": "8480c28a39fc170faf402c3262ddf6d3d140bf7598dfbf5ce8c00ae2da3c13c6",
+        "fixture_source_sha256": "1c4a63ba4b9d14fe0719128ea13ddbc2d4dc8cd54230a2881f56450a0f6cbb6a",
+        "uncommitted_test_source": false,
+        "source_revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
+        "game_pids": [
+          "",
+          "9995"
+        ],
+        "helper_sha256": [
+          "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9",
+          "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
+        ],
+        "return_codes": [
+          0,
+          0
+        ],
+        "results": [
+          {
+            "passed": 1,
+            "role": "host",
+            "exchanges": 24346,
+            "elapsed_ms": 600036,
+            "p50_us": 22734,
+            "p95_us": 31035,
+            "p99_us": 38205,
+            "max_us": 74944,
+            "data_errors": 0,
+            "final_outstanding": 0,
+            "mean_us": 24628,
+            "over_33_ms": 922,
+            "over_66_ms": 6,
+            "over_100_ms": 0,
+            "over_200_ms": 0
+          },
+          {
+            "passed": 1,
+            "role": "join",
+            "exchanges": 24346,
+            "elapsed_ms": 599855,
+            "p50_us": 0,
+            "p95_us": 0,
+            "p99_us": 0,
+            "max_us": 0,
+            "data_errors": 0,
+            "final_outstanding": 0,
+            "mean_us": 0,
+            "over_33_ms": 0,
+            "over_66_ms": 0,
+            "over_100_ms": 0,
+            "over_200_ms": 0
+          }
+        ],
+        "completed_at": 1791389604
+      },
+      "queue_measurements": {
+        "host": {
+          "samples": 121,
+          "peak_queued_bytes": 112,
+          "sample_max_unconfirmed": 1,
+          "final_sent": 24349,
+          "final_confirmed": 24349,
+          "final_queued_bytes": 0,
+          "max_transport_ack_us": 73204
+        },
+        "join": {
+          "samples": 121,
+          "peak_queued_bytes": 58,
+          "sample_max_unconfirmed": 1,
+          "final_sent": 24349,
+          "final_confirmed": 24349,
+          "final_queued_bytes": 0,
+          "max_transport_ack_us": 94369
+        }
+      },
+      "scope": "Synthetic NextUI single-outstanding 104-byte padded exchanges through physical BLE, not Mario Tennis gameplay. Internal sending queue telemetry is now measured. Receiver burst/backpressure behavior verified separately.",
+      "load_context": "Offline NES remains running on .91. Other applications were not stopped. User reported that prior red indicators may coincide with testing other software; causation not established."
     }
   }
 }

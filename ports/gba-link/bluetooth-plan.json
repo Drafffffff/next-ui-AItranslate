@@ -236,5 +236,12 @@
     "frontend": "Immediate explicit mismatch status, no emulation or UI wait. Only mismatch retires worker with private control FD alive; targeted TERM at 1s, KILL at 2s if needed. Ordinary cancel remains immediate TERM.",
     "helper": "Drain already queued frontend bytes at most 750ms on local EOF/closed stream; ordinary signal cancellation interrupts immediately.",
     "validation": "Delayed-radio identity delivery, EOF preservation versus cancel discard, repeated race tests, private worker lifecycle, real physical core/ROM/mode mismatch, normal and reverse-role cases."
+  },
+  "hotspot_and_top_tabs": {
+    "user_request": "2026-10-08: Bluetooth optimized enough to proceed. Three peer modes as top tabs; concise interaction.",
+    "ui": "Bluetooth / Wi-Fi / Hotspot tabs; Create Room and Join Room in each; addresses only in Wi-Fi advanced settings.",
+    "hardware_readonly": "Both xradio phys advertise AP+managed and two managed simultaneous virtual interfaces on one channel; hostapd present. Actual concurrency not yet tested.",
+    "next": "Probe private same-channel virtual AP/client without modifying saved networks or wlan0; verify cleanup and connectivity before UI integration.",
+    "status": "in progress"
   }
 }
