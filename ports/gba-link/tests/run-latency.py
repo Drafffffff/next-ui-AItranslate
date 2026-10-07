@@ -22,7 +22,7 @@ for mode in ('sleep','network-wait'):
  print(log,end='')
  assert proc.returncode==0,log
  latency=int(re.search(r'pacing reply latency_us=(\d+)',log)[1])
- results.append({'mode':mode,'reply_latency_us':latency,'checks_passed':5})
+ results.append({'mode':mode,'reply_latency_us':latency,'checks_passed':log.count('PASS:')})
 # This is the simulated frontend pacing wait, not a Wi-Fi/handheld benchmark.
 assert results[1]['reply_latency_us']<results[0]['reply_latency_us'],results
 (OUT/'transport-results.json').write_text(json.dumps({'sanitizers':'ASan/UBSan','results':results},indent=2)+'\n')

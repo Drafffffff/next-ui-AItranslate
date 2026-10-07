@@ -2,7 +2,7 @@
   "gpsp_commit": "5819380c2ffb0900219d700a382ee68c464ebb99",
   "gpsp_archive_sha256": "1dfc919966cd58ce1d8f2580041d9bffe2e313d9442260c713ed0286a048a733",
   "toolchain": "ghcr.io/loveretro/tg5040-toolchain@sha256:f131c6af64029a8723d0ce8d3c2682642f5f091b04714f6beedda9bec18477ab",
-  "nextui_link_protocol": 2,
+  "nextui_link_protocol": 3,
   "gpSP_link_protocol": "gpSP v1.0",
   "libretro_common_commit": "0a2b63d903ea0cc7bac9e759af57db190b4aeadd",
   "libchdr_commit": "607694ca0812edfc9cc2030c64634fc2393668de",

@@ -9,7 +9,7 @@
 
 void chooseSyncRef(void) {
 	switch (sync_ref) {
-		case SYNC_SRC_AUTO:   use_core_fps = (core.get_region() == RETRO_REGION_PAL); break;
+		case SYNC_SRC_AUTO:   use_core_fps = Netplay_active() || (core.get_region() == RETRO_REGION_PAL); break;
 		case SYNC_SRC_SCREEN: use_core_fps = 0; break;
 		case SYNC_SRC_CORE:   use_core_fps = 1; break;
 	}
@@ -52,6 +52,7 @@ void run_frame(void) {
 	static enum NPState previous = NP_IDLE;
 	if (Netplay_state() != previous) {
 		previous = Netplay_state();
+		chooseSyncRef(); // Auto uses core pacing only for the live link session.
 		Notification_push(NOTIFICATION_SETTING, Netplay_status(), NULL);
 	}
 	if (Netplay_busy() || Netplay_used()) {

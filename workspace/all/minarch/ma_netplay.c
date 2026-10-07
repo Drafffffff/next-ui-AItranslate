@@ -25,7 +25,7 @@
 #define NP_QUEUE (1024 * 1024)
 #define NP_TIMEOUT 10000
 #define NP_ACK_SAMPLES 256
-enum { W_DATA = 1, W_PAUSE, W_PING };
+enum { W_DATA = 1, W_PAUSE, W_PING, W_RFU_EXCHANGE, W_RFU_CONFIRM };
 static struct {
     struct retro_netpacket_callback cb;
     enum NPState state;
@@ -41,6 +41,9 @@ static struct {
     uint64_t rfu_sent[8], rfu_received[8];
     uint64_t ack_started[NP_ACK_SAMPLES], ack_samples, ack_us_sum, ack_us_max;
     uint64_t ack_bins[5], ack_unmeasured, outstanding_peak, send_calls;
+    uint64_t ack_ids[NP_ACK_SAMPLES], ack_pause[NP_ACK_SAMPLES];
+    uint64_t exchange_sequence, reply_exchange, pause_epoch, ack_outstanding, ack_cancelled, ack_paused;
+    uint64_t wait_calls, video_us_max, present_us_max, core_video_frames, screen_video_frames;
     uint64_t last_poll_us, poll_gap_us_max, wait_packets;
     char status[160];
 } np = { .listener = -1, .fd = -1 };
@@ -90,7 +93,7 @@ bool Netplay_setInterface(const struct retro_netpacket_callback *cb) {
     np.cb = *cb;
     np.supported = true;
     memset(np.hello, 0, sizeof(np.hello));
-    memcpy(np.hello, "NEXTUILINK\0\2", 12);
+    memcpy(np.hello, "NEXTUILINK\0\3", 12);
     snprintf((char *)np.hello + 12, 64, "%s", cb->protocol_version);
     return true;
 }
@@ -138,18 +141,21 @@ static bool queue_bytes(const void *buf, size_t len) {
     np.tx_end += len;
     return true;
 }
-/* Ordered TCP has one RFU ACK per host exchange. The bounded ring records
- * application round-trip timing (including pacing), not pure network RTT.
- * Overflow never changes delivery or acknowledges a new exchange. */
-static void record_ack(void) {
-    uint64_t received = np.rfu_received[7], sent = np.rfu_sent[5];
-    if (!received || received > sent || sent - received >= NP_ACK_SAMPLES) {
-        np.ack_unmeasured++;
-        return;
+/* Diagnostic identity lives in the frontend envelope. The core still receives
+ * its original bytes; RFU resets/role changes cannot shift a FIFO timestamp. */
+static void cancel_ack_samples(void) {
+    np.ack_cancelled += np.ack_outstanding;
+    np.ack_outstanding = 0;
+    memset(np.ack_ids, 0, sizeof(np.ack_ids));
+}
+static void record_ack(uint64_t id) {
+    unsigned slot = (unsigned)((id - 1) % NP_ACK_SAMPLES);
+    if (!id || np.ack_ids[slot] != id) { np.ack_unmeasured++; return; }
+    np.ack_ids[slot] = 0; np.ack_outstanding--;
+    if (np.ack_pause[slot] != np.pause_epoch || Netplay_paused()) {
+        np.ack_paused++; return;
     }
-    uint64_t started = np.ack_started[(received - 1) % NP_ACK_SAMPLES];
-    if (!started) { np.ack_unmeasured++; return; }
-    uint64_t elapsed = now_us() - started;
+    uint64_t elapsed = now_us() - np.ack_started[slot];
     np.ack_samples++; np.ack_us_sum += elapsed;
     if (elapsed > np.ack_us_max) np.ack_us_max = elapsed;
     unsigned bin = elapsed <= 16000 ? 0 : elapsed <= 33000 ? 1 :
@@ -176,32 +182,44 @@ static void packet(unsigned type, const void *buf, size_t len) {
      * in one write, and flush before this poll returns: no extra frame/delay. */
     if (!np.polling) flush();
 }
+static void tagged_packet(unsigned type, uint64_t id, const void *buf, size_t len) {
+    if (!id || len > NP_MAX_PACKET - 8) { end_session("Invalid RFU exchange envelope", true); return; }
+    uint32_t words[4] = { htonl(type), htonl((uint32_t)len + 8),
+                         htonl((uint32_t)(id >> 32)), htonl((uint32_t)id) };
+    if (queue_bytes(words, sizeof(words))) queue_bytes(buf, len);
+    if (!np.polling) flush();
+}
 static void core_send(int flags, const void *buf, size_t len, uint16_t to) {
-    (void)flags; /* Reliable; receive-callback replies flush together in this poll. */
+    (void)flags;
     if (!Netplay_active()) return;
     if ((to != RETRO_NETPACKET_BROADCAST && to != (np.host ? 1 : 0)) || (!buf && len)) {
         end_session("Invalid destination from core", true); return;
     }
     if (buf && len) {
-        if (len >= 8 && !memcmp(buf, "RFU1", 4)) {
-            uint32_t type; memcpy(&type, (const unsigned char *)buf + 4, 4);
-            type = ntohl(type);
+        unsigned type = 0xffffffffU;
+        if (len >= 12 && !memcmp(buf, "RFU1", 4)) {
+            uint32_t word; memcpy(&word, (const unsigned char *)buf + 4, 4); type = ntohl(word);
             if (type < 8) np.rfu_sent[type]++;
-            if (type == 5) {
-                uint64_t sent = np.rfu_sent[5];
-                np.ack_started[(sent - 1) % NP_ACK_SAMPLES] = now_us();
-                uint64_t outstanding = sent >= np.rfu_received[7] ? sent - np.rfu_received[7] : 0;
-                if (outstanding > np.outstanding_peak) np.outstanding_peak = outstanding;
-            }
+            if (type >= 1 && type <= 4) cancel_ack_samples();
         }
-        packet(W_DATA, buf, len); np.sent++;
-        /* A request may already have an answer waiting: bypass empty-read backoff. */
+        if (type == 5) {
+            uint64_t id = ++np.exchange_sequence;
+            unsigned slot = (unsigned)((id - 1) % NP_ACK_SAMPLES);
+            if (np.ack_ids[slot]) { np.ack_outstanding--; np.ack_unmeasured++; }
+            np.ack_ids[slot] = id; np.ack_started[slot] = now_us(); np.ack_pause[slot] = np.pause_epoch;
+            np.ack_outstanding++;
+            if (np.ack_outstanding > np.outstanding_peak) np.outstanding_peak = np.ack_outstanding;
+            tagged_packet(W_RFU_EXCHANGE, id, buf, len);
+        } else if (type == 7 && np.reply_exchange) {
+            tagged_packet(W_RFU_CONFIRM, np.reply_exchange, buf, len);
+        } else packet(W_DATA, buf, len);
+        np.sent++;
         np.next_core_read_us = 0;
-    }
-    else flush();
+    } else flush();
 }
 void Netplay_pause(bool paused) {
     if (np.local_pause == paused) return;
+    np.pause_epoch++;
     np.local_pause = paused;
     unsigned char value = paused;
     packet(W_PAUSE, &value, 1);
@@ -224,6 +242,10 @@ static bool prepare(bool host) {
     np.next_core_read_us = np.core_polls = np.skipped_polls = np.socket_reads = 0;
     np.ack_samples = np.ack_us_sum = np.ack_us_max = np.ack_unmeasured = 0;
     np.outstanding_peak = np.send_calls = np.last_poll_us = np.poll_gap_us_max = np.wait_packets = 0;
+    np.exchange_sequence = np.reply_exchange = np.pause_epoch = np.ack_outstanding = 0;
+    np.ack_cancelled = np.ack_paused = np.wait_calls = np.video_us_max = np.present_us_max = 0;
+    np.core_video_frames = np.screen_video_frames = 0;
+    memset(np.ack_ids, 0, sizeof(np.ack_ids));
     memset(np.ack_started, 0, sizeof(np.ack_started));
     memset(np.ack_bins, 0, sizeof(np.ack_bins));
     memset(np.rfu_sent, 0, sizeof(np.rfu_sent));
@@ -331,24 +353,42 @@ static void consume(void) {
         uint32_t header[2]; memcpy(header, np.rx, 8);
         unsigned type = ntohl(header[0]);
         size_t len = ntohl(header[1]);
-        if (len > NP_MAX_PACKET || type < W_DATA || type > W_PING ||
+        if (len > NP_MAX_PACKET || type < W_DATA || type > W_RFU_CONFIRM ||
+            ((type == W_RFU_EXCHANGE || type == W_RFU_CONFIRM) && len < 20) ||
             (type == W_DATA && !len) || (type == W_PAUSE && len != 1) || (type == W_PING && len)) {
             end_session("Invalid link frame", true); return;
         }
         if (np.rx_end < len + 8) return;
-        if (type == W_DATA) {
-            if (!valid_core_packet(np.rx + 8, len)) { end_session("Invalid gpSP RFU payload", true); return; }
-            np.received++;
-            if (len >= 8 && !memcmp(np.rx + 8, "RFU1", 4)) {
-                uint32_t subtype; memcpy(&subtype, np.rx + 12, 4);
-                subtype = ntohl(subtype);
-                if (subtype < 8) np.rfu_received[subtype]++;
-                if (subtype == 7) record_ack();
+        if (type == W_DATA || type == W_RFU_EXCHANGE || type == W_RFU_CONFIRM) {
+            const unsigned char *data = np.rx + 8;
+            size_t core_len = len;
+            uint64_t id = 0;
+            if (type != W_DATA) {
+                uint32_t words[2]; memcpy(words, data, 8);
+                id = ((uint64_t)ntohl(words[0]) << 32) | ntohl(words[1]);
+                data += 8; core_len -= 8;
+                uint32_t subtype; memcpy(&subtype, data + 4, 4);
+                if (!id || memcmp(data, "RFU1", 4) ||
+                    ntohl(subtype) != (type == W_RFU_EXCHANGE ? 5U : 7U)) {
+                    end_session("Invalid RFU exchange envelope", true); return;
+                }
             }
-            np.cb.receive(np.rx + 8, len, np.host ? 1 : 0);
+            if (!valid_core_packet(data, core_len)) { end_session("Invalid gpSP RFU payload", true); return; }
+            np.received++;
+            if (core_len >= 12 && !memcmp(data, "RFU1", 4)) {
+                uint32_t word; memcpy(&word, data + 4, 4); unsigned subtype = ntohl(word);
+                if (subtype < 8) np.rfu_received[subtype]++;
+                if (subtype >= 1 && subtype <= 4) cancel_ack_samples();
+                if (subtype == 7) record_ack(id);
+            }
+            np.reply_exchange = type == W_RFU_EXCHANGE ? id : 0;
+            np.cb.receive(data, core_len, np.host ? 1 : 0);
+            np.reply_exchange = 0;
         } else if (type == W_PAUSE) {
             if (np.rx[8] > 1) { end_session("Invalid pause frame", true); return; }
-            np.remote_pause = np.rx[8] != 0;
+            bool paused = np.rx[8] != 0;
+            if (np.remote_pause != paused) np.pause_epoch++;
+            np.remote_pause = paused;
         }
         /* Callback may have stopped the session. */
         if (!Netplay_active()) return;
@@ -426,9 +466,13 @@ void Netplay_poll(void) {
                 (unsigned long long)np.ack_bins[0], (unsigned long long)np.ack_bins[1],
                 (unsigned long long)np.ack_bins[2], (unsigned long long)np.ack_bins[3],
                 (unsigned long long)np.ack_bins[4], (unsigned long long)np.ack_unmeasured,
-                (unsigned long long)(np.rfu_sent[5] >= np.rfu_received[7] ? np.rfu_sent[5] - np.rfu_received[7] : 0),
+                (unsigned long long)np.ack_outstanding,
                 (unsigned long long)np.outstanding_peak, (unsigned long long)np.poll_gap_us_max,
                 (unsigned long long)np.send_calls, (unsigned long long)np.wait_packets);
+            fprintf(stderr, "GBA Link pacing: wait_calls=%llu core_video_frames=%llu screen_video_frames=%llu video_max_us=%llu present_max_us=%llu ack_cancelled=%llu ack_paused=%llu\n",
+                (unsigned long long)np.wait_calls, (unsigned long long)np.core_video_frames,
+                (unsigned long long)np.screen_video_frames, (unsigned long long)np.video_us_max,
+                (unsigned long long)np.present_us_max, (unsigned long long)np.ack_cancelled, (unsigned long long)np.ack_paused);
 #if defined(__linux__)
             struct tcp_info info; socklen_t info_len = sizeof(info);
             memset(&info, 0, sizeof(info));
@@ -448,6 +492,7 @@ void Netplay_poll(void) {
 /* Service the socket during an existing frame pacing wait on the core thread.
  * Packet arrival wakes poll(), but never advances emulation or shortens pacing. */
 void Netplay_wait(unsigned microseconds) {
+    if (Netplay_active()) np.wait_calls++;
     uint64_t deadline = now_us() + microseconds;
     while (now_us() < deadline) {
         if (Netplay_busy()) {
@@ -469,4 +514,11 @@ void Netplay_wait(unsigned microseconds) {
             nanosleep(&delay, NULL);
         }
     }
+}
+
+void Netplay_videoTiming(uint64_t elapsed_us, uint64_t present_us, bool core_pacing) {
+    if (!Netplay_active() || Netplay_paused()) return;
+    if (core_pacing) np.core_video_frames++; else np.screen_video_frames++;
+    if (elapsed_us > np.video_us_max) np.video_us_max = elapsed_us;
+    if (present_us > np.present_us_max) np.present_us_max = present_us;
 }

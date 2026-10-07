@@ -62,7 +62,7 @@ for name in ('test-results.json','regression.log','arm-host.log','arm-join.log',
              'rfu-flower-adapter.log', 'rfu-flower-arm-probe.log',
              'ime-before-mac.json', 'ime-after-mac.json', 'ime-before-arm.json', 'ime-after-arm.json',
              'rfu-ime-validation.json', 'rfu-ime-regression.log', 'rfu-ime-adapter.log', 'rfu-ime-arm-probe.log',
-             'rfu-latency-validation.json', 'rfu-latency-regression.log', 'rfu-latency-transport.log'):
+             'rfu-latency-validation.json', 'rfu-latency-regression.log', 'rfu-latency-transport.log', 'rfu-auto-validation.json', 'rfu-auto-regression.log', 'rfu-auto-transport.log'):
     path=OUT/name
     if path.is_file():shutil.copy2(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'

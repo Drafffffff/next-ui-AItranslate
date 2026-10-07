@@ -136,7 +136,7 @@ with open(path,'w') as output:
         if child.poll() is None: child.terminate();child.wait(timeout=5)
 log=path.read_text()
 record('oversized frame rejected before core receive', 'Invalid link frame' in log and 'received=0' in log,[log])
-def malformed_rfu(name, payload):
+def malformed_rfu(name, payload, frame_type=1, expected="Invalid gpSP RFU payload"):
     port=free_port();path=OUT/(name+'-host.log')
     with open(path,'w') as output:
         child=subprocess.Popen([str(RUNNER),str(CORE),str(ROM),'host','127.0.0.1',str(port),'rfu','2400'],stdout=output,stderr=subprocess.STDOUT)
@@ -145,14 +145,31 @@ def malformed_rfu(name, payload):
             with socket.create_connection(('127.0.0.1',port),timeout=3) as peer:
                 hello=b''
                 while len(hello)<160:hello+=peer.recv(160-len(hello))
-                peer.sendall(hello[:-1]+b'\x00'+struct.pack('!II',1,len(payload))+payload)
+                peer.sendall(hello[:-1]+b'\x00'+struct.pack('!II',frame_type,len(payload))+payload)
                 child.wait(timeout=5)
         finally:
             if child.poll() is None:child.terminate();child.wait(timeout=5)
     log=path.read_text()
-    record(name,'Invalid gpSP RFU payload' in log and 'received=0' in log,[log])
+    record(name,expected in log and 'received=0' in log,[log])
 
 malformed_rfu('truncated RFU broadcast blocked',b'RFU1'+struct.pack('!II',0,1))
 malformed_rfu('RFU client buffer overflow blocked',b'RFU1'+struct.pack('!II',6,17<<24)+bytes(17))
 malformed_rfu('RFU invalid assigned slot blocked',b'RFU1'+struct.pack('!II',2,4<<16)+bytes(4))
+malformed_rfu('truncated exchange envelope blocked', bytes(12), 4, 'Invalid link frame')
+malformed_rfu('zero exchange identity blocked', bytes(8)+b'RFU1'+struct.pack('!II',5,0), 4, 'Invalid RFU exchange envelope')
+malformed_rfu('confirmation envelope subtype checked', struct.pack('!Q',1)+b'RFU1'+struct.pack('!II',5,0), 5, 'Invalid RFU exchange envelope')
+port=free_port();path=OUT/'wire-version-mismatch.log'
+with open(path,'w') as output:
+ child=subprocess.Popen([str(RUNNER),str(CORE),str(ROM),'host','127.0.0.1',str(port),'rfu','2400'],stdout=output,stderr=subprocess.STDOUT)
+ try:
+  wait_text(path,'state=1')
+  with socket.create_connection(('127.0.0.1',port),timeout=3) as peer:
+   hello=b''
+   while len(hello)<160:hello+=peer.recv(160-len(hello))
+   previous=bytearray(hello);previous[11]=2;previous[159]=0;peer.sendall(previous)
+   child.wait(timeout=5)
+ finally:
+  if child.poll() is None:child.terminate();child.wait(timeout=5)
+log=path.read_text()
+record('previous frontend protocol rejected before emulation','NextUI link protocol mismatch' in log and 'frames=0' in log,[log])
 print('All completed checks passed; commercial gameplay, true packet loss and real WAN need separate evidence.')
