@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "status": "physical_frontend_bridge_verified_menu_gameplay_pending",
-  "production_integration": false,
+  "status": "installed_both_bricks_runtime_ui_and_gameplay_pending",
+  "production_integration": true,
   "source_review": {
     "existing_prototype": "gba-netplay/workspace/all/minarch/ma_netplay_ble*.c (untracked)",
     "reuse": [
@@ -173,7 +173,7 @@
     "hardware_ap_support_verified": false
   },
   "frontend_integration": {
-    "source_status": "implemented_not_installed",
+    "source_status": "installed_both_bricks",
     "menu": [
       "Mode",
       "Create Room",
@@ -193,14 +193,18 @@
       "Current ARM Go suite: 28 passes, 1 intentional Mac-core integration skip",
       "Corrected private FD lifecycle fixture passed on Brick",
       "Current helper physical duplex: both directions 300x104 bytes, integrity and final empty queues passed",
-      "Six physical frontend/core cases passed: automatic room selection, both roles, repeat, ROM/core/mode mismatch; failed second discovery fixed without restarting discovery"
+      "Six physical frontend/core cases passed: automatic room selection, both roles, repeat, ROM/core/mode mismatch; failed second discovery fixed without restarting discovery",
+      "Three actual host-wait cancellation cycles over radio: zero emulated frames, helper processes gone; teardown 130/74/75ms",
+      "Both installed payloads independently rechecked against exact release hashes; .91 game process retained old image inode and PID"
     ],
     "pending": [
-      "Generate final revision-labelled build and installation package",
-      "On-device menu acceptance and user-controlled Mario Tennis gameplay",
-      "Production host/scan cancellation over real radio and helper teardown verification"
+      "User normally reopens game to load installed frontend",
+      "On-device menu, cancel and join acceptance",
+      "User-controlled Mario Tennis menu, character selection and match performance",
+      "Hotspot follow-up after Bluetooth acceptance"
     ],
-    "build_note": "Rebuild committed selected-room fix and package before installation.",
-    "obsolete_package": "34999bb6: do not deploy; superseded after reproducing and fixing second-discovery stall"
+    "build_note": "Pinned package compiled, checksummed, installation/rollback tested and atomically installed on both consoles. Running old .91 frontend needs user-controlled normal reopen.",
+    "obsolete_package": "34999bb6: do not deploy; superseded after reproducing and fixing second-discovery stall",
+    "installed_revision": "da609b38f485adf91d667d1b377d4e99900d0010"
   }
 }
