@@ -24,6 +24,7 @@ static int helper(void) {
     int marker=atoi(getenv("BT_TEST_MARKER"));
     if (fcntl(marker,F_GETFD)!=-1 || errno!=EBADF) return 90;
     const char *mode=getenv("BT_TEST_CASE");
+    if (!strcmp(mode,"exit")) return 1;
     if (!strcmp(mode,"hang")) {signal(SIGTERM,SIG_IGN);send(4,"Whanging",8,0);while(1)tick();}
     if (!strcmp(mode,"bad")) {unsigned char invalid[]={ 'R', 9 };send(4,invalid,sizeof(invalid),0);}
     else if (!strcmp(mode,"scan")) {
@@ -69,7 +70,7 @@ int main(int argc,char **argv) {
     while(offset<5&&milliseconds()<deadline) {ssize_t n=read(e.fd,data+offset,5-offset);if(n>0)offset+=(size_t)n;else tick();}
     assert(offset==5&&!memcmp(data,"READY",5));stop();close(e.fd);
     /* Normal exit detection surfaces an error; it never hangs the UI. */
-    setenv("NEXTUI_BT_HELPER","/usr/bin/false",1);assert(Netplay_btScan());event('E');assert(Netplay_btScanFailed());stop();
+    setenv("BT_TEST_CASE","exit",1);assert(Netplay_btScan());event('E');assert(Netplay_btScanFailed());stop();
     deadline=milliseconds()+3500;
     while(milliseconds()<deadline){Netplay_btReap();tick();}
     errno=0;assert(waitpid(-1,NULL,WNOHANG)==-1&&errno==ECHILD);

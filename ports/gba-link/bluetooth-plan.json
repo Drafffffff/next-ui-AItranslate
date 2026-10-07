@@ -189,12 +189,15 @@
       "Full tg5040 frontend and pinned gpSP compilation",
       "Existing TCP regression: 18 cases passed",
       "Private helper lifecycle: FD isolation, malformed room control, nonblocking cancel, stale worker retry, child exit and cleanup passed on Mac",
-      "Eight installation regressions passed, including first helper installation/removal on rollback and legacy journal recovery"
+      "Eight installation regressions passed, including first helper installation/removal on rollback and legacy journal recovery",
+      "Current ARM Go suite: 28 passes, 1 intentional Mac-core integration skip",
+      "Corrected private FD lifecycle fixture passed on Brick",
+      "Current helper physical duplex: both directions 300x104 bytes, integrity and final empty queues passed"
     ],
     "pending": [
       "Generate final revision-labelled build and installation package",
-      "Fresh ARM-native worker tests and actual-radio frontend integration",
-      "On-device menu acceptance and user-controlled Mario Tennis gameplay"
+      "On-device menu acceptance and user-controlled Mario Tennis gameplay",
+      "Production inherited-FD frontend bridge over physical radio, both roles and cancel/retry"
     ],
     "build_note": "Preliminary build passed; rebuild committed revision including the packaged helper before installation."
   }

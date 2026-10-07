@@ -51,7 +51,9 @@ for candidate in ('COPYING','LICENSE','LICENSE.txt'):
     if (gpsp/candidate).is_file():shutil.copy2(gpsp/candidate,licenses/('gpSP-'+candidate))
 # The shipped helper statically links Go and its pinned BSD dependencies.
 goroot=Path(subprocess.check_output(['go','env','GOROOT'],text=True).strip())
-shutil.copy2(goroot/'LICENSE',licenses/'Go-LICENSE')
+go_license=next((path for path in (goroot/'LICENSE',goroot.parent/'LICENSE') if path.is_file()),None)
+if go_license is None:raise SystemExit('Go runtime LICENSE is missing; refuse incomplete distribution')
+shutil.copy2(go_license,licenses/'Go-LICENSE')
 for module,label in [('github.com/godbus/dbus/v5','godbus'),('golang.org/x/sys','x-sys')]:
     info=json.loads(subprocess.check_output(['go','list','-m','-json',module],cwd=ROOT/'ports/gba-link/bluetooth',text=True))
     shutil.copy2(Path(info['Dir'])/'LICENSE',licenses/(label+'-LICENSE'))
@@ -74,7 +76,7 @@ for name in ('test-results.json','regression.log','arm-host.log','arm-join.log',
     if path.is_file():shutil.copy2(path,records/name)
 for name in ('bluetooth-plan.json','bluetooth-validation.json'):
     shutil.copy2(ROOT/'ports/gba-link'/name,records/name)
-for name in ('core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log'):
+for name in ('core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log','native-tests-current.elf.log','native-worker-lifecycle-results.json','worker-lifecycle-arm.elf.log','worker-lifecycle-arm-v1-failed.log'):
     path=OUT/'bluetooth'/name
     if path.is_file():shutil.copy2(path,records/name)
 (package/'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+str(p.relative_to(package))+'\n'

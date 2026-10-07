@@ -1719,5 +1719,82 @@
     }
   ],
   "load_context": "Both games kept open to prevent sleep; no production GBA Link TCP socket at start; game PIDs captured. Probe does not control games.",
-  "power_save_after_probe": "Read back on both devices: on"
+  "power_save_after_probe": "Read back on both devices: on",
+  "frontend_worker_stage": {
+    "revision": "85aa442",
+    "production_installed": false,
+    "gameplay_verified": false,
+    "native_go": {
+      "passed_tests": 28,
+      "skipped_tests": 1,
+      "skip_reason": "Mac real-core integration intentionally not run on ARM; four cases separately passed on Mac",
+      "binary_sha256": "b9ac7f2c7286a4efe155cb2bbc41d7cb54c7bc5585999753959b233e593053f5"
+    },
+    "native_lifecycle": {
+      "passed": true,
+      "exit_code": 0,
+      "sha256": "c8f3f41156294a0ad2eba96886ca8c9e74e91bb83904cd6f478fcb00376b2383",
+      "scope": "native ARM worker lifecycle, no radio",
+      "previous_failure": "Fixture assumed /usr/bin/false exists; replaced with self-exec exit fixture; failure log retained"
+    },
+    "physical_duplex": {
+      "transport": "BLE raw-att",
+      "duplex": true,
+      "server_fd": true,
+      "return_codes": [
+        0,
+        0
+      ],
+      "passed": true,
+      "metrics": {
+        "handle": 0,
+        "actual_us": 7500,
+        "mtu": 517,
+        "payload": 512,
+        "tx": 239,
+        "rx": 242,
+        "messages": 300,
+        "bytes_each_direction": 31200,
+        "elapsed_ms": 3683,
+        "window": 4,
+        "max_queued_bytes": 512,
+        "final_queued_bytes": 0,
+        "p50": 31036,
+        "p95": 49375,
+        "p99": 138230,
+        "max": 147416
+      },
+      "host_metrics": {
+        "interval_ms": 100,
+        "mtu": 517,
+        "messages": 300,
+        "bytes_each_direction": 31200,
+        "elapsed_ms": 3602,
+        "window": 4,
+        "max_queued_bytes": 512,
+        "final_queued_bytes": 0,
+        "p50": 21460,
+        "p95": 39749,
+        "p99": 45366,
+        "max": 49720
+      },
+      "sample_kind": "peer arrival since independent local batch submission; not echo RTT",
+      "host_log": "LEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nDUPLEX_PASS messages=300 bytes_each_direction=31200 elapsed_ms=3602 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=21460 p95=39749 p99=45366 max=49720\nDUPLEX_OWNED_PEER_DISCONNECTED\nDUPLEX_WORKER_ERROR host=true error=duplex receive: EOF\nHOST_SUMMARY messages=0 mtu=517\n",
+      "join_log": "FOUND_FRESH address=22:22:1C:11:93:21 path=/org/bluez/hci0/dev_22_22_1C_11_93_21\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=239 rx=242\nDUPLEX_PASS messages=300 bytes_each_direction=31200 elapsed_ms=3683 window=4 max_queued_bytes=512 final_queued_bytes=0 p50=31036 p95=49375 p99=138230 max=147416\n",
+      "game_pids": [
+        "",
+        ""
+      ],
+      "completed_at": 1791384680,
+      "probe_sha256": "3ff32006650c9c2bdac4af6c7a10dd5480f48e5eb92165399bfb01dc5a2c9ce0"
+    },
+    "scope": "Physical duplex validates newly shipped helper binary diagnostic path; production inherited-FD bridge over radio remains unverified",
+    "mac_real_core_cases": 4,
+    "tcp_regression_cases": 18,
+    "install_regression_cases": 8,
+    "retained_failures": [
+      "worker-lifecycle-arm-v1-failed.log: test fixture assumed /usr/bin/false on Tina; repaired self-exec fixture passed",
+      "package-current-v1-failed.log: Homebrew stores runtime LICENSE above GOROOT; packaging now handles both layouts and fails if neither exists"
+    ]
+  }
 }
