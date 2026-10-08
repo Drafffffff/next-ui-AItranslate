@@ -1,0 +1,106 @@
+{
+  "revision": "45f8202adbdd87d0333f2f1a0ffd630d438a707b",
+  "ble_transport_version": 5,
+  "default_transport_version": 3,
+  "local_validation_passed": true,
+  "hardware_performance_verified": false,
+  "deployed": false,
+  "prior_v4_game_observation": {
+    "rfu_ack_samples": 783,
+    "rfu_ack_average_us": 29167,
+    "rfu_ack_maximum_us": 68796,
+    "late_ack": 657,
+    "host_no_reply": 55,
+    "rfu_dropped": 0,
+    "send_queue_accumulated": false,
+    "scope": "Retained game log counters; screen red indication and true radio drops are not the same statistic"
+  },
+  "constructed_rfu_wire_costs": [
+    {
+      "data_bytes": 0,
+      "v4_value": 39,
+      "v5_value": 19,
+      "acl_before": 2,
+      "acl_after": 1
+    },
+    {
+      "data_bytes": 4,
+      "v4_value": 47,
+      "v5_value": 23,
+      "acl_before": 2,
+      "acl_after": 2
+    },
+    {
+      "data_bytes": 8,
+      "v4_value": 51,
+      "v5_value": 27,
+      "acl_before": 3,
+      "acl_after": 2
+    },
+    {
+      "data_bytes": 12,
+      "v4_value": 55,
+      "v5_value": 31,
+      "acl_before": 3,
+      "acl_after": 2
+    },
+    {
+      "data_bytes": 16,
+      "v4_value": 59,
+      "v5_value": 35,
+      "acl_before": 3,
+      "acl_after": 2
+    },
+    {
+      "data_bytes": 22,
+      "v4_value": 65,
+      "v5_value": 41,
+      "acl_before": 3,
+      "acl_after": 2
+    },
+    {
+      "data_bytes": 24,
+      "v4_value": 67,
+      "v5_value": 43,
+      "acl_before": 3,
+      "acl_after": 2
+    },
+    {
+      "data_bytes": 40,
+      "v4_value": 83,
+      "v5_value": 59,
+      "acl_before": 4,
+      "acl_after": 3
+    },
+    {
+      "data_bytes": 92,
+      "v4_value": 135,
+      "v5_value": 111,
+      "acl_before": 6,
+      "acl_after": 5
+    }
+  ],
+  "checks": {
+    "full_race_suite_no_skips": true,
+    "real_mac_core_four_cases": true,
+    "bidirectional_rfu_stream_payload_20_512": true,
+    "exact_roundtrip_full_integer_ranges": true,
+    "malformed_and_10_second_fuzz": true,
+    "targeted_ten_repeats": true,
+    "v3_suite": true,
+    "v4_stream_control": true,
+    "actual_arm_version_5": true,
+    "actual_package_install_rollback": true,
+    "core_hash_unchanged": true
+  },
+  "test_log_sha256": {
+    "rfu-codec-candidate-tests.log": "c02bec48ad04355412ef6e39287a8f1adf8374e5262bb4a27a8e18a8bfeee015",
+    "rfu-codec-baseline-tests.log": "21e213c1efbb589851fea14886dd70d24c010593bccaf5cf9e97a9955ce246a5",
+    "rfu-codec-repeat-tests.log": "5e0db90601442f390a466fb89fe648b4749dd062e0f39b47151228f0c20832de",
+    "rfu-codec-fuzz.log": "17f7bf79c0b9f25fa24c60aa74d4a2e7a1dc6a17451da4228a511cdcb4f92c3b",
+    "rfu-codec-v4-control.log": "323934b91dc297f3b097ab30b5fb1981b553d8c6204c78857ab051a22a534b1b",
+    "rfu-codec-elf-variant-check.log": "a8073d80bb04cd2e5966115dfe5183676614b55d441e3e3b99809129368ba156",
+    "rfu-codec-package-install-rollback.log": "a6dbec33a94339dbcdeb964c232bf93a061100c9cc12e14dc56fe5e8eff2a332"
+  },
+  "limitations": "Packet segmentation arithmetic and in-memory BLE transport, not physical radio latency or commercial RFU gameplay acceptance. Second device SSH unavailable during local validation."
+}
