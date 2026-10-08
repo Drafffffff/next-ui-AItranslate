@@ -1,32 +1,33 @@
 {
-  "revision": "94e0c73612faeaf87307caeaeb276f3b44871730",
+  "revision": "a29e3e2480221352c85d01af58a55baae0d2d63d",
+  "ble_transport_version": 4,
   "both_installed_and_hash_verified": true,
   "runtime_ui_verified": false,
   "gameplay_verified": false,
   "package_install_rollback_verified": true,
-  "change": "Bluetooth / Wi-Fi / Hotspot top tabs; fixed auto-entered WPA2 password; dedicated AP with autonomous cleanup; LAN host waits displaying local IP, refresh via local getifaddrs once per second. gpSP binary unchanged.",
+  "change": "User requested installation of opt-in BLE v4 compact candidate. Both devices backed up from 94e0c736, atomic payload replacement and exact installed hashes verified. gpSP hash unchanged.",
   "records": [
     {
       "peer": "nextui-brick",
       "label": "70",
-      "revision": "94e0c73612faeaf87307caeaeb276f3b44871730",
+      "revision": "a29e3e2480221352c85d01af58a55baae0d2d63d",
       "installed": true,
       "user_authorized_keep_game_running": true,
       "helper_pid_before": "",
       "game_pid_before": "",
-      "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005622-94e0c736",
-      "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005622-94e0c736",
+      "backup": "/mnt/SDCARD/.gba-link-backups/20261008-093601-a29e3e24",
+      "stage": "/mnt/SDCARD/.gba-link-staging/20261008-093601-a29e3e24",
       "old": {
-        ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
+        ".system/tg5040/bin/minarch.elf": "aceb6cd6b2f40d2a73292733184d1c419ae25063a9473857a01204c3263a5b0c",
         ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
         ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
       },
       "helper_pid_after": "",
       "running_helper_image": {},
       "files": {
-        ".system/tg5040/bin/minarch.elf": "aceb6cd6b2f40d2a73292733184d1c419ae25063a9473857a01204c3263a5b0c",
+        ".system/tg5040/bin/minarch.elf": "e05136c9cfbcfb81e867db1bdfc495d99452c51f49f5ce0accf331eea1854462",
         ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
+        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "9545040d6a10e14cddf5c29bf434e0599e99633dd60b17c355b992ba247039a0"
       },
       "game_pid_after": "",
       "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
@@ -34,117 +35,58 @@
     {
       "peer": "root@192.168.50.91",
       "label": "91",
-      "revision": "94e0c73612faeaf87307caeaeb276f3b44871730",
-      "installed": true,
-      "user_authorized_keep_game_running": true,
-      "helper_pid_before": "",
-      "game_pid_before": "9995",
-      "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005645-94e0c736",
-      "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005645-94e0c736",
-      "old": {
-        ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
-        ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
-      },
-      "helper_pid_after": "",
-      "running_helper_image": {},
-      "files": {
-        ".system/tg5040/bin/minarch.elf": "aceb6cd6b2f40d2a73292733184d1c419ae25063a9473857a01204c3263a5b0c",
-        ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
-      },
-      "game_pid_after": "9995",
-      "running_previous_image": {
-        "9995": "/mnt/SDCARD/.gba-link-staging/20261008-001412-4328c156/.system/tg5040/bin/minarch.elf (deleted)\nab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a  /proc/9995/exe\n"
-      },
-      "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
-    }
-  ],
-  "intermediate_hotspot_install": [
-    {
-      "peer": "nextui-brick",
-      "label": "70",
-      "revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
+      "revision": "a29e3e2480221352c85d01af58a55baae0d2d63d",
       "installed": true,
       "user_authorized_keep_game_running": true,
       "helper_pid_before": "",
       "game_pid_before": "",
-      "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005457-1fa13c10",
-      "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005457-1fa13c10",
+      "backup": "/mnt/SDCARD/.gba-link-backups/20261008-093630-a29e3e24",
+      "stage": "/mnt/SDCARD/.gba-link-staging/20261008-093630-a29e3e24",
       "old": {
-        ".system/tg5040/bin/minarch.elf": "18182fb84e8ff557ef79b1c2d97964f282146b4d63d3596fb627bca05d5fa105",
+        ".system/tg5040/bin/minarch.elf": "aceb6cd6b2f40d2a73292733184d1c419ae25063a9473857a01204c3263a5b0c",
         ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
+        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
       },
       "helper_pid_after": "",
       "running_helper_image": {},
       "files": {
-        ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
+        ".system/tg5040/bin/minarch.elf": "e05136c9cfbcfb81e867db1bdfc495d99452c51f49f5ce0accf331eea1854462",
         ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
+        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "9545040d6a10e14cddf5c29bf434e0599e99633dd60b17c355b992ba247039a0"
       },
       "game_pid_after": "",
-      "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
-    },
-    {
-      "peer": "root@192.168.50.91",
-      "label": "91",
-      "revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
-      "installed": true,
-      "user_authorized_keep_game_running": true,
-      "helper_pid_before": "",
-      "game_pid_before": "9995",
-      "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005526-1fa13c10",
-      "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005526-1fa13c10",
-      "old": {
-        ".system/tg5040/bin/minarch.elf": "18182fb84e8ff557ef79b1c2d97964f282146b4d63d3596fb627bca05d5fa105",
-        ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
-      },
-      "helper_pid_after": "",
-      "running_helper_image": {},
-      "files": {
-        ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
-        ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-        ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
-      },
-      "game_pid_after": "9995",
-      "running_previous_image": {
-        "9995": "/mnt/SDCARD/.gba-link-staging/20261008-001412-4328c156/.system/tg5040/bin/minarch.elf (deleted)\nab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a  /proc/9995/exe\n"
-      },
       "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
     }
   ],
   "previous_release": {
-    "revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
+    "revision": "94e0c73612faeaf87307caeaeb276f3b44871730",
     "both_installed_and_hash_verified": true,
     "runtime_ui_verified": false,
     "gameplay_verified": false,
     "package_install_rollback_verified": true,
-    "change": "Bounded receiver backpressure and measured transport queues; asynchronous identity-rejection drain preserves bilateral error messages, ordinary cancel unchanged. gpSP RFU and flower-fix binary unchanged.",
-    "user_authorization": "Offline games kept running, atomic rename preserves running executable inode. User requested further hotspot mode and three top tabs on 2026-10-08. No user game controls issued.",
+    "change": "Bluetooth / Wi-Fi / Hotspot top tabs; fixed auto-entered WPA2 password; dedicated AP with autonomous cleanup; LAN host waits displaying local IP, refresh via local getifaddrs once per second. gpSP binary unchanged.",
     "records": [
       {
         "peer": "nextui-brick",
         "label": "70",
-        "revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
+        "revision": "94e0c73612faeaf87307caeaeb276f3b44871730",
         "installed": true,
         "user_authorized_keep_game_running": true,
         "helper_pid_before": "",
         "game_pid_before": "",
-        "backup": "/mnt/SDCARD/.gba-link-backups/20261008-001343-4328c156",
-        "stage": "/mnt/SDCARD/.gba-link-staging/20261008-001343-4328c156",
+        "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005622-94e0c736",
+        "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005622-94e0c736",
         "old": {
-          ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
+          ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
           ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
+          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
         },
         "helper_pid_after": "",
         "running_helper_image": {},
         "files": {
-          ".system/tg5040/bin/minarch.elf": "18182fb84e8ff557ef79b1c2d97964f282146b4d63d3596fb627bca05d5fa105",
+          ".system/tg5040/bin/minarch.elf": "aceb6cd6b2f40d2a73292733184d1c419ae25063a9473857a01204c3263a5b0c",
           ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
+          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
         },
         "game_pid_after": "",
         "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
@@ -152,24 +94,79 @@
       {
         "peer": "root@192.168.50.91",
         "label": "91",
-        "revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
+        "revision": "94e0c73612faeaf87307caeaeb276f3b44871730",
         "installed": true,
         "user_authorized_keep_game_running": true,
         "helper_pid_before": "",
         "game_pid_before": "9995",
-        "backup": "/mnt/SDCARD/.gba-link-backups/20261008-001412-4328c156",
-        "stage": "/mnt/SDCARD/.gba-link-staging/20261008-001412-4328c156",
+        "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005645-94e0c736",
+        "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005645-94e0c736",
         "old": {
-          ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
+          ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
           ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
+          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
         },
         "helper_pid_after": "",
         "running_helper_image": {},
         "files": {
+          ".system/tg5040/bin/minarch.elf": "aceb6cd6b2f40d2a73292733184d1c419ae25063a9473857a01204c3263a5b0c",
+          ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
+        },
+        "game_pid_after": "9995",
+        "running_previous_image": {
+          "9995": "/mnt/SDCARD/.gba-link-staging/20261008-001412-4328c156/.system/tg5040/bin/minarch.elf (deleted)\nab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a  /proc/9995/exe\n"
+        },
+        "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
+      }
+    ],
+    "intermediate_hotspot_install": [
+      {
+        "peer": "nextui-brick",
+        "label": "70",
+        "revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
+        "installed": true,
+        "user_authorized_keep_game_running": true,
+        "helper_pid_before": "",
+        "game_pid_before": "",
+        "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005457-1fa13c10",
+        "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005457-1fa13c10",
+        "old": {
           ".system/tg5040/bin/minarch.elf": "18182fb84e8ff557ef79b1c2d97964f282146b4d63d3596fb627bca05d5fa105",
           ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
           ".system/tg5040/bin/nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
+        },
+        "helper_pid_after": "",
+        "running_helper_image": {},
+        "files": {
+          ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
+          ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
+        },
+        "game_pid_after": "",
+        "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
+      },
+      {
+        "peer": "root@192.168.50.91",
+        "label": "91",
+        "revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
+        "installed": true,
+        "user_authorized_keep_game_running": true,
+        "helper_pid_before": "",
+        "game_pid_before": "9995",
+        "backup": "/mnt/SDCARD/.gba-link-backups/20261008-005526-1fa13c10",
+        "stage": "/mnt/SDCARD/.gba-link-staging/20261008-005526-1fa13c10",
+        "old": {
+          ".system/tg5040/bin/minarch.elf": "18182fb84e8ff557ef79b1c2d97964f282146b4d63d3596fb627bca05d5fa105",
+          ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
+        },
+        "helper_pid_after": "",
+        "running_helper_image": {},
+        "files": {
+          ".system/tg5040/bin/minarch.elf": "403ba3d5e40531627de14dd8ae9957cb8a5fcd62a296d8149a0e07ed723ef10b",
+          ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+          ".system/tg5040/bin/nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
         },
         "game_pid_after": "9995",
         "running_previous_image": {
@@ -179,162 +176,228 @@
       }
     ],
     "previous_release": {
-      "revision": "fbf7fc3e5935221983ba0b7cb7dec96d87ff6c4b",
+      "revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
       "both_installed_and_hash_verified": true,
       "runtime_ui_verified": false,
       "gameplay_verified": false,
-      "previous_release_user_report": "Both consoles connected successfully over Bluetooth; frequent game red indicator. Host avg ACK 36ms, RFU host_no_reply frequent; measured transport queue drops 0.",
       "package_install_rollback_verified": true,
-      "change": "Lossless trailing-zero chunk encoding, bilateral transport version 3; only Bluetooth helper binary replaced by rename. Frontend and core payload hashes retained from da609b38.",
-      "user_authorization": "User explicitly allowed keeping the offline game open to prevent sleep during deployment. Replaced files by rename; the running .91 process kept its original executable inode and PID. New UI loads only on normal game reopen.",
+      "change": "Bounded receiver backpressure and measured transport queues; asynchronous identity-rejection drain preserves bilateral error messages, ordinary cancel unchanged. gpSP RFU and flower-fix binary unchanged.",
+      "user_authorization": "Offline games kept running, atomic rename preserves running executable inode. User requested further hotspot mode and three top tabs on 2026-10-08. No user game controls issued.",
       "records": [
         {
           "peer": "nextui-brick",
           "label": "70",
-          "revision": "fbf7fc3e5935221983ba0b7cb7dec96d87ff6c4b",
-          "installed": true,
-          "user_authorized_keep_game_running": true,
-          "helper_pid_before": "3301",
-          "game_pid_before": "2770",
-          "backup": "/mnt/SDCARD/.gba-link-backups/20261007-232411-fbf7fc3e",
-          "stage": "/mnt/SDCARD/.gba-link-staging/20261007-232411-fbf7fc3e",
-          "old": {
-            ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
-            ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-            ".system/tg5040/bin/nextui-gba-bluetooth.elf": "d5adc65a915cbcc7c88beb995b6d5b788ed26c82a500e877921baf8ef94a5bbd"
-          },
-          "helper_pid_after": "",
-          "running_helper_image": {},
-          "files": {
-            ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
-            ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-            ".system/tg5040/bin/nextui-gba-bluetooth.elf": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
-          },
-          "game_pid_after": "",
-          "post_install_observation": "The original game/helper exited during deployment; disk hashes and APPLIED journal were independently rechecked. No game controls or termination were issued by deployment.",
-          "historical_postcheck_error": "nextui-brick: sha256sum: can't open '/proc/2770/exe': No such file or directory\n"
-        },
-        {
-          "peer": "root@192.168.50.91",
-          "label": "91",
-          "revision": "fbf7fc3e5935221983ba0b7cb7dec96d87ff6c4b",
+          "revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
           "installed": true,
           "user_authorized_keep_game_running": true,
           "helper_pid_before": "",
           "game_pid_before": "",
-          "backup": "/mnt/SDCARD/.gba-link-backups/20261007-232458-fbf7fc3e",
-          "stage": "/mnt/SDCARD/.gba-link-staging/20261007-232458-fbf7fc3e",
+          "backup": "/mnt/SDCARD/.gba-link-backups/20261008-001343-4328c156",
+          "stage": "/mnt/SDCARD/.gba-link-staging/20261008-001343-4328c156",
           "old": {
-            ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
-            ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-            ".system/tg5040/bin/nextui-gba-bluetooth.elf": "d5adc65a915cbcc7c88beb995b6d5b788ed26c82a500e877921baf8ef94a5bbd"
-          },
-          "helper_pid_after": "",
-          "running_helper_image": {},
-          "files": {
             ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
             ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
             ".system/tg5040/bin/nextui-gba-bluetooth.elf": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
           },
+          "helper_pid_after": "",
+          "running_helper_image": {},
+          "files": {
+            ".system/tg5040/bin/minarch.elf": "18182fb84e8ff557ef79b1c2d97964f282146b4d63d3596fb627bca05d5fa105",
+            ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            ".system/tg5040/bin/nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
+          },
           "game_pid_after": "",
+          "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
+        },
+        {
+          "peer": "root@192.168.50.91",
+          "label": "91",
+          "revision": "4328c1561761bc48c6a0a4ca2ad6c5762b176667",
+          "installed": true,
+          "user_authorized_keep_game_running": true,
+          "helper_pid_before": "",
+          "game_pid_before": "9995",
+          "backup": "/mnt/SDCARD/.gba-link-backups/20261008-001412-4328c156",
+          "stage": "/mnt/SDCARD/.gba-link-staging/20261008-001412-4328c156",
+          "old": {
+            ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
+            ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            ".system/tg5040/bin/nextui-gba-bluetooth.elf": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
+          },
+          "helper_pid_after": "",
+          "running_helper_image": {},
+          "files": {
+            ".system/tg5040/bin/minarch.elf": "18182fb84e8ff557ef79b1c2d97964f282146b4d63d3596fb627bca05d5fa105",
+            ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+            ".system/tg5040/bin/nextui-gba-bluetooth.elf": "739680bc65d7d0888e041dd0446dd77613bde0d0e05a954b9c0e97fbfd8156d9"
+          },
+          "game_pid_after": "9995",
+          "running_previous_image": {
+            "9995": "/mnt/SDCARD/.gba-link-staging/20261008-001412-4328c156/.system/tg5040/bin/minarch.elf (deleted)\nab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a  /proc/9995/exe\n"
+          },
           "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
         }
       ],
       "previous_release": {
-        "revision": "da609b38f485adf91d667d1b377d4e99900d0010",
+        "revision": "fbf7fc3e5935221983ba0b7cb7dec96d87ff6c4b",
         "both_installed_and_hash_verified": true,
         "runtime_ui_verified": false,
         "gameplay_verified": false,
-        "user_authorization": "User explicitly allowed keeping the offline game open to prevent sleep during deployment. Replaced files by rename; the running .91 process kept its original executable inode and PID. New UI loads only on normal game reopen.",
+        "previous_release_user_report": "Both consoles connected successfully over Bluetooth; frequent game red indicator. Host avg ACK 36ms, RFU host_no_reply frequent; measured transport queue drops 0.",
         "package_install_rollback_verified": true,
+        "change": "Lossless trailing-zero chunk encoding, bilateral transport version 3; only Bluetooth helper binary replaced by rename. Frontend and core payload hashes retained from da609b38.",
+        "user_authorization": "User explicitly allowed keeping the offline game open to prevent sleep during deployment. Replaced files by rename; the running .91 process kept its original executable inode and PID. New UI loads only on normal game reopen.",
         "records": [
           {
             "peer": "nextui-brick",
             "label": "70",
-            "revision": "da609b38f485adf91d667d1b377d4e99900d0010",
+            "revision": "fbf7fc3e5935221983ba0b7cb7dec96d87ff6c4b",
             "installed": true,
             "user_authorized_keep_game_running": true,
-            "game_pid_before": "",
-            "backup": "/mnt/SDCARD/.gba-link-backups/20261007-230908-da609b38",
-            "stage": "/mnt/SDCARD/.gba-link-staging/20261007-230908-da609b38",
+            "helper_pid_before": "3301",
+            "game_pid_before": "2770",
+            "backup": "/mnt/SDCARD/.gba-link-backups/20261007-232411-fbf7fc3e",
+            "stage": "/mnt/SDCARD/.gba-link-staging/20261007-232411-fbf7fc3e",
             "old": {
-              ".system/tg5040/bin/minarch.elf": "5a6c373c106bf253f5159b34ccf2dc9b49d518c6930f9a5e662f888db80dd32a",
-              ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-              ".system/tg5040/bin/nextui-gba-bluetooth.elf": null
-            },
-            "files": {
               ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
               ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
               ".system/tg5040/bin/nextui-gba-bluetooth.elf": "d5adc65a915cbcc7c88beb995b6d5b788ed26c82a500e877921baf8ef94a5bbd"
             },
+            "helper_pid_after": "",
+            "running_helper_image": {},
+            "files": {
+              ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
+              ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+              ".system/tg5040/bin/nextui-gba-bluetooth.elf": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
+            },
             "game_pid_after": "",
-            "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin",
-            "post_install_recheck": true
+            "post_install_observation": "The original game/helper exited during deployment; disk hashes and APPLIED journal were independently rechecked. No game controls or termination were issued by deployment.",
+            "historical_postcheck_error": "nextui-brick: sha256sum: can't open '/proc/2770/exe': No such file or directory\n"
           },
           {
             "peer": "root@192.168.50.91",
             "label": "91",
-            "revision": "da609b38f485adf91d667d1b377d4e99900d0010",
+            "revision": "fbf7fc3e5935221983ba0b7cb7dec96d87ff6c4b",
             "installed": true,
             "user_authorized_keep_game_running": true,
-            "game_pid_before": "28412",
-            "backup": "/mnt/SDCARD/.gba-link-backups/20261007-230932-da609b38",
-            "stage": "/mnt/SDCARD/.gba-link-staging/20261007-230932-da609b38",
+            "helper_pid_before": "",
+            "game_pid_before": "",
+            "backup": "/mnt/SDCARD/.gba-link-backups/20261007-232458-fbf7fc3e",
+            "stage": "/mnt/SDCARD/.gba-link-staging/20261007-232458-fbf7fc3e",
             "old": {
-              ".system/tg5040/bin/minarch.elf": "5a6c373c106bf253f5159b34ccf2dc9b49d518c6930f9a5e662f888db80dd32a",
-              ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
-              ".system/tg5040/bin/nextui-gba-bluetooth.elf": null
-            },
-            "files": {
               ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
               ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
               ".system/tg5040/bin/nextui-gba-bluetooth.elf": "d5adc65a915cbcc7c88beb995b6d5b788ed26c82a500e877921baf8ef94a5bbd"
             },
-            "game_pid_after": "28412",
-            "running_previous_image": {
-              "28412": "/mnt/SDCARD/.gba-link-staging/20261007-230932-da609b38/.system/tg5040/bin/minarch.elf (deleted)\n5a6c373c106bf253f5159b34ccf2dc9b49d518c6930f9a5e662f888db80dd32a  /proc/28412/exe\n"
+            "helper_pid_after": "",
+            "running_helper_image": {},
+            "files": {
+              ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
+              ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+              ".system/tg5040/bin/nextui-gba-bluetooth.elf": "cb84cb2ba33e2c1824893c3c36a17fd066b407984ce3731085c3544485a0863e"
             },
-            "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin",
-            "post_install_recheck": true
+            "game_pid_after": "",
+            "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin"
           }
         ],
-        "production_host_cancel": {
-          "scope": "Real production Netplay_stop after advertised host wait; no game core started; UI B button not directly exercised",
-          "passed": true,
-          "cases": [
+        "previous_release": {
+          "revision": "da609b38f485adf91d667d1b377d4e99900d0010",
+          "both_installed_and_hash_verified": true,
+          "runtime_ui_verified": false,
+          "gameplay_verified": false,
+          "user_authorization": "User explicitly allowed keeping the offline game open to prevent sleep during deployment. Replaced files by rename; the running .91 process kept its original executable inode and PID. New UI loads only on normal game reopen.",
+          "package_install_rollback_verified": true,
+          "records": [
             {
-              "iteration": 0,
-              "passed": true,
-              "runner_code": 1,
-              "graceful_teardown_ms": 130,
-              "remaining_owned_pids": "",
-              "adapter_after": "Controller 22:22:1C:11:93:21 (public)\n\tManufacturer: 0x063d (1597)\n\tVersion: 0x07 (7)\n\tName: BlueZ 5.78\n\tAlias: Trimui Brick (NextUI)\n\tClass: 0x00080000 (524288)\n\tPowered: yes\n\tPowerState: on\n\tDiscoverable: no\n\tDiscoverableTimeout: 0x000000b4 (180)\n\tPairable: no\n\tUUID: Audio Source              (0000110a-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Attribute Profile (00001801-0000-1000-8000-00805f9b34fb)\n\tUUID: Device Information        (0000180a-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control        (0000110e-0000-1000-8000-00805f9b34fb)\n\tUUID: PnP Information           (00001200-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Access Profile    (00001800-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control Target (0000110c-0000-1000-8000-00805f9b34fb)\n\tModalias: usb:v1D6Bp0246d054E\n\tDiscovering: no\n\tRoles: central\n\tRoles: peripheral\nAdvertising Features:\n\tActiveInstances: 0x00 (0)\n\tSupportedInstances: 0x05 (5)\n\tSupportedIncludes: tx-power\n\tSupportedIncludes: appearance\n\tSupportedIncludes: local-name\n\tSupportedCapabilities.MaxAdvLen: 0x1f (31)\n\tSupportedCapabilities.MaxScnRspLen: 0x1f (31)\n",
-              "log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=GBA Link 9321\nWaiting for another Brick...\nDUEL local_hp=0 peer_hp=0\nHOST_SUMMARY messages=0 mtu=0\n"
+              "peer": "nextui-brick",
+              "label": "70",
+              "revision": "da609b38f485adf91d667d1b377d4e99900d0010",
+              "installed": true,
+              "user_authorized_keep_game_running": true,
+              "game_pid_before": "",
+              "backup": "/mnt/SDCARD/.gba-link-backups/20261007-230908-da609b38",
+              "stage": "/mnt/SDCARD/.gba-link-staging/20261007-230908-da609b38",
+              "old": {
+                ".system/tg5040/bin/minarch.elf": "5a6c373c106bf253f5159b34ccf2dc9b49d518c6930f9a5e662f888db80dd32a",
+                ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+                ".system/tg5040/bin/nextui-gba-bluetooth.elf": null
+              },
+              "files": {
+                ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
+                ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+                ".system/tg5040/bin/nextui-gba-bluetooth.elf": "d5adc65a915cbcc7c88beb995b6d5b788ed26c82a500e877921baf8ef94a5bbd"
+              },
+              "game_pid_after": "",
+              "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin",
+              "post_install_recheck": true
             },
             {
-              "iteration": 1,
-              "passed": true,
-              "runner_code": 1,
-              "graceful_teardown_ms": 74,
-              "remaining_owned_pids": "",
-              "adapter_after": "Controller 22:22:1C:11:93:21 (public)\n\tManufacturer: 0x063d (1597)\n\tVersion: 0x07 (7)\n\tName: BlueZ 5.78\n\tAlias: Trimui Brick (NextUI)\n\tClass: 0x00080000 (524288)\n\tPowered: yes\n\tPowerState: on\n\tDiscoverable: no\n\tDiscoverableTimeout: 0x000000b4 (180)\n\tPairable: no\n\tUUID: Audio Source              (0000110a-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Attribute Profile (00001801-0000-1000-8000-00805f9b34fb)\n\tUUID: Device Information        (0000180a-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control        (0000110e-0000-1000-8000-00805f9b34fb)\n\tUUID: PnP Information           (00001200-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Access Profile    (00001800-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control Target (0000110c-0000-1000-8000-00805f9b34fb)\n\tModalias: usb:v1D6Bp0246d054E\n\tDiscovering: no\n\tRoles: central\n\tRoles: peripheral\nAdvertising Features:\n\tActiveInstances: 0x00 (0)\n\tSupportedInstances: 0x05 (5)\n\tSupportedIncludes: tx-power\n\tSupportedIncludes: appearance\n\tSupportedIncludes: local-name\n\tSupportedCapabilities.MaxAdvLen: 0x1f (31)\n\tSupportedCapabilities.MaxScnRspLen: 0x1f (31)\n",
-              "log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=GBA Link 9321\nWaiting for another Brick...\nDUEL local_hp=0 peer_hp=0\nHOST_SUMMARY messages=0 mtu=0\n"
-            },
-            {
-              "iteration": 2,
-              "passed": true,
-              "runner_code": 1,
-              "graceful_teardown_ms": 75,
-              "remaining_owned_pids": "",
-              "adapter_after": "Controller 22:22:1C:11:93:21 (public)\n\tManufacturer: 0x063d (1597)\n\tVersion: 0x07 (7)\n\tName: BlueZ 5.78\n\tAlias: Trimui Brick (NextUI)\n\tClass: 0x00080000 (524288)\n\tPowered: yes\n\tPowerState: on\n\tDiscoverable: no\n\tDiscoverableTimeout: 0x000000b4 (180)\n\tPairable: no\n\tUUID: Audio Source              (0000110a-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Attribute Profile (00001801-0000-1000-8000-00805f9b34fb)\n\tUUID: Device Information        (0000180a-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control        (0000110e-0000-1000-8000-00805f9b34fb)\n\tUUID: PnP Information           (00001200-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Access Profile    (00001800-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control Target (0000110c-0000-1000-8000-00805f9b34fb)\n\tModalias: usb:v1D6Bp0246d054E\n\tDiscovering: no\n\tRoles: central\n\tRoles: peripheral\nAdvertising Features:\n\tActiveInstances: 0x00 (0)\n\tSupportedInstances: 0x05 (5)\n\tSupportedIncludes: tx-power\n\tSupportedIncludes: appearance\n\tSupportedIncludes: local-name\n\tSupportedCapabilities.MaxAdvLen: 0x1f (31)\n\tSupportedCapabilities.MaxScnRspLen: 0x1f (31)\n",
-              "log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=GBA Link 9321\nWaiting for another Brick...\nDUEL local_hp=0 peer_hp=0\nHOST_SUMMARY messages=0 mtu=0\n"
+              "peer": "root@192.168.50.91",
+              "label": "91",
+              "revision": "da609b38f485adf91d667d1b377d4e99900d0010",
+              "installed": true,
+              "user_authorized_keep_game_running": true,
+              "game_pid_before": "28412",
+              "backup": "/mnt/SDCARD/.gba-link-backups/20261007-230932-da609b38",
+              "stage": "/mnt/SDCARD/.gba-link-staging/20261007-230932-da609b38",
+              "old": {
+                ".system/tg5040/bin/minarch.elf": "5a6c373c106bf253f5159b34ccf2dc9b49d518c6930f9a5e662f888db80dd32a",
+                ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+                ".system/tg5040/bin/nextui-gba-bluetooth.elf": null
+              },
+              "files": {
+                ".system/tg5040/bin/minarch.elf": "ab0842e20d5e2cc1a2a6206c57c8213378f5cc1ab9736f129220cf7c7d15e11a",
+                ".system/tg5040/cores/gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+                ".system/tg5040/bin/nextui-gba-bluetooth.elf": "d5adc65a915cbcc7c88beb995b6d5b788ed26c82a500e877921baf8ef94a5bbd"
+              },
+              "game_pid_after": "28412",
+              "running_previous_image": {
+                "28412": "/mnt/SDCARD/.gba-link-staging/20261007-230932-da609b38/.system/tg5040/bin/minarch.elf (deleted)\n5a6c373c106bf253f5159b34ccf2dc9b49d518c6930f9a5e662f888db80dd32a  /proc/28412/exe\n"
+              },
+              "helper_launch_check": "Usage of /mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf:\n  -bytes int\n    \tpayload bytes (default 104)\n  -control-fd int\n    \tinherited private frontend control FD (default -1)\n  -count int\n    \texchanges (default 100)\n  -data-fd int\n    \tinherited frontend stream FD for serve roles (default -1)\n  -delay duration\n    \tdelay after each reply\n  -duration duration\n    \ttotal timeout (default 2m0s)\n  -event-length uint\n    \tinformational event length hint in 625us units, 0..12\n  -peer strin",
+              "post_install_recheck": true
             }
-          ]
+          ],
+          "production_host_cancel": {
+            "scope": "Real production Netplay_stop after advertised host wait; no game core started; UI B button not directly exercised",
+            "passed": true,
+            "cases": [
+              {
+                "iteration": 0,
+                "passed": true,
+                "runner_code": 1,
+                "graceful_teardown_ms": 130,
+                "remaining_owned_pids": "",
+                "adapter_after": "Controller 22:22:1C:11:93:21 (public)\n\tManufacturer: 0x063d (1597)\n\tVersion: 0x07 (7)\n\tName: BlueZ 5.78\n\tAlias: Trimui Brick (NextUI)\n\tClass: 0x00080000 (524288)\n\tPowered: yes\n\tPowerState: on\n\tDiscoverable: no\n\tDiscoverableTimeout: 0x000000b4 (180)\n\tPairable: no\n\tUUID: Audio Source              (0000110a-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Attribute Profile (00001801-0000-1000-8000-00805f9b34fb)\n\tUUID: Device Information        (0000180a-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control        (0000110e-0000-1000-8000-00805f9b34fb)\n\tUUID: PnP Information           (00001200-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Access Profile    (00001800-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control Target (0000110c-0000-1000-8000-00805f9b34fb)\n\tModalias: usb:v1D6Bp0246d054E\n\tDiscovering: no\n\tRoles: central\n\tRoles: peripheral\nAdvertising Features:\n\tActiveInstances: 0x00 (0)\n\tSupportedInstances: 0x05 (5)\n\tSupportedIncludes: tx-power\n\tSupportedIncludes: appearance\n\tSupportedIncludes: local-name\n\tSupportedCapabilities.MaxAdvLen: 0x1f (31)\n\tSupportedCapabilities.MaxScnRspLen: 0x1f (31)\n",
+                "log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=GBA Link 9321\nWaiting for another Brick...\nDUEL local_hp=0 peer_hp=0\nHOST_SUMMARY messages=0 mtu=0\n"
+              },
+              {
+                "iteration": 1,
+                "passed": true,
+                "runner_code": 1,
+                "graceful_teardown_ms": 74,
+                "remaining_owned_pids": "",
+                "adapter_after": "Controller 22:22:1C:11:93:21 (public)\n\tManufacturer: 0x063d (1597)\n\tVersion: 0x07 (7)\n\tName: BlueZ 5.78\n\tAlias: Trimui Brick (NextUI)\n\tClass: 0x00080000 (524288)\n\tPowered: yes\n\tPowerState: on\n\tDiscoverable: no\n\tDiscoverableTimeout: 0x000000b4 (180)\n\tPairable: no\n\tUUID: Audio Source              (0000110a-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Attribute Profile (00001801-0000-1000-8000-00805f9b34fb)\n\tUUID: Device Information        (0000180a-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control        (0000110e-0000-1000-8000-00805f9b34fb)\n\tUUID: PnP Information           (00001200-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Access Profile    (00001800-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control Target (0000110c-0000-1000-8000-00805f9b34fb)\n\tModalias: usb:v1D6Bp0246d054E\n\tDiscovering: no\n\tRoles: central\n\tRoles: peripheral\nAdvertising Features:\n\tActiveInstances: 0x00 (0)\n\tSupportedInstances: 0x05 (5)\n\tSupportedIncludes: tx-power\n\tSupportedIncludes: appearance\n\tSupportedIncludes: local-name\n\tSupportedCapabilities.MaxAdvLen: 0x1f (31)\n\tSupportedCapabilities.MaxScnRspLen: 0x1f (31)\n",
+                "log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=GBA Link 9321\nWaiting for another Brick...\nDUEL local_hp=0 peer_hp=0\nHOST_SUMMARY messages=0 mtu=0\n"
+              },
+              {
+                "iteration": 2,
+                "passed": true,
+                "runner_code": 1,
+                "graceful_teardown_ms": 75,
+                "remaining_owned_pids": "",
+                "adapter_after": "Controller 22:22:1C:11:93:21 (public)\n\tManufacturer: 0x063d (1597)\n\tVersion: 0x07 (7)\n\tName: BlueZ 5.78\n\tAlias: Trimui Brick (NextUI)\n\tClass: 0x00080000 (524288)\n\tPowered: yes\n\tPowerState: on\n\tDiscoverable: no\n\tDiscoverableTimeout: 0x000000b4 (180)\n\tPairable: no\n\tUUID: Audio Source              (0000110a-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Attribute Profile (00001801-0000-1000-8000-00805f9b34fb)\n\tUUID: Device Information        (0000180a-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control        (0000110e-0000-1000-8000-00805f9b34fb)\n\tUUID: PnP Information           (00001200-0000-1000-8000-00805f9b34fb)\n\tUUID: Generic Access Profile    (00001800-0000-1000-8000-00805f9b34fb)\n\tUUID: A/V Remote Control Target (0000110c-0000-1000-8000-00805f9b34fb)\n\tModalias: usb:v1D6Bp0246d054E\n\tDiscovering: no\n\tRoles: central\n\tRoles: peripheral\nAdvertising Features:\n\tActiveInstances: 0x00 (0)\n\tSupportedInstances: 0x05 (5)\n\tSupportedIncludes: tx-power\n\tSupportedIncludes: appearance\n\tSupportedIncludes: local-name\n\tSupportedCapabilities.MaxAdvLen: 0x1f (31)\n\tSupportedCapabilities.MaxScnRspLen: 0x1f (31)\n",
+                "log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=GBA Link 9321\nWaiting for another Brick...\nDUEL local_hp=0 peer_hp=0\nHOST_SUMMARY messages=0 mtu=0\n"
+              }
+            ]
+          }
         }
       }
-    }
+    },
+    "original_wifi_restored_and_saved_config_unchanged": true,
+    "package_sha256": "3f8235c8173574b21bd0c472669a19942d6d6fa4f249abda63a6c3738135d2ad",
+    "user_authorization": "Offline games remain running to prevent sleep. Atomic rename, no game controls or saves modified. User accepts own UI/gameplay tests."
   },
-  "original_wifi_restored_and_saved_config_unchanged": true,
-  "package_sha256": "3f8235c8173574b21bd0c472669a19942d6d6fa4f249abda63a6c3738135d2ad",
-  "user_authorization": "Offline games remain running to prevent sleep. Atomic rename, no game controls or saves modified. User accepts own UI/gameplay tests."
+  "package_sha256": "7204a158e583c225b3c311e00e93658afb1837e7d69d0871df0d3e9a72cbe7b9",
+  "user_authorization": "2026-10-08 user requested installation; existing prior authorization preserves offline games by atomic rename. No game controls or unrelated service changes."
 }
