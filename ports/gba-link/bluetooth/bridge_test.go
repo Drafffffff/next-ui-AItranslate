@@ -48,6 +48,13 @@ func TestBridgePreservesNextUIStreamAndMaxPacket(t *testing.T) {
 				}
 				wire.Write(body)
 			}
+			// Exercise structured RFU messages through both live pumps, including
+			// maximum exchange identifiers, client data and zero-padded confirms.
+			for _, fields := range [][2]uint32{{4, 5}, {1, 6}, {5, 7}, {1, 0}} {
+				body := make([]byte, 92)
+				copy(body, []byte{tag, 0, tag, 1})
+				wire.Write(rfuCodecPacket(fields[0], fields[1], 0xff000004, ^uint64(0), body))
+			}
 			expected = append(expected, wire.Bytes())
 		}
 		writes := make(chan error, 2)
@@ -209,6 +216,9 @@ func TestBridgeRejectsOldTransportBeforeReadiness(t *testing.T) {
 	other := "2"
 	if bleTransportVersion == "4" {
 		other = "3"
+	}
+	if bleTransportVersion == "5" {
+		other = "4"
 	}
 	if err := old.Send([]byte("NUIBLE" + other + "\x00")); err != nil {
 		t.Fatal(err)

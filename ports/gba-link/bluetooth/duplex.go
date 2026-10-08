@@ -54,7 +54,7 @@ func newDuplexLink(epoch uint32, payload int) (*duplexLink, error) {
 	if epoch == 0 || payload <= frameHeader || payload > 512 {
 		return nil, fmt.Errorf("invalid duplex session or negotiated payload")
 	}
-	return &duplexLink{epoch: epoch, payload: payload, compact: bleTransportVersion == "4", in: make(chan duplexMessage, 8), out: make(chan []byte, 4)}, nil
+	return &duplexLink{epoch: epoch, payload: payload, compact: (bleTransportVersion == "4" || bleTransportVersion == "5"), in: make(chan duplexMessage, 8), out: make(chan []byte, 4)}, nil
 }
 
 // Send is bounded and never waits for the radio. The caller must treat any

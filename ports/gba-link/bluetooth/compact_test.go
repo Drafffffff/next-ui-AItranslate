@@ -172,7 +172,7 @@ func TestCompactPeripheralRequiresBootstrapAndVariant(t *testing.T) {
 		t.Fatal(err)
 	}
 	err := e.accept(short[0])
-	if (err == nil) != (bleTransportVersion == "4") {
+	if (err == nil) != (bleTransportVersion == "4" || bleTransportVersion == "5") {
 		t.Fatalf("compact variant=%s err=%v", bleTransportVersion, err)
 	}
 }

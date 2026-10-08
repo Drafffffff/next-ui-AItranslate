@@ -15,8 +15,8 @@ import (
 var errDuplexQueueFull = errors.New("duplex queue full")
 var errTransportVersion = errors.New("BLE transport version mismatch")
 
-// Candidate builds opt in with -ldflags "-X main.bleTransportVersion=4".
-// Normal builds keep the installed v3 path until physical validation.
+// Candidate builds explicitly select version 4 or 5 with linker flags.
+// Normal builds default to v3; candidates require matching helpers on both peers.
 var bleTransportVersion = "3"
 
 // Legacy radios carry only 27 ACL bytes per packet. RFU messages often end
@@ -62,7 +62,7 @@ type dataStream interface {
 // accept a game identity or invoke core callbacks; the frontend still does
 // the protocol 3 ROM/core/serial-mode handshake on the emulation thread.
 func bridgeSession(ctx context.Context, endpoint duplexEndpoint, payload int, epoch uint32, host bool, stream dataStream, ready func() error) error {
-	if bleTransportVersion != "3" && bleTransportVersion != "4" {
+	if bleTransportVersion != "3" && bleTransportVersion != "4" && bleTransportVersion != "5" {
 		return fmt.Errorf("unsupported BLE transport build")
 	}
 	transportHello := []byte("NUIBLE" + bleTransportVersion + "\x00")
@@ -72,7 +72,7 @@ func bridgeSession(ctx context.Context, endpoint duplexEndpoint, payload int, ep
 	if err != nil {
 		return err
 	}
-	d.compact = bleTransportVersion == "4"
+	d.compact = (bleTransportVersion == "4" || bleTransportVersion == "5")
 	result := make(chan error, 1)
 	go func() { result <- d.Run(ctx, endpoint) }()
 	watchDone := make(chan struct{})
@@ -172,7 +172,7 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 			results <- err
 			return
 		}
-		encodedHello, err := encodeBridgeChunk(hello)
+		encodedHello, err := encodeTransportChunk(hello)
 		if err == nil {
 			err = send(ctx, encodedHello)
 		}
@@ -205,7 +205,7 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 				if end > len(packet) {
 					end = len(packet)
 				}
-				encoded, err := encodeBridgeChunk(packet[offset:end])
+				encoded, err := encodeTransportChunk(packet[offset:end])
 				if err == nil {
 					err = send(ctx, encoded)
 				}
@@ -227,7 +227,7 @@ func bridgeStream(ctx context.Context, d *duplexLink, stream dataStream, send fu
 					results <- fmt.Errorf("BLE peer channel closed")
 					return
 				}
-				message, err := decodeBridgeChunk(message)
+				message, err := decodeTransportChunk(message)
 				if err != nil {
 					results <- err
 					return

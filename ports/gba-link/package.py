@@ -22,7 +22,7 @@ if 'files' in variant:
     for path in FILES.values():
         if hashlib.sha256(path.read_bytes()).hexdigest()!=variant['files'].get(path.name):
             raise SystemExit('Stale build-variant hash: '+str(path))
-package=OUT/('nextui-gba-link-'+revision[:8]+('-ble4' if variant['ble_transport_version']==4 else ''))
+package=OUT/('nextui-gba-link-'+revision[:8]+('-ble'+str(variant['ble_transport_version']) if variant['ble_transport_version']>=4 else ''))
 if package.exists():shutil.rmtree(package)
 package.mkdir();checksums={}
 for name,source in FILES.items():
@@ -39,13 +39,13 @@ shutil.copy2(ROOT/'ports/gba-link/install.py',package/'install.py')
 shutil.copy2(ROOT/'ports/gba-link/README.md',package/'README.md')
 shutil.copy2(ROOT/'ports/gba-link/compatibility.md',package/'compatibility.md')
 shutil.copy2(ROOT/'ports/gba-link/GAME-VALIDATION.md',package/'GAME-VALIDATION.md')
-for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md', 'RFU-EXCHANGE-FIX.md', 'RFU-TIMING-FIX.md', 'RFU-FLOWER-INVESTIGATION.md', 'BLE-COMPACT-CANDIDATE.md'):
+for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md', 'RFU-EXCHANGE-FIX.md', 'RFU-TIMING-FIX.md', 'RFU-FLOWER-INVESTIGATION.md', 'BLE-COMPACT-CANDIDATE.md', 'BLE-RFU-CODEC-CANDIDATE.md'):
     shutil.copy2(ROOT/'ports/gba-link'/name, package/name)
 source_dir=package/'source';source_dir.mkdir()
 (source_dir/'REVISION.txt').write_text(revision+'\n')
 (source_dir/'BUILD.md').write_text('Extract nextui-source.tar.gz into a fresh directory. Dependencies are fetched at pinned commits by build.py.\nRun python3 ports/gba-link/build.py brick --revision '+revision+'\nFor Mac: python3 ports/gba-link/build.py mac. Docker SDK, Apple clang, Homebrew OpenSSL/SDL2 and Python are required.\nThe included dependency archives supply the source of linked libraries; the normal script uses pinned Git checkouts.\n')
 with (source_dir/'BUILD.md').open('a') as recipe:
-    recipe.write('BLE variant: '+str(variant['ble_transport_version'])+'. For the v4 candidate add --ble-compact to build.py brick; normal builds default to v3.\n')
+    recipe.write('BLE variant: '+str(variant['ble_transport_version'])+'. For v4 add --ble-compact; for v5 add --ble-rfu-codec to build.py brick; normal builds default to v3.\n')
 shutil.copy2(OUT/'gpsp-source.tar.gz',source_dir/'gpsp-source.tar.gz')
 subprocess.run(['git','archive','--format=tar.gz','-o',str(source_dir/'nextui-source.tar.gz'),revision],cwd=ROOT,check=True)
 for name,folder in [('libretro-common','libretro-common'),('libchdr','libchdr'),('rcheevos','rcheevos/src')]:
@@ -84,7 +84,7 @@ for name in ('test-results.json','regression.log','arm-host.log','arm-join.log',
     if path.is_file():shutil.copy2(path,records/name)
 for name in ('bluetooth-plan.json','bluetooth-validation.json'):
     shutil.copy2(ROOT/'ports/gba-link'/name,records/name)
-for name in ('compact-candidate-tests.log','compact-baseline-tests.log','compact-repeat-tests.log','compact-baseline-variant-test.log','hotspot-go-tests-final.log','hotspot-tcp-regression.log','hotspot-lifecycle-mac.log','core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log','native-tests-current.elf.log','native-worker-lifecycle-results.json','worker-lifecycle-arm.elf.log','worker-lifecycle-arm-v1-failed.log'):
+for name in ('rfu-codec-fuzz.log','rfu-codec-candidate-tests.log','rfu-codec-baseline-tests.log','rfu-codec-repeat-tests.log','compact-candidate-tests.log','compact-baseline-tests.log','compact-repeat-tests.log','compact-baseline-variant-test.log','hotspot-go-tests-final.log','hotspot-tcp-regression.log','hotspot-lifecycle-mac.log','core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log','native-tests-current.elf.log','native-worker-lifecycle-results.json','worker-lifecycle-arm.elf.log','worker-lifecycle-arm-v1-failed.log'):
     path=OUT/'bluetooth'/name
     if path.is_file():shutil.copy2(path,records/name)
 for name in ('identity-stream-10min','hotspot-current-normal','hotspot-release-reverse','hotspot-release-core','hotspot-release-rom','hotspot-final-mode-mismatch','selected-room-core-normal','selected-room-core-core-mismatch','selected-room-core-rom-mismatch','selected-room-core-mode-mismatch','selected-room-core-normal-retry','selected-room-core-reverse','discovered-core-ble-core-mismatch','discovered-core-mismatch-traced'):
