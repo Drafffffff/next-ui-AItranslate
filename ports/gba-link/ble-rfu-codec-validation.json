@@ -4,7 +4,7 @@
   "default_transport_version": 3,
   "local_validation_passed": true,
   "hardware_performance_verified": false,
-  "deployed": false,
+  "deployed": true,
   "prior_v4_game_observation": {
     "rfu_ack_samples": 783,
     "rfu_ack_average_us": 29167,
@@ -102,5 +102,6 @@
     "rfu-codec-elf-variant-check.log": "a8073d80bb04cd2e5966115dfe5183676614b55d441e3e3b99809129368ba156",
     "rfu-codec-package-install-rollback.log": "a6dbec33a94339dbcdeb964c232bf93a061100c9cc12e14dc56fe5e8eff2a332"
   },
-  "limitations": "Packet segmentation arithmetic and in-memory BLE transport, not physical radio latency or commercial RFU gameplay acceptance. Second device SSH unavailable during local validation."
+  "limitations": "Local packet, core and installer checks passed; both physical devices installed and hash verified. Physical radio latency and commercial RFU gameplay performance acceptance remain pending.",
+  "deployment_record": "bluetooth-deployment.json"
 }
