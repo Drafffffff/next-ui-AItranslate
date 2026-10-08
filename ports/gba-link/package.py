@@ -39,7 +39,7 @@ shutil.copy2(ROOT/'ports/gba-link/install.py',package/'install.py')
 shutil.copy2(ROOT/'ports/gba-link/README.md',package/'README.md')
 shutil.copy2(ROOT/'ports/gba-link/compatibility.md',package/'compatibility.md')
 shutil.copy2(ROOT/'ports/gba-link/GAME-VALIDATION.md',package/'GAME-VALIDATION.md')
-for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md', 'RFU-EXCHANGE-FIX.md', 'RFU-TIMING-FIX.md', 'RFU-FLOWER-INVESTIGATION.md', 'BLE-COMPACT-CANDIDATE.md', 'BLE-RFU-CODEC-CANDIDATE.md'):
+for name in ('LOCAL-TESTING.md', 'HARDWARE-VALIDATION.md', 'RFU-EXCHANGE-FIX.md', 'RFU-TIMING-FIX.md', 'RFU-FLOWER-INVESTIGATION.md', 'BLE-COMPACT-CANDIDATE.md', 'BLE-RFU-CODEC-CANDIDATE.md', 'BLUETOOTH-POWER-HANDOFF.md'):
     shutil.copy2(ROOT/'ports/gba-link'/name, package/name)
 source_dir=package/'source';source_dir.mkdir()
 (source_dir/'REVISION.txt').write_text(revision+'\n')
@@ -84,7 +84,7 @@ for name in ('test-results.json','regression.log','arm-host.log','arm-join.log',
     if path.is_file():shutil.copy2(path,records/name)
 for name in ('bluetooth-plan.json','bluetooth-validation.json'):
     shutil.copy2(ROOT/'ports/gba-link'/name,records/name)
-for name in ('rfu-codec-fuzz.log','rfu-codec-candidate-tests.log','rfu-codec-baseline-tests.log','rfu-codec-repeat-tests.log','compact-candidate-tests.log','compact-baseline-tests.log','compact-repeat-tests.log','compact-baseline-variant-test.log','hotspot-go-tests-final.log','hotspot-tcp-regression.log','hotspot-lifecycle-mac.log','core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log','native-tests-current.elf.log','native-worker-lifecycle-results.json','worker-lifecycle-arm.elf.log','worker-lifecycle-arm-v1-failed.log'):
+for name in ('bluetooth-power-handoff-tests.log','rfu-codec-fuzz.log','rfu-codec-candidate-tests.log','rfu-codec-baseline-tests.log','rfu-codec-repeat-tests.log','compact-candidate-tests.log','compact-baseline-tests.log','compact-repeat-tests.log','compact-baseline-variant-test.log','hotspot-go-tests-final.log','hotspot-tcp-regression.log','hotspot-lifecycle-mac.log','core-bridge-integration.log','frontend-tcp-regression.log','worker-lifecycle.log','install-helper-regression.log','native-tests-current.elf.log','native-worker-lifecycle-results.json','worker-lifecycle-arm.elf.log','worker-lifecycle-arm-v1-failed.log'):
     path=OUT/'bluetooth'/name
     if path.is_file():shutil.copy2(path,records/name)
 for name in ('identity-stream-10min','hotspot-current-normal','hotspot-release-reverse','hotspot-release-core','hotspot-release-rom','hotspot-final-mode-mismatch','selected-room-core-normal','selected-room-core-core-mismatch','selected-room-core-rom-mismatch','selected-room-core-mode-mismatch','selected-room-core-normal-retry','selected-room-core-reverse','discovered-core-ble-core-mismatch','discovered-core-mismatch-traced'):

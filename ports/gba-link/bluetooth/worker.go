@@ -125,6 +125,13 @@ func serveFrontend(ctx context.Context, conn *dbus.Conn, role, peer string, data
 		}
 	}()
 	defer func() { cancel(); stream.Close(); <-watchDone }()
+	if err := control.send('S', "Preparing Bluetooth..."); err != nil {
+		return err
+	}
+	if err := enableLinkBluetooth(ctx, conn); err != nil {
+		control.send('E', "Cannot enable Bluetooth. Try again.")
+		return err
+	}
 	devices, radioErr := managed(ctx, conn)
 	if radioErr != nil {
 		control.send('E', "Bluetooth service unavailable. Try again.")

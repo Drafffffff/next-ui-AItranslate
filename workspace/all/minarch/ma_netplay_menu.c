@@ -242,6 +242,12 @@ static int start_link(MenuList *list, int index) {
         return MENU_CALLBACK_NOP;
     }
 #ifdef NEXTUI_LINK_BT
+    /* Choosing a Bluetooth link explicitly enables the shared system setting.
+     * Hardware startup is cancellable in the private worker, never on this UI
+     * thread. Brick Mic cleanup then preserves Bluetooth for the next app. */
+    if (connection_mode == 1 && !CFG_getBluetooth()) {
+        CFG_setBluetooth(true);
+    }
     char bluetooth_peer[18] = {0};
     if (connection_mode != 0 && !host && !nearby_find(bluetooth_peer)) return MENU_CALLBACK_NOP;
 #endif
