@@ -1,3 +1,5 @@
+//go:build ignore
+
 /* Brick Mic keeps its custom extension and font contract independent of the workshop. */
 #define _GNU_SOURCE
 #include "brick-services.h"
