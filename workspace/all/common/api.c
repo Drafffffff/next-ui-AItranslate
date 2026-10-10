@@ -735,6 +735,14 @@ void GFX_flip(SDL_Surface *screen)
 
 	per_frame_start = SDL_GetPerformanceCounter();
 }
+static uint64_t last_present_us;
+uint64_t GFX_getLastPresentTimeUs(void) { return last_present_us; }
+static void timed_gl_swap(void) {
+    uint64_t began = SDL_GetPerformanceCounter();
+    PLAT_GL_Swap();
+    uint64_t frequency = SDL_GetPerformanceFrequency();
+    last_present_us = frequency ? (SDL_GetPerformanceCounter() - began) * 1000000 / frequency : 0;
+}
 void GFX_GL_Swap()
 {
 	{
@@ -744,7 +752,7 @@ void GFX_GL_Swap()
 		double frame_ms = elapsed_time_s * 1000.0;
 		//LOG_info("GFX_GL_Swap: Frame time before flip: %.2f ms\n", frame_ms);
 	}
-	PLAT_GL_Swap();
+	timed_gl_swap();
 
 	perf.fps = current_fps;
 	fps_counter++;
@@ -812,6 +820,8 @@ void GFX_sync(void)
 	}
 }
 
+static void (*frame_wait_callback)(unsigned);
+void GFX_setFrameWaitCallback(void (*callback)(unsigned)) { frame_wait_callback = callback; }
 void GFX_flip_fixed_rate(SDL_Surface *screen, double target_fps)
 {
 	if (target_fps == 0.0)
@@ -871,7 +881,8 @@ void GFX_flip_fixed_rate(SDL_Surface *screen, double target_fps)
 			const useconds_t min_waiting_time = 2000;
 			if (time_to_sleep_us > min_waiting_time)
 			{
-				usleep(time_to_sleep_us - min_waiting_time);
+				if (frame_wait_callback) frame_wait_callback(time_to_sleep_us - min_waiting_time);
+                else usleep(time_to_sleep_us - min_waiting_time);
 			}
 
 			while (SDL_GetPerformanceCounter() < time_of_frame)
@@ -880,7 +891,7 @@ void GFX_flip_fixed_rate(SDL_Surface *screen, double target_fps)
 			}
 		}
 	}
-	PLAT_GL_Swap();
+	timed_gl_swap();
 
 	double elapsed_time_s = (double)(SDL_GetPerformanceCounter() - per_frame_start) / perf_freq;
 	double tempfps = 1.0 / elapsed_time_s;

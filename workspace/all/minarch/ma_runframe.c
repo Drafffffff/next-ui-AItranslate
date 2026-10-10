@@ -4,10 +4,12 @@
 #include "ma_input.h"
 #include "ma_config.h"
 #include "ma_runframe.h"
+#include "ma_netplay.h"
+#include "notification.h"
 
 void chooseSyncRef(void) {
 	switch (sync_ref) {
-		case SYNC_SRC_AUTO:   use_core_fps = (core.get_region() == RETRO_REGION_PAL); break;
+		case SYNC_SRC_AUTO:   use_core_fps = Netplay_active() || (core.get_region() == RETRO_REGION_PAL); break;
 		case SYNC_SRC_SCREEN: use_core_fps = 0; break;
 		case SYNC_SRC_CORE:   use_core_fps = 1; break;
 	}
@@ -46,6 +48,25 @@ static void limitFF(void) {
 }
 
 void run_frame(void) {
+	Netplay_poll();
+	static enum NPState previous = NP_IDLE;
+	if (Netplay_state() != previous) {
+		previous = Netplay_state();
+		chooseSyncRef(); // Auto uses core pacing only for the live link session.
+		Notification_push(NOTIFICATION_SETTING, Netplay_status(), NULL);
+	}
+	if (Netplay_busy() || Netplay_used()) {
+		static uint32_t last_report;
+		uint32_t now = SDL_GetTicks();
+		if (Netplay_active() && now - last_report >= 5000) {
+			LOG_info("GBA Link frame rate: %.1f fps; %s\n", perf.fps, Netplay_status());
+			last_report = now;
+		}
+		fast_forward = rewind_pressed = rewind_toggle = rewinding = 0;
+		if (Netplay_paused()) { input_poll_callback(); SDL_Delay(5); return; }
+		core.run();
+		return;
+	}
 	// if rewind is toggled, fast-forward toggle must stay off; fast-forward hold pauses rewind
 	int do_rewind = (rewind_pressed || rewind_toggle) && !(rewind_toggle && ff_hold_active);
 	if (do_rewind) {

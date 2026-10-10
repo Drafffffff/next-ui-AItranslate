@@ -23,6 +23,9 @@
 #include "ma_frontend_opts.h"
 #include "ma_menu.h"
 #include "ma_ai.h"
+#include "ma_netplay.h"
+
+int OptionNetplay_openMenu(MenuList *list, int index);
 
 ///////////////////////////////
 
@@ -223,6 +226,7 @@ void Menu_quit(void) {
 	SDL_FreeSurface(menu.overlay);
 }
 void Menu_beforeSleep() {
+	Netplay_stop("Link ended for sleep");
 	SRAM_write();
 	RTC_write();
 	State_autosave();
@@ -916,6 +920,7 @@ static MenuList options_menu = {
 		{NULL},
 		{NULL},
 		{NULL},
+		{NULL},
 	}
 };
 
@@ -924,7 +929,7 @@ static int save_changes_index = 7;
 
 // Update options menu visibility based on RA enable state
 static void Options_updateVisibility(void) {
-	// AI Translate 始终排在最后，紧跟在 Save Changes 之后。
+	// AI Translate 紧跟 Save Changes，GBA Link 在其后。
 	// 位置随 RA 开关变（RA 开时 Save Changes 在 7，关时在 6），
 	// 所以这里动态决定它落在哪一格，并保证下一格是终止符 —— 否则列表会被提前截断。
 	int ai_index;
@@ -949,8 +954,10 @@ static void Options_updateVisibility(void) {
 	options_menu.items[ai_index].name = "AI Translate";
 	options_menu.items[ai_index].desc = NULL;
 	options_menu.items[ai_index].on_confirm = OptionAI_openMenu;
-	options_menu.items[ai_index + 1].name = NULL;
-	options_menu.items[ai_index + 1].on_confirm = NULL;
+	options_menu.items[ai_index + 1].name = "GBA Link";
+	options_menu.items[ai_index + 1].on_confirm = OptionNetplay_openMenu;
+	options_menu.items[ai_index + 2].name = NULL;
+	options_menu.items[ai_index + 2].on_confirm = NULL;
 }
 
 void OptionSaveChanges_updateDesc(void) {
@@ -1021,6 +1028,9 @@ bool getAlias(char* path, char* alias) {
 int Menu_options(MenuList* list) {
 	MenuItem* items = list->items;
 	int type = list->type;
+	int tab_count = 0;
+	if (list->tabs) while (list->tabs[tab_count]) tab_count++;
+	int tab_height = tab_count ? SCALE1(BUTTON_SIZE + 6) : 0;
 
 	int dirty = 1;
 	int show_options = 1;
@@ -1029,6 +1039,7 @@ int Menu_options(MenuList* list) {
 	
 	// dependent on option list offset top and bottom, eg. the gray triangles
 	int max_visible_options = (screen->h - ((SCALE1(PADDING + PILL_SIZE) * 2) + SCALE1(BUTTON_SIZE))) / SCALE1(BUTTON_SIZE); // 7 for 480, 10 for 720
+	if (tab_count) max_visible_options = MAX(1, max_visible_options - 2);
 	
 	int count;
 	for (count=0; items[count].name; count++);
@@ -1042,6 +1053,7 @@ int Menu_options(MenuList* list) {
 	
 	int defer_menu = false;
 	while (show_options) {
+		Netplay_poll();
 		if (await_input) {
 			defer_menu = true;
 			list->on_confirm(list, selected);
@@ -1062,6 +1074,15 @@ int Menu_options(MenuList* list) {
 		
 		GFX_startFrame();
 		PAD_poll();
+		if (tab_count && list->on_tab_change) {
+			int direction = 0;
+			if (PAD_justPressed(BTN_L1) || PAD_justRepeated(BTN_LEFT)) direction = -1;
+			else if (PAD_justPressed(BTN_R1) || PAD_justRepeated(BTN_RIGHT)) direction = 1;
+			if (direction) {
+				int next = (list->tab + tab_count + direction) % tab_count;
+				if (list->on_tab_change(list, next) == MENU_CALLBACK_EXIT || !show_menu) break;
+			}
+		}
 		if (PAD_justRepeated(BTN_UP)) {
 			selected -= 1;
 			if (selected<0) {
@@ -1136,7 +1157,7 @@ int Menu_options(MenuList* list) {
 				if (item->values==button_labels) await_input = 1; // button binding
 				else result = list->on_confirm(list, selected); // list-specific action, eg. show item detail view or input binding
 			}
-			if (result==MENU_CALLBACK_EXIT) show_options = 0;
+			if (result==MENU_CALLBACK_EXIT || !show_menu) show_options = 0;
 			else {
 				if (result==MENU_CALLBACK_NEXT_ITEM) {
 					// copied from PAD_justRepeated(BTN_DOWN) above
@@ -1183,6 +1204,24 @@ int Menu_options(MenuList* list) {
 		
 		GFX_clear(screen);
 		GFX_blitHardwareGroup(screen, show_settings);
+		if (tab_count) {
+			int gap = SCALE1(6);
+			int width = (screen->w - SCALE1(PADDING * 2) - gap * (tab_count - 1)) / tab_count;
+			int top = SCALE1(PADDING + PILL_SIZE);
+			for (int i = 0; i < tab_count; i++) {
+				int left = SCALE1(PADDING) + i * (width + gap);
+				SDL_Color color = COLOR_WHITE;
+				if (i == list->tab) {
+					GFX_blitPillDark(ASSET_BUTTON, screen, &(SDL_Rect){left, top, width, SCALE1(BUTTON_SIZE)});
+					color = uintToColour(THEME_COLOR5_255);
+				}
+				SDL_Surface* label = TTF_RenderUTF8_Blended(font.small, list->tabs[i], color);
+				if (label) {
+					SDL_BlitSurface(label, NULL, screen, &(SDL_Rect){left + (width - label->w) / 2, top + SCALE1(1)});
+					SDL_FreeSurface(label);
+				}
+			}
+		}
 		
 		char* desc = NULL;
 		SDL_Surface* text;
@@ -1204,6 +1243,7 @@ int Menu_options(MenuList* list) {
 			
 			int ox = (screen->w - mw) / 2;
 			int oy = SCALE1(PADDING + PILL_SIZE);
+			oy += tab_height;
 			int selected_row = selected - start;
 			for (int i=start,j=0; i<end; i++,j++) {
 				MenuItem* item = &items[i];
@@ -1406,6 +1446,11 @@ int Menu_options(MenuList* list) {
 		}
 		
 		if (!desc && list->desc) desc = list->desc;
+		char tab_desc[512];
+		if (tab_count) {
+			snprintf(tab_desc, sizeof(tab_desc), "%s%sL/R: MODE   B: BACK   A: SELECT", desc ? desc : "", desc ? "\n" : "");
+			desc = tab_desc;
+		}
 		
 		if (desc) {
 			int w,h;
@@ -1659,6 +1704,10 @@ void Menu_screenshot(void) {
 	}
 }
 int Menu_saveState(void) {
+    if (Netplay_busy() || Netplay_used()) {
+        Notification_push(NOTIFICATION_SAVE_STATE, "Reopen game before using save states", NULL);
+        return 0;
+    }
 	// LOG_info("Menu_saveState\n");
 	Menu_updateState();
 	state_slot = menu.slot;
@@ -1733,6 +1782,10 @@ static int Menu_saveOnQuit(void) {
 	return leave;
 }
 void Menu_loadState(void) {
+    if (Netplay_busy() || Netplay_used()) {
+        Notification_push(NOTIFICATION_LOAD_STATE, "Reopen game before using load states", NULL);
+        return;
+    }
 	Menu_updateState();
 
 	if (menu.save_exists) {
@@ -1766,6 +1819,7 @@ void Menu_loadState(void) {
 }
 
 void Menu_loop(void) {
+	Netplay_pause(true);
 
 	int cw, ch;
 	unsigned char* pixels = GFX_GL_screenCapture(&cw, &ch);
@@ -1835,6 +1889,7 @@ void Menu_loop(void) {
 	//set vid.blit to null for menu drawing no need for blitrender drawing
 	GFX_clearShaders();
 	while (show_menu) {
+		Netplay_poll();
 
 		GFX_startFrame();
 		uint32_t now = SDL_GetTicks();
@@ -1914,7 +1969,7 @@ void Menu_loop(void) {
 				break;
 				case ITEM_OPTS: {
 					if (simple_mode) {
-						core.reset();
+						if (!Netplay_busy()) core.reset();
 						status = STATUS_RESET;
 						show_menu = 0;
 					}
@@ -2119,6 +2174,7 @@ void Menu_loop(void) {
 	
 
 	SDL_FreeSurface(backing);
+	Netplay_pause(false);
 	PWR_disableAutosleep();
 }
 

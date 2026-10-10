@@ -23,7 +23,7 @@ TARGET = minarch
 PRODUCT= build/$(PLATFORM)/$(TARGET).elf
 INCDIR = -I. -I./libretro-common/include/ -I../common/ -I../../$(PLATFORM)/platform/
 SOURCE = $(TARGET).c ma_cheats.c ma_rewind.c ma_audio.c ma_input.c \
-         ma_options.c ma_frontend_opts.c ma_saves.c ma_video.c ma_core.c ma_game.c ma_environment.c ma_config.c ma_menu.c ma_runframe.c ma_ai.c \
+         ma_options.c ma_frontend_opts.c ma_saves.c ma_video.c ma_core.c ma_game.c ma_environment.c ma_config.c ma_menu.c ma_runframe.c ma_ai.c ma_netplay.c ma_netplay_wifi.c ma_netplay_menu.c \
          ../common/scaler.c ../common/utils.c ../common/config.c ../common/api.c \
          ../common/notification.c ../../$(PLATFORM)/platform/platform.c
 
@@ -36,6 +36,10 @@ endif
 CC = $(CROSS_COMPILE)gcc
 CFLAGS  += $(OPT)
 CFLAGS  += $(INCDIR) -DPLATFORM=\"$(PLATFORM)\" -std=gnu99
+ifeq ($(PLATFORM),tg5040)
+CFLAGS += -DNEXTUI_LINK_WIFI -DNEXTUI_LINK_BT
+SOURCE += ma_netplay_bt.c
+endif
 LDFLAGS	 += -lmsettings -lsamplerate
 
 ifeq ($(PROFILE), 1)

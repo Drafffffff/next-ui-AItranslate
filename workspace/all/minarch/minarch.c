@@ -1,3 +1,4 @@
+#include "ma_netplay.h"
 #include <stdlib.h>
 #include <msettings.h>
 
@@ -238,6 +239,7 @@ int main(int argc , char* argv[]) {
 	Special_init(); // after config
 
 	chooseSyncRef();
+	GFX_setFrameWaitCallback(Netplay_wait);
 	
 	int has_pending_opt_change = 0;
 
@@ -343,6 +345,7 @@ int main(int argc , char* argv[]) {
 	GFX_animateSurfaceOpacity(converted, 0, 0, cw, ch, 255, 0, CFG_getMenuTransitions() ? 200 : 20, 1);
 	SDL_FreeSurface(converted); 
 	
+	GFX_setFrameWaitCallback(NULL);
 	Video_cleanup();
 
 	PLAT_clearTurbo();

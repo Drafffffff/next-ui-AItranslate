@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "status": "bluetooth_connected_user_reports_frequent_red_optimizing",
+  "production_integration": true,
+  "source_review": {
+    "existing_prototype": "gba-netplay/workspace/all/minarch/ma_netplay_ble*.c (untracked)",
+    "reuse": [
+      "Transport backend separation concept",
+      "Separate connection and game compatibility handshake",
+      "Existing NextUI game/save protection and RFU fixes"
+    ],
+    "replace": [
+      "Copied stale TCP implementation",
+      "Synchronous 30-second Device1.Connect on emulation thread",
+      "Hard-coded ATT payload size 185",
+      "Connected state before remote GATT discovery and notification subscription",
+      "Tests that report missing BlueZ as PASS"
+    ],
+    "current_wifi_revision": "f2b97ccda42fec99513097e9ad4d2b11be524f42",
+    "wifi_review": "Protocol 3 tagged RFU exchange telemetry and Auto core pacing must be retained; old TCP backend cannot replace current session code",
+    "brick_mic_reference": "Use negotiated MTU, session identity, subscription lifecycle patterns; do not share Mic UUIDs or change its service"
+  },
+  "interaction": {
+    "entry": "Connection: Bluetooth; Create room / Join nearby room",
+    "host": [
+      "Prepare local identity and save guards",
+      "Publish only an active game room",
+      "Show waiting state and cancel action",
+      "Show peer and compatibility verification",
+      "Show connected only after bilateral readiness"
+    ],
+    "join": [
+      "Scan only the GBA Link service, never generic paired devices",
+      "Show nearby room name and short identity suffix for duplicate names",
+      "Select room without entering MAC or pairing codes",
+      "Connect asynchronously with visible progress and cancel",
+      "Check full ROM SHA256, core SHA256, serial mode and wire version",
+      "Enter connected state after both data directions are ready"
+    ],
+    "error": [
+      "Distinguish no rooms, radio unavailable, timeout, incompatible ROM/core and peer disconnect",
+      "Retry before core session start without restarting game",
+      "After a used game link session require normal game reopen when current core safety guard demands it",
+      "Do not auto-switch transport or claim reconnection preserved game state"
+    ],
+    "constraints": [
+      "Never block emulation or UI on discovery/connect calls",
+      "Keep transport-specific address and relay fields out of Bluetooth flow",
+      "Cancel closes owned sockets/GATT subscriptions and owned advertisement only",
+      "Discard stale discovery/connect completion after cancellation",
+      "Do not disconnect other Bluetooth users, reset bluetoothd or modify Mic permissions"
+    ],
+    "health_indicator": "Separate host wait/peer pause/link loss from measured delay; do not label every delayed exchange as packet loss",
+    "simplicity": [
+      "No MAC or IP entry in Bluetooth mode",
+      "Host creates room; peer joins nearby room",
+      "Use a single compatible room directly after player chooses Join; show a short list when multiple rooms exist",
+      "Compatibility checks are automatic; never silently choose an incompatible room"
+    ]
+  },
+  "transport_selection": {
+    "classic_l2cap": "Candidate only. ERTM ordered stream can reuse existing bounded framing, identity and receive callbacks; discovery still required.",
+    "ble_gatt": "Two-way BlueZ and raw ATT framing validated at negotiated MTU 517. Raw ATT avoids client multi-notification batching, requests owned 7.5ms connection timing, and waits for actual controller completion. Game integration still pending latency/long-run evidence.",
+    "known_measurement": {
+      "kind": "isolated 256-byte echo, not gameplay",
+      "ertm_awake_100_samples_us": {
+        "p50": 36170,
+        "p95": 43754,
+        "p99": 88541
+      },
+      "initial_max_us": 3211698
+    },
+    "conclusion": "Echo window4 is complete for 600 seconds and independent duplex FD bursts pass both roles and fragmentation. Delay spikes remain significant, especially for larger messages. Keep Wi-Fi available and do not claim fluid play or deploy a default Bluetooth mode before frontend/core and user gameplay validation.",
+    "acceptance": [
+      "No payload corruption or truncation across repeated sessions",
+      "Measure p50/p95/p99/max, stalls above 33/66/200ms and queue growth over 10-minute runs",
+      "Compare against Wi-Fi on the same pair with the same payload and pacing",
+      "Test both host assignments and simultaneous Wi-Fi/Bluetooth coexistence",
+      "Hardware UI validation: discovery, duplicate names, cancellation, timeout, mismatch and retry",
+      "User validates Mario Tennis menus, selection and gameplay; no automated game controls",
+      "Deploy only after production build, compatibility regression and explicit experimental mode identification"
+    ],
+    "latest_comparison": {
+      "classic_104_continuous_p50_us": 33764,
+      "tcp_104_continuous_p50_us": 4312,
+      "gameplay_verified": false,
+      "classic_not_selected_as_default": true,
+      "ble_bluez_104_p50_us": 139951,
+      "ble_fast_bluez_104_p50_us": 40833,
+      "ble_raw_att_104_p50_us": 29955,
+      "ble_raw_att_104_max_us": 92357,
+      "ble_fd_600sec": {
+        "exchanges": 16899,
+        "elapsed_ms": 600021,
+        "p50": 29015,
+        "p95": 71478,
+        "p99": 119947,
+        "max": 298754
+      },
+      "ble_window4_600sec": {
+        "passed": true,
+        "seconds": 600.046,
+        "exchanges": 47552,
+        "max_pending": 4,
+        "max_queued_bytes": 928,
+        "final_queued_bytes": 0,
+        "metrics_us": {
+          "p50": 42280,
+          "p95": 94518,
+          "p99": 146851,
+          "max": 465004
+        },
+        "gameplay_verified": false
+      }
+    },
+    "remaining_experiments": [
+      "Actual duplex 10-minute run with bounded draining and cancel/peer-exit checks",
+      "Asynchronous frontend IPC and nearby-room selection/menu integration",
+      "Real gpSP serial/identity/RFU regression over the BLE worker",
+      "Matched Wi-Fi/BLE comparison under fixed game load",
+      "Actual game menus, selection and match validation by the user"
+    ],
+    "sources": [
+      {
+        "url": "https://github.com/bluez/bluez/blob/5.78/src/shared/gatt-server.c",
+        "finding": "Multiple notifications use a 10ms batching timer; direct ATT central avoids advertising that client feature."
+      },
+      {
+        "url": "https://nrfconnectdocs.nordicsemi.com/ncs/latest/nrfxlib/doxygen/html/group__HCI__VS__API_ga983adff8d1da7f0db2a16838df27c3f9.html",
+        "finding": "Connection event lengths are informational hints; actual controller behavior may differ and needs measurement."
+      }
+    ],
+    "measured_controls_completed": [
+      "Server FD repeated sessions and role switch",
+      "Power-save-off and event-length 0/6/12 controls (informational, not causal)",
+      "Window4 short transfer, 104/1024-byte payloads",
+      "Missing-room timeout and successful retry"
+    ]
+  },
+  "accepted_followup": {
+    "requested_at": "2026-10-07",
+    "sequence": "Finish the current Bluetooth integration, installation, performance and user gameplay acceptance first; then implement Wi-Fi hotspot mode.",
+    "settings_modes": [
+      {
+        "id": "lan_wifi",
+        "label": "局域网 Wi-Fi",
+        "flow": "Both Bricks use the same existing Wi-Fi network; retain current optimized transport."
+      },
+      {
+        "id": "bluetooth",
+        "label": "蓝牙",
+        "flow": "Create room / find nearby room; no manual MAC address."
+      },
+      {
+        "id": "wifi_hotspot",
+        "label": "Wi-Fi 热点",
+        "flow": "One Brick creates a game hotspot, the other finds and joins it; no external router or manual IP required."
+      }
+    ],
+    "presentation": "Three modes are peer choices in the GBA Link settings. Show only options relevant to the selected mode, with consistent Create room / Join room / Disconnect actions.",
+    "relay_placement": "Preserve Public Relay in the Wi-Fi advanced options; it is not a fourth peer mode.",
+    "hotspot_requirements": [
+      "Verify the actual Brick driver and system support for AP mode before selecting an implementation; do not claim feasibility yet.",
+      "Keep existing protocol 3, ROM/core/serial identity, save guards, RFU and flower-screen fixes.",
+      "Use asynchronous hotspot setup and nearby-room discovery, visible progress, cancellation, timeout and retry.",
+      "Provide authenticated hotspot access without asking players to enter an IP address.",
+      "Snapshot network state before setup and restore it after failure, cancellation or disconnect; handle loss of the SSH path with a bounded recovery mechanism.",
+      "Do not overwrite saved Wi-Fi credentials or disrupt unrelated Bluetooth services.",
+      "Measure both role assignments, repeated connection and at least 10 minutes of transmission; user validates real Mario Tennis gameplay.",
+      "Include all three modes in the final compiled package, installation verification and rollback instructions."
+    ],
+    "implementation_started": false,
+    "hardware_ap_support_verified": false
+  },
+  "frontend_integration": {
+    "source_status": "installed_both_bricks",
+    "menu": [
+      "Mode",
+      "Create Room",
+      "Join Room",
+      "Disconnect"
+    ],
+    "advanced": "Wi-Fi address and relay settings are inside Advanced; Bluetooth hides Advanced",
+    "discovery": "One fresh room connects automatically after a short discovery window; multiple rooms require selection",
+    "progress": "Automatic discovery, connect and compatibility checks with B cancel",
+    "verified": [
+      "Go race unit suite including stream framing and discovery validation",
+      "Four Mac real gpSP bridge cases: gameplay SIO, ROM mismatch, core build mismatch, serial mode mismatch",
+      "Full tg5040 frontend and pinned gpSP compilation",
+      "Existing TCP regression: 18 cases passed",
+      "Private helper lifecycle: FD isolation, malformed room control, nonblocking cancel, stale worker retry, child exit and cleanup passed on Mac",
+      "Eight installation regressions passed, including first helper installation/removal on rollback and legacy journal recovery",
+      "Current ARM Go suite: 28 passes, 1 intentional Mac-core integration skip",
+      "Corrected private FD lifecycle fixture passed on Brick",
+      "Current helper physical duplex: both directions 300x104 bytes, integrity and final empty queues passed",
+      "Six physical frontend/core cases passed: automatic room selection, both roles, repeat, ROM/core/mode mismatch; failed second discovery fixed without restarting discovery",
+      "Three actual host-wait cancellation cycles over radio: zero emulated frames, helper processes gone; teardown 130/74/75ms",
+      "Both installed payloads independently rechecked against exact release hashes; .91 game process retained old image inode and PID"
+    ],
+    "pending": [
+      "User normally reopens game to load installed frontend",
+      "On-device menu, cancel and join acceptance",
+      "User-controlled Mario Tennis menu, character selection and match performance",
+      "Hotspot follow-up after Bluetooth acceptance"
+    ],
+    "build_note": "Pinned package compiled, checksummed, installation/rollback tested and atomically installed on both consoles. Running old .91 frontend needs user-controlled normal reopen.",
+    "obsolete_package": "34999bb6: do not deploy; superseded after reproducing and fixing second-discovery stall",
+    "installed_revision": "da609b38f485adf91d667d1b377d4e99900d0010"
+  },
+  "live_game_optimization": {
+    "baseline": "User confirmed both consoles connected over Bluetooth; frequent in-game red indicator.",
+    "observed_host_ack_avg_us": 36461,
+    "observed_host_no_reply": 1829,
+    "observed_host_data": 3587,
+    "transport_queue_drops": 0,
+    "candidate": "Transport v3 trims trailing zero bytes in each bounded chunk, restores exact bytes before frontend; no changes to RFU deadlines or game state.",
+    "trace_estimate": {
+      "samples": 707,
+      "stream_bytes": 60232,
+      "encoded_stream_bytes": 27683,
+      "estimated_acl_packets_before": 3455,
+      "estimated_acl_packets_after": 2330,
+      "scope": "passive live trace; ACL estimate only, not latency measurement"
+    },
+    "validation": "Go race suite and four real Mac gpSP bridge/identity cases PASS. Physical latency and actual game acceptance pending."
+  },
+  "receive_backpressure_fix": {
+    "status": "identity_teardown_fixed_six_physical_cases_pass_release_build_pending",
+    "change": "Delay message confirmation until delivery to the bounded consumer queue. Keep dispatcher servicing reverse data and confirmations while the consumer is slow.",
+    "bounds": "4 consumer messages plus at most 4 staged messages, matching sender window; malicious ninth injection rejected. Send byte budget unchanged at 262144.",
+    "evidence": "Go race suite, 10 repeats of max-packet and slow-consumer reverse-traffic tests; Mac actual gpSP/identity bridge tests.",
+    "queue_telemetry": "Periodic send queued bytes, exact peak, sent/confirmed counts and message-confirmation maximum; final zero is cancellation cleanup, not evidence that all messages were confirmed.",
+    "blocking_case": "Resolved with bounded asynchronous identity drain on pre-game rejection only. Preserve fully received messages on remote EOF; explicit cancellation still discards its own session."
+  },
+  "identity_rejection_cleanup": {
+    "frontend": "Immediate explicit mismatch status, no emulation or UI wait. Only mismatch retires worker with private control FD alive; targeted TERM at 1s, KILL at 2s if needed. Ordinary cancel remains immediate TERM.",
+    "helper": "Drain already queued frontend bytes at most 750ms on local EOF/closed stream; ordinary signal cancellation interrupts immediately.",
+    "validation": "Delayed-radio identity delivery, EOF preservation versus cancel discard, repeated race tests, private worker lifecycle, real physical core/ROM/mode mismatch, normal and reverse-role cases."
+  },
+  "hotspot_and_top_tabs": {
+    "user_request": "2026-10-08: Bluetooth optimized enough to proceed. Three peer modes as top tabs; concise interaction.",
+    "ui": "Bluetooth / Wi-Fi / Hotspot top tabs; L/R or left/right switches; Create Room and Join Room; Advanced only Wi-Fi. LAN Create Room holds an IP-address waiting screen until identity handshake or B cancel.",
+    "hardware_readonly": "Native wlan1 AP works. AP+router concurrent ping measured 40% loss; additional managed aliases fail authentication. Dedicated AP with wlan0 disconnected was selected.",
+    "next": "User normally reopens game to load new frontend, checks three tabs, LAN IP waiting, hotspot pairing and actual match. Do not equate SIO probe with commercial RFU acceptance.",
+    "status": "compiled, isolated native tests passed, both handhelds installed 94e0c736; user UI and actual game acceptance pending",
+    "hotspot_password": "NextUI-GBA-Link; fixed WPA2 CCMP PSK, supplied automatically with no password input."
+  }
+}

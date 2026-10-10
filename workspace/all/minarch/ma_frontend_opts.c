@@ -3,6 +3,7 @@
 #include "ma_cheats.h"
 #include "ra_integration.h"
 #include "notification.h"
+#include "ma_netplay.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -13,6 +14,7 @@ int Menu_messageWithFont(char* message, char** pairs, TTF_Font* f) {
 	GFX_setMode(MODE_MAIN);
 	int dirty = 1;
 	while (1) {
+		Netplay_poll();
 		GFX_startFrame();
 		PAD_poll();
 
@@ -146,6 +148,7 @@ static int OptionEmulator_optionDetail(MenuList* list, int i) {
 }
 
 int OptionEmulator_openMenu(MenuList* list, int index) {
+	if (Netplay_busy()) return Menu_message("Disconnect GBA Link before changing core options.", (char*[]){"B", "BACK", NULL});
 	LOG_info("%s: limit to category %s\n", __FUNCTION__, list->category ? list->category : "<all>");
 
 	if (list->category == NULL) {

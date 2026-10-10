@@ -1,0 +1,590 @@
+--- a/rfu.c
++++ b/rfu.c
+@@ -19,6 +19,32 @@
+
+ #include "common.h"
+
++#if defined(__linux__) || defined(__APPLE__)
++#include <time.h>
++#endif
++
++#ifndef RFU_NET_TIME_US
++static u64 rfu_net_time_us(void) {
++#if defined(__linux__) || defined(__APPLE__)
++  struct timespec ts;
++  if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
++    return (u64)ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
++#endif
++  return 0; // Other targets retain the emulated-cycle deadline.
++}
++#define RFU_NET_TIME_US() rfu_net_time_us()
++#endif
++
++/* One peer frame plus transport latency can exceed the original RF deadline.
++ * Keep emulated timing, but do not report failure before a bounded real-time
++ * grace of two 60Hz frames has elapsed. This does not sleep or stall rendering. */
++#define RFU_NET_GRACE_US 33334
++static u64 rfu_wait_started_us;
++static bool rfu_real_deadline_expired(u32 limit_us) {
++  u64 now = RFU_NET_TIME_US();
++  return !now || !rfu_wait_started_us || now - rfu_wait_started_us >= limit_us;
++}
++
+ // Debug print logic:
+ #ifdef RFU_DEBUG
+   #define RFU_DEBUG_LOG(...) printf(__VA_ARGS__)
+@@ -32,6 +58,17 @@
+
+ #define RFU_DEF_TIMEOUT              32   // Expressed as frames (~533ms)
+ #define RFU_DEF_RTXMAX                4   // Up to 4 transmissions per send
++
++/* Real RFU transfers are host-clocked and expose one receive mailbox.
++ * A later exchange replaces unread data, rather than replaying stale frames.
++ * See gba-link-connection/docs/wireless_adapter.md (SendData / Waiting). */
++#define RFU_RX_QUEUE                  1
++static struct {
++  u32 host_peak, client_peak, host_dropped, client_dropped;
++  u32 host_replaced, client_replaced;
++  u32 host_ack_ok, host_late_ack, max_wait_us, rejected_spi, staged;
++  u32 host_no_reply, client_timeout, frames;
++} rfu_queue_stats;
+
+
+ // Unpacks big endian integers used for signaling
+@@ -135,10 +172,11 @@
+     u16 client_id;   // libretro client ID
+     u16 devid;       // Host-assigned device ID
+     u16 clttl;       // Client TTL (to check for disconnects)
++    u32 sent, acked; // Ordered TCP exchange confirmations, not game payload ACKs.
+     struct {
+       u32 datalen;   // Byte count of data waiting to be polled.
+       u8  data[16];  // Data received from client.
+-    } pkts[4];
++    } pkts[RFU_RX_QUEUE];
+   } clients[4];      // Connected clients IDs (zero means empty slot).
+ } rfu_host;
+
+@@ -146,11 +184,12 @@
+   u16 devid;         // Device ID assigned to the client (by the host?)
+   u16 clnum;         // Client number (0 to 3)
+   u16 host_id;       // Client ID for the host device.
+-  // Store host recevied packets (up to 8!)
++  bool tx_pending, rx_event; // Child stages uplink until a host exchange.
++  // Expose the latest host exchange until the GBA reads it.
+   struct {
+     u16 hblen;       // Bytes received from the host.
+     u8 hdata[128];   // Data received from the host (accumulated).
+-  } pkts[4];
++  } pkts[RFU_RX_QUEUE];
+ } rfu_client;
+
+ typedef struct {
+@@ -175,6 +214,60 @@
+ #define NET_RFU_HOST_SEND       0x05    // Host to client data send
+ #define NET_RFU_CLIENT_SEND     0x06    // Client to host data send
+ #define NET_RFU_CLIENT_ACK      0x07    // Client ACKs host received data.
++
++/* Bounded, game-specific tracing of the addresses observed corrupt on Brick.
++ * Never changes guest values or resets the RFU to hide a stalled game. */
++static struct { u32 word, pc, state, cnt, plen, tick; } rfu_trace[64];
++static u32 rfu_trace_count, rfu_watch_changes, rfu_watch_pointer_changes, rfu_stall_frames, rfu_watch_prev_progress;
++static bool rfu_watch_dumped, rfu_watch_game;
++void rfu_watch_configure(const char *code) {
++  rfu_watch_game = code && !strcmp(code, "BTME");
++}
++static bool rfu_watch_enabled(void) {
++  return rfu_watch_game &&
++    (rfu_state == RFU_STATE_HOST || rfu_state == RFU_STATE_CLIENT);
++}
++static void rfu_watch_dump(const char *reason) {
++  if (rfu_watch_dumped) return;
++  rfu_watch_dumped = true;
++  fprintf(stderr, "GBA Link WATCH %s: pc=%08x pointer=%08x bg0=%04x siocnt=%04x com=%u cmd=%02x cnt=%u plen=%u\n",
++    reason, reg[REG_PC], readaddress32(ewram, 0x33f0), read_ioreg(REG_BG0CNT),
++    read_ioreg(REG_SIOCNT), rfu_comstate, rfu_cmd, rfu_cnt, rfu_plen);
++  u32 start = rfu_trace_count > 64 ? rfu_trace_count - 64 : 0;
++  for (u32 n = start; n < rfu_trace_count; n++) {
++    unsigned k = n & 63;
++    fprintf(stderr, "GBA Link SPI trace: pc=%08x word=%08x com=%u cnt=%u plen=%u ticks=%u\n",
++      rfu_trace[k].pc, rfu_trace[k].word, rfu_trace[k].state,
++      rfu_trace[k].cnt, rfu_trace[k].plen, rfu_trace[k].tick);
++  }
++}
++void rfu_watch_dma(u32 src, u32 dst, u32 length, u32 type) {
++  if (!rfu_watch_enabled()) return;
++  fprintf(stderr, "GBA Link DMA large: pc=%08x src=%08x dst=%08x count=%u type=%u\n", reg[REG_PC], src, dst, length, type);
++  for (unsigned n = 0; n < 16; n++) fprintf(stderr, " r%u=%08x%s", n, reg[n], n%4==3?"\n":"");
++  rfu_watch_dump("dma-overwrites-library");
++}
++void rfu_watch_write(u32 address, u32 value, unsigned bits, u32 pc, unsigned source) {
++  if (!rfu_watch_enabled()) return;
++  u32 width = bits / 8, offset = address & 0x3ffff;
++  u32 old = 0, next = 0;
++  const char *name;
++  if ((address >> 24) == 2 && offset >= 0x33f0 && offset <= 0x33f3) {
++    old = readaddress32(ewram, 0x33f0); next = old;
++    for (u32 n = 0; n < width && offset + n <= 0x33f3; n++) {
++      u32 shift = (offset + n - 0x33f0) * 8;
++      next = (next & ~(255U << shift)) | (((value >> (n * 8)) & 255U) << shift);
++    }
++    name = "library-pointer";
++  } else if ((address >> 24) == 4 && (address & 0xffffff) == 8) {
++    old = read_ioreg(REG_BG0CNT); next = value & 0xdfff; name = "bg0-control";
++  } else return;
++  if (old == next) return;
++  if (((address >> 24) == 2 ? rfu_watch_pointer_changes++ : rfu_watch_changes++) < 256)
++    fprintf(stderr, "GBA Link WRITE %s: pc=%08x addr=%08x bits=%u source=%u old=%08x new=%08x com=%u cmd=%02x cnt=%u plen=%u\n",
++      name, pc, address, bits, source, old, next, rfu_comstate, rfu_cmd, rfu_cnt, rfu_plen);
++  if (old && (next >> 24) != 2 && (next >> 24) != 3 && (address >> 24) == 2) rfu_watch_dump(name);
++}
+
+ // Callbacks used to send and force-receive data.
+ void netpacket_send(uint16_t client_id, const void *buf, size_t len);
+@@ -235,9 +328,15 @@
+   rfu_comstate = RFU_COMSTATE_RESET;
+   rfu_timeout_cycles = 0;
+   rfu_resp_timeout = 0;
++  rfu_trace_count = rfu_watch_changes = rfu_watch_pointer_changes = rfu_stall_frames = rfu_watch_prev_progress = 0;
++  rfu_watch_dumped = false;
++  rfu_wait_started_us = 0;
++  memset(&rfu_tx_buf, 0, sizeof(rfu_tx_buf));
+   rfu_timeout = RFU_DEF_TIMEOUT;
+   rfu_rtx_max = RFU_DEF_RTXMAX;
+   memset(&rfu_host, 0, sizeof(rfu_host));
++  memset(&rfu_client, 0, sizeof(rfu_client));
++  memset(&rfu_queue_stats, 0, sizeof(rfu_queue_stats));
+
+   // Clear all the received broadcasts.
+   memset(&rfu_peer_bcst, 0, sizeof(rfu_peer_bcst));
+@@ -276,6 +375,8 @@
+     // Contains the slave timeout and retransmit count.
+     rfu_timeout = rfu_buf[0];
+     rfu_rtx_max = rfu_buf[0] >> 8;
++    fprintf(stderr, "GBA Link RFU setup: timeout_frames=%u retry_count=%u real_grace_us=%u\n",
++            rfu_timeout, rfu_rtx_max, RFU_NET_GRACE_US);
+     return 0;
+
+   case RFU_CMD_SYSVER:
+@@ -446,15 +547,24 @@
+   case RFU_CMD_SEND_DATA:
+     if (!rfu_plen)
+       return 0;
++    // SPI is game-controlled too: never let a malformed word count overwrite
++    // adapter state. Header-only ghost sends retain existing TX bytes.
++    if (rfu_plen > 1 + sizeof(rfu_tx_buf.buf) / sizeof(u32) ||
++        (rfu_state == RFU_STATE_CLIENT && rfu_plen > 5)) {
++      rfu_queue_stats.rejected_spi++;
++      return -2;
++    }
+
+     if (rfu_state == RFU_STATE_HOST) {
+       // Read data to be sent into the TX buffer
+       rfu_tx_buf.blen = rfu_buf[0] & 0x7F;
++      if (rfu_tx_buf.blen > 90) { rfu_queue_stats.rejected_spi++; return -2; }
+       memcpy(rfu_tx_buf.buf, &rfu_buf[1], (rfu_plen - 1)*sizeof(u32));
+     }
+     else if (rfu_state == RFU_STATE_CLIENT) {
+       // Same as above, but the header encoding is funny
+       rfu_tx_buf.blen = (rfu_buf[0] >> (8 + rfu_client.clnum * 5)) & 0x1F;
++      if (rfu_tx_buf.blen > 16) { rfu_queue_stats.rejected_spi++; return -2; }
+       memcpy(rfu_tx_buf.buf, &rfu_buf[1], (rfu_plen - 1)*sizeof(u32));
+     }
+
+@@ -466,21 +576,18 @@
+                     rfu_tx_buf.blen, rfu_plen - 1);
+       if (rfu_tx_buf.blen <= 90) {
+         for (i = 0; i < 4; i++)
+-          if (rfu_host.clients[i].devid)
++          if (rfu_host.clients[i].devid) {
++            rfu_host.clients[i].sent++;
+             rfu_net_send_data(rfu_host.clients[i].client_id,
+               NET_RFU_HOST_SEND, rfu_tx_buf.blen, rfu_tx_buf.buf, rfu_tx_buf.blen);
++          }
+       }
+     }
+     else if (rfu_state == RFU_STATE_CLIENT) {
+-      // Schedule data to be sent
+-      RFU_DEBUG_LOG("Client sending %d bytes / %d words to host\n",
+-                    rfu_tx_buf.blen, rfu_plen - 1);
+-      if (rfu_tx_buf.blen <= 16) {
+-        // Send it immediately! This is not really accurate.
+-        rfu_net_send_data(rfu_client.host_id, NET_RFU_CLIENT_SEND,
+-          (rfu_tx_buf.blen << 24) | (rfu_client.clnum << 16) | rfu_client.devid,
+-          rfu_tx_buf.buf, rfu_tx_buf.blen);
+-      }
++      /* A child cannot initiate RF: 24h/25h only stage its uplink.
++       * The host's next transfer clocks it out (including ghost sends). */
++      rfu_client.tx_pending = rfu_tx_buf.blen <= 16;
++      rfu_queue_stats.staged++;
+     }
+     else
+       return -1;   // We are not connected nor a host
+@@ -502,9 +609,7 @@
+           // Update byte count header for this client
+           rfu_buf[0] |= dlen << (8 + i * 5);
+           // Discard front packet
+-          memmove(&rfu_host.clients[i].pkts[0], &rfu_host.clients[i].pkts[1],
+-                  3 * sizeof(rfu_host.clients[i].pkts[0]));
+-          rfu_host.clients[i].pkts[3].datalen = 0;
++          rfu_host.clients[i].pkts[0].datalen = 0;
+         }
+       }
+       // Copy data into words into the RFU buffer.
+@@ -521,8 +626,7 @@
+         rfu_buf[cnt++] = leupack32(&rfu_client.pkts[0].hdata[j*4]);
+
+       // Move to the next packet
+-      memmove(&rfu_client.pkts[0], &rfu_client.pkts[1], sizeof(rfu_client.pkts[0]) * 3);
+-      rfu_client.pkts[3].hblen = 0;
++      rfu_client.pkts[0].hblen = 0;
+       return cnt;
+     }
+     break;
+@@ -576,6 +680,12 @@
+ // Called whenever the game flips the SIOCNT:Start bit to transmit a value.
+ // We simulate the reception and response of said value (over the SPI bus).
+ u32 rfu_transfer(u32 sent_value) {
++  if (rfu_watch_enabled()) {
++    unsigned k = rfu_trace_count++ & 63;
++    rfu_trace[k].word = sent_value; rfu_trace[k].pc = reg[REG_PC];
++    rfu_trace[k].state = rfu_comstate; rfu_trace[k].cnt = rfu_cnt;
++    rfu_trace[k].plen = rfu_plen; rfu_trace[k].tick = cpu_ticks;
++  }
+   u32 retval = 0x80000000;
+
+   switch (rfu_comstate) {
+@@ -644,8 +754,9 @@
+     // and reverse the clock roles (the RFU becomes master).
+     if (rfu_cmd == RFU_CMD_WAIT || rfu_cmd == RFU_CMD_RTX_WAIT || rfu_cmd == RFU_CMD_SEND_DATAW) {
+       rfu_comstate = RFU_COMSTATE_WAITEVENT;
+-      rfu_timeout_cycles = rfu_timeout * (16777216 / 60);  // Frames to cycles
+-      rfu_resp_timeout = rfu_rtx_max * (16777216 / 60 / 6);  // RFU "frame" to cycles
++      rfu_wait_started_us = RFU_NET_TIME_US();
++      rfu_timeout_cycles = rfu_timeout ? rfu_timeout * (16777216 / 60) : ~0U;  // Frames to cycles
++      rfu_resp_timeout = rfu_rtx_max ? rfu_rtx_max * (16777216 / 60 / 6) : ~0U;  // RFU "frame" to cycles
+     } else {
+       rfu_comstate = rfu_plen ? RFU_COMSTATE_RESPDAT : RFU_COMSTATE_WAITCMD;
+     }
+@@ -681,6 +792,26 @@
+
+ // Gets called every frame for basic device updates.
+ void rfu_frame_update() {
++  if (rfu_watch_enabled()) {
++    u32 progress = (rfu_comstate << 24) | (rfu_cnt << 8) | rfu_plen;
++    if (rfu_comstate == RFU_COMSTATE_WAITDAT && progress == rfu_watch_prev_progress) {
++      if (++rfu_stall_frames == 180) rfu_watch_dump("partial-command-stalled");
++    } else rfu_stall_frames = 0;
++    rfu_watch_prev_progress = progress;
++  }
++  if ((rfu_state == RFU_STATE_HOST || rfu_state == RFU_STATE_CLIENT) &&
++      ++rfu_queue_stats.frames % 300 == 0) {
++    fprintf(stderr, "GBA Link RFU queue: host_peak=%u client_peak=%u "
++            "host_dropped=%u client_dropped=%u host_no_reply=%u client_timeout=%u host_replaced=%u client_replaced=%u "
++            "ack_ok=%u late_ack=%u max_wait_us=%u rejected_spi=%u staged=%u state=%u com=%u cmd=%02x\n",
++            rfu_queue_stats.host_peak, rfu_queue_stats.client_peak,
++            rfu_queue_stats.host_dropped, rfu_queue_stats.client_dropped,
++            rfu_queue_stats.host_no_reply, rfu_queue_stats.client_timeout,
++            rfu_queue_stats.host_replaced, rfu_queue_stats.client_replaced,
++            rfu_queue_stats.host_ack_ok, rfu_queue_stats.host_late_ack,
++            rfu_queue_stats.max_wait_us, rfu_queue_stats.rejected_spi, rfu_queue_stats.staged,
++            rfu_state, rfu_comstate, rfu_cmd);
++  }
+   // If device is in reset state, do nothing really.
+   if (rfu_comstate != RFU_COMSTATE_RESET) {
+     u32 i;
+@@ -807,50 +938,48 @@
+       break;
+
+     case NET_RFU_HOST_SEND:
+-      // Only possible if we are a client
+-      if (rfu_state == RFU_STATE_CLIENT) {
++      if (rfu_state == RFU_STATE_CLIENT && client_id == rfu_client.host_id) {
+         u32 blen = hdata & 0x7f;
+         if (len >= blen + 12) {
+-          u32 i;
+-          // ACK the reception (so they know we are alive!)
++          if (blen) {
++            if (rfu_client.pkts[0].hblen) rfu_queue_stats.client_replaced++;
++            memset(rfu_client.pkts[0].hdata, 0, sizeof(rfu_client.pkts[0].hdata));
++            memcpy(rfu_client.pkts[0].hdata, payl, blen);
++            rfu_client.pkts[0].hblen = blen;
++          }
++          rfu_client.rx_event = true; // Even a zero-byte exchange wakes a child.
++          rfu_queue_stats.client_peak = MAX(rfu_queue_stats.client_peak, !!blen);
++          if (rfu_client.tx_pending) {
++            rfu_net_send_data(client_id, NET_RFU_CLIENT_SEND,
++              (rfu_tx_buf.blen << 24) | (rfu_client.clnum << 16) | rfu_client.devid,
++              rfu_tx_buf.buf, rfu_tx_buf.blen);
++            rfu_client.tx_pending = false;
++          }
++          // Confirm only after accepting the exchange and emitting the uplink.
+           rfu_net_send_cmd(client_id, NET_RFU_CLIENT_ACK,
+                            rfu_client.devid | (rfu_client.clnum << 16));
+-          // Receive data from the host. Queue que packet if possible
+-          for (i = 0; i < 4; i++) {
+-            if (!rfu_client.pkts[i].hblen) {
+-              memcpy(&rfu_client.pkts[i].hdata, payl, blen);
+-              rfu_client.pkts[i].hblen = blen;
+-              RFU_DEBUG_LOG("Recv host packet (%d bytes) Q[#%d]\n", blen, i);
+-              return;
+-            }
+-          }
+-          RFU_DEBUG_LOG("Client dropped a host packet\n");
+         }
+       }
+       break;
+
+     case NET_RFU_CLIENT_SEND:
+-      // Only available when we are hosting
+       if (rfu_state == RFU_STATE_HOST) {
+-        u32 i;
+         u16 cdevid = hdata & 0xffff;
+         u32 clid = (hdata >> 16) & 0x3;
+         u32 blen = hdata >> 24;
+-
+-        // Validate the slot with device ID
+-        if (rfu_host.clients[clid].devid == cdevid) {
+-          rfu_host.clients[clid].clttl = 0;   // Account for packet reception
+-          for (i = 0; i < 4; i++) {
+-            if (!rfu_host.clients[clid].pkts[i].datalen) {
+-              memcpy(rfu_host.clients[clid].pkts[i].data, payl, blen);
+-              rfu_host.clients[clid].pkts[i].datalen = blen;
+-              RFU_DEBUG_LOG("Recv client packet (%d bytes) Q[#%d]\n", blen, i);
+-              return;
+-            }
++        if (rfu_host.clients[clid].devid == cdevid && cdevid &&
++            rfu_host.clients[clid].client_id == client_id && blen <= 16 && len >= 12 + blen) {
++          rfu_host.clients[clid].clttl = 0;
++          if (blen) {
++            if (rfu_host.clients[clid].pkts[0].datalen) rfu_queue_stats.host_replaced++;
++            memset(rfu_host.clients[clid].pkts[0].data, 0, sizeof(rfu_host.clients[clid].pkts[0].data));
++            memcpy(rfu_host.clients[clid].pkts[0].data, payl, blen);
++            rfu_host.clients[clid].pkts[0].datalen = blen;
+           }
+-          RFU_DEBUG_LOG("Host dropped a client packet\n");
++          rfu_queue_stats.host_peak = MAX(rfu_queue_stats.host_peak, !!blen);
+         }
+       }
++      break; // A payload is not a transport confirmation.
+
+     case NET_RFU_CLIENT_ACK:
+       // Should only happen when hosting
+@@ -858,8 +987,12 @@
+         u32 devid = hdata & 0xffff;
+         u32 clid = (hdata >> 16) & 0x3;
+
+-        if (rfu_host.clients[clid].devid == devid)
+-          rfu_host.clients[clid].clttl = 0;   // Account for packet reception
++        if (devid && rfu_host.clients[clid].devid == devid &&
++            rfu_host.clients[clid].client_id == client_id) {
++          rfu_host.clients[clid].clttl = 0;
++          if (rfu_host.clients[clid].acked != rfu_host.clients[clid].sent)
++            rfu_host.clients[clid].acked++;
++        }
+       }
+     };
+   } else {
+@@ -884,8 +1017,8 @@
+     netpacket_poll_receive();
+
+     // Check if we are running our of time to respond.
+-    rfu_timeout_cycles -= MIN(cycles, rfu_timeout_cycles);
+-    rfu_resp_timeout   -= MIN(cycles, rfu_resp_timeout);
++    if (rfu_timeout) rfu_timeout_cycles -= MIN(cycles, rfu_timeout_cycles);
++    if (rfu_rtx_max) rfu_resp_timeout -= MIN(cycles, rfu_resp_timeout);
+
+     // Wait for GBA to go into slave mode before finishing the wait!
+     if ((read_ioreg(REG_SIOCNT) & 0x1) == 0) {
+@@ -899,7 +1032,9 @@
+         rfu_comstate = RFU_COMSTATE_WAITRESP;
+         RFU_DEBUG_LOG("Wait command resp: disconnect\n");
+       }
+-      else if (rfu_data_avail()) {
++      else if (rfu_state == RFU_STATE_CLIENT &&
++               (rfu_client.rx_event || rfu_data_avail())) {
++        rfu_client.rx_event = false;
+         // Some event is available!
+         rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_DATA;
+         rfu_buf[1] = 0x80000000;
+@@ -907,17 +1042,41 @@
+         rfu_plen = 2;
+         rfu_comstate = RFU_COMSTATE_WAITRESP;
+       }
+-      else if (rfu_state == RFU_STATE_HOST && !rfu_resp_timeout) {
+-        // We "retransmitted" the message N times (not really, but the equivalent
+-        // time has elapsed) and we simulate a lack of client response.
+-        rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_DATA | (1 << 8);
+-        rfu_buf[1] = 0x00000F0F;  // TODO: just using 4 slots for now
+-        rfu_buf[2] = 0x80000000;
+-        rfu_cnt = 0;
+-        rfu_plen = 3;
+-        rfu_comstate = RFU_COMSTATE_WAITRESP;
+-      }
+-      else if (!rfu_timeout_cycles) {
++      else if (rfu_state == RFU_STATE_HOST) {
++        u32 connected = 0, received = 0;
++        for (unsigned i = 0; i < 4; i++) if (rfu_host.clients[i].devid) {
++          connected |= 1U << i;
++          if (rfu_host.clients[i].acked == rfu_host.clients[i].sent)
++            received |= 1U << i;
++        }
++        u32 retry_us = MAX(RFU_NET_GRACE_US, (u32)rfu_rtx_max * (1000000 / 60 / 6));
++        bool retry_expired = !rfu_resp_timeout && rfu_real_deadline_expired(retry_us);
++        bool total_expired = !rfu_timeout_cycles &&
++          rfu_real_deadline_expired((u32)rfu_timeout * (1000000 / 60));
++        if (received == connected || retry_expired || total_expired) {
++          bool missing = received != connected;
++          if (missing) rfu_queue_stats.host_no_reply++;
++          else {
++            rfu_queue_stats.host_ack_ok++;
++            if (!rfu_resp_timeout) rfu_queue_stats.host_late_ack++;
++          }
++          if (rfu_wait_started_us) {
++            u64 elapsed = RFU_NET_TIME_US() - rfu_wait_started_us;
++            rfu_queue_stats.max_wait_us = MAX(rfu_queue_stats.max_wait_us, MIN(elapsed, 0xffffffffULL));
++          }
++          rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_DATA | (missing ? 1 << 8 : 0);
++          // Only actual receivers are marked. No fabricated inactive slots:
++          // real hardware marks a client inactive after ~4s, not one missed RF frame.
++          rfu_buf[1] = missing ? received : 0x80000000;
++          rfu_buf[2] = 0x80000000;
++          rfu_cnt = 0;
++          rfu_plen = missing ? 3 : 2;
++          rfu_comstate = RFU_COMSTATE_WAITRESP;
++        }
++      }
++      else if (!rfu_timeout_cycles &&
++               rfu_real_deadline_expired((u32)rfu_timeout * (1000000 / 60))) {
++        rfu_queue_stats.client_timeout++;
+         // We ran out of time, just return an "error" code
+         rfu_buf[0] = 0x99660000 | RFU_CMD_RESP_TIMEO;
+         rfu_buf[1] = 0x80000000;
+--- a/gba_memory.c
++++ b/gba_memory.c
+@@ -19,6 +19,9 @@
+
+ #include "common.h"
+ #include "streams/file_stream.h"
++extern void rfu_watch_write(u32, u32, unsigned, u32, unsigned);
++extern void rfu_watch_configure(const char *);
++extern void rfu_watch_dma(u32, u32, u32, u32);
+
+ /* Sound */
+ #define gbc_sound_tone_control_low(channel, regn)                             \
+@@ -1038,6 +1041,7 @@
+ {
+   uint32_t ioreg = ((address & 0xffffff) >> 1);
+   value &= 0xffff;
++  if (ioreg == REG_BG0CNT) rfu_watch_write(0x04000000 | (address & 0x3ff), value, 16, reg[REG_PC], 0);
+   switch(ioreg)
+   {
+     case REG_DISPCNT:
+@@ -1197,8 +1201,13 @@
+
+     // Register writes with side-effects, can raise an IRQ
+     case REG_IE:
++      write_ioreg(ioreg, value);
++      return check_interrupt();
+     case REG_IME:
+-      write_ioreg(ioreg, value);
++      // IME is a one-bit register. Reserved bits cannot enable IRQs.
++      // RFU SDK critical sections commonly write the register address (0208h)
++      // to clear it; accepting any nonzero value permits destructive reentry.
++      write_ioreg(REG_IME, value & 1);
+       return check_interrupt();
+
+     // Read-only registers
+@@ -1842,18 +1851,24 @@
+
+ cpu_alert_type function_cc write_memory8(u32 address, u8 value)
+ {
++  if ((address >> 24) == 2 && ((address & 0x3fffc) == 0x33f0))
++    rfu_watch_write(address, value, 8, reg[REG_PC], 0);
+   write_memory(8);
+   return CPU_ALERT_NONE;
+ }
+
+ cpu_alert_type function_cc write_memory16(u32 address, u16 value)
+ {
++  if ((address >> 24) == 2 && ((address & 0x3fffc) == 0x33f0))
++    rfu_watch_write(address, value, 16, reg[REG_PC], 0);
+   write_memory(16);
+   return CPU_ALERT_NONE;
+ }
+
+ cpu_alert_type function_cc write_memory32(u32 address, u32 value)
+ {
++  if ((address >> 24) == 2 && ((address & 0x3fffc) == 0x33f0))
++    rfu_watch_write(address, value, 32, reg[REG_PC], 0);
+   write_memory(32);
+   return CPU_ALERT_NONE;
+ }
+@@ -1886,6 +1901,7 @@
+
+ static void load_game_config_over(const char *gamecode)
+ {
++  rfu_watch_configure(gamecode);
+   unsigned i = 0;
+   is_known_game = false;
+
+@@ -2096,6 +2112,8 @@
+   write_memory##tfsize(type##_ptr, read_value)                                \
+
+ #define dma_write_ewram(type, tfsize)                                         \
++  if ((type##_ptr & 0x3fffc) == 0x33f0)                                      \
++    rfu_watch_write(type##_ptr, read_value, tfsize, reg[REG_PC], 1);            \
+   address##tfsize(ewram, type##_ptr & 0x3FFFF) = eswap##tfsize(read_value);   \
+   if (address##tfsize(ewram, (type##_ptr & 0x3FFFF) + 0x40000))               \
+     alerts |= CPU_ALERT_SMC;                                                  \
+@@ -2371,6 +2389,7 @@
+   cpu_alert_type ret = CPU_ALERT_NONE;
+   u32 tfsizes = dmach->length_type == DMA_16BIT ? 1 : 2;
+   u32 byte_length = dmach->length << tfsizes;
++  if ((dst_ptr >> 24) == 2 && byte_length >= 0x10000) rfu_watch_dma(src_ptr, dst_ptr, dmach->length, dmach->length_type);
+
+   // Divide the DMA transaction into up to three transactions depending on
+   // the source and destination memory regions.
+--- a/cpu.cc
++++ b/cpu.cc
+@@ -606,7 +606,7 @@
+
+ #define check_for_interrupts()                                                \
+   if((read_ioreg(REG_IE) & read_ioreg(REG_IF)) &&                             \
+-   read_ioreg(REG_IME) && ((reg[REG_CPSR] & 0x80) == 0))                      \
++   (read_ioreg(REG_IME) & 1) && ((reg[REG_CPSR] & 0x80) == 0))                      \
+   {                                                                           \
+     REG_MODE(MODE_IRQ)[6] = reg[REG_PC] + 4;                                  \
+     REG_SPSR(MODE_IRQ) = reg[REG_CPSR];                                       \
+@@ -1433,7 +1433,7 @@
+ }
+
+ #define cpu_has_interrupt()                                 \
+-  (!(reg[REG_CPSR] & 0x80) && read_ioreg(REG_IME) &&        \
++  (!(reg[REG_CPSR] & 0x80) && (read_ioreg(REG_IME) & 1) &&        \
+     (read_ioreg(REG_IE) & read_ioreg(REG_IF)))
+
+ // Returns whether the CPU has a pending interrupt.
+--- a/arm/arm64_stub.S
++++ b/arm/arm64_stub.S
+@@ -592,6 +592,10 @@
+   ret                                     /* return                        */;\
+                                                                              ;\
+ ext_store_ewram_u##store_type:                                               ;\
++  and w3, w0, #0x3fffc                                                       ;\
++  mov w4, #0x33f0                                                             ;\
++  cmp w3, w4                                                                 ;\
++  b.eq ext_store_u##store_type##_safe                                         ;\
+   and w0, w0, #(0x3ffff & ~stmask)        /* Mask to mirror memory (+align)*/;\
+   add x3, reg_base, #EWRAM_OFF            /* x3 = ewram base               */;\
+   str_op w1, [x0, x3]                     /* store data                    */;\
+@@ -715,6 +719,10 @@
+   str w1, [x0, x3]                        // store data
+   ret                                     // Return
+ ext_store_ewram_u32_safe:
++  and w3, w0, #0x3fffc
++  mov w4, #0x33f0
++  cmp w3, w4
++  b.eq ext_store_u32_safe
+   and w0, w0, #(0x3ffff)                  // Mask to mirror memory (no need to align!)
+   add x3, reg_base, #(EWRAM_OFF)          // x3 = ewram base
+   str w1, [x0, x3]                        // store data

@@ -1,0 +1,27 @@
+{
+  "revision": "82c06048d8161713002155a4a3f162dcd3775191",
+  "ble_transport_version": 5,
+  "deployed": false,
+  "hardware_handoff_verified": false,
+  "source_evidence": "Brick Mic launch.sh conditionally stops temporary Bluetooth after exit; previous GBA worker only checked service/Powered. Physical post-Mic state not captured because both SSH targets unreachable.",
+  "change": "Explicit Bluetooth create/join enables persistent NextUI setting; private worker asynchronously starts absent service or sets Powered=true, reuses existing ready service and never restores off state. Existing daemon with missing adapter is awaited without restart.",
+  "local_gates": {
+    "power_state_ready_off_absent_daemon_pending": true,
+    "denials_fail_without_restart": true,
+    "bounded_cancel": true,
+    "full_race_suite_no_skips": true,
+    "real_mac_core_four_cases": true,
+    "arm_frontend_and_helper_build": true,
+    "arm_variant_5": true,
+    "core_hash_unchanged": true,
+    "actual_package_install_rollback": true
+  },
+  "logs_sha256": {
+    "bluetooth-power-handoff-tests.log": "414958702d0d040c2c79ca564a83581a5f88df6448f40237f73af3d8c3f1c589",
+    "bluetooth-power-handoff-install-rollback.log": "1503d00d5c9880247eed1ab2356b79233c6a90db6f04335393b4ca0ab1ef934d"
+  },
+  "pending": [
+    "Both handhelds reachable for backed-up deployment",
+    "User tests Brick Mic exit -> GBA Bluetooth create/join, cancellation and reverse handoff"
+  ]
+}

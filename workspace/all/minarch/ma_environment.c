@@ -5,6 +5,7 @@
 #include "ma_input.h"
 #include "ra_integration.h"
 #include "ma_environment.h"
+#include "ma_netplay.h"
 
 static bool set_rumble_state(unsigned port, enum retro_rumble_effect effect, uint16_t strength) {
 	// TODO: handle other args? not sure I can
@@ -16,6 +17,8 @@ bool environment_callback(unsigned cmd, void *data) { // copied from picoarch in
 	// LOG_info("environment_callback: %i\n", cmd);
 
 	switch(cmd) {
+	case RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE:
+		return Netplay_setInterface((const struct retro_netpacket_callback *)data);
 	// case RETRO_ENVIRONMENT_SET_ROTATION: { /* 1 */
 	// 	LOG_info("RETRO_ENVIRONMENT_SET_ROTATION %i\n", *(int *)data); // core requests frontend to handle rotation
 	// 	break;

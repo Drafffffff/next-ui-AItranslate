@@ -1,0 +1,285 @@
+{
+  "release_revision": "94e0c73612faeaf87307caeaeb276f3b44871730",
+  "status": "native core, compatibility and cleanup verified; user UI and commercial game acceptance pending",
+  "physical": {
+    "hotspot-current-normal": {
+      "passed": true,
+      "scope": "Real ARM gpSP/core frontend over dedicated physical hotspot; open-source SIO probe, not Mario Tennis UI/game acceptance",
+      "case": "normal",
+      "requested_frame_bound": 1800,
+      "hashes": {
+        "core-runner.elf": "6397907f2f38d3cd758dd40a038857a69afb4b27a7d371a86790411f2bc0b7ab",
+        "nextui-gba-bluetooth.elf": "65fb9b45e10c66ec958854dcbdb400f04953a5bb24cf31c2425005946ffdbc6b",
+        "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+        "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+      },
+      "revision": "fa076ef0e9602a20a131dfd14aa4d2837f9aa5a6",
+      "dirty_source": true,
+      "config_before": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "offline_game_pids": [
+        "",
+        "9995"
+      ],
+      "roles": {
+        "host": {
+          "code": 0,
+          "log": "state=1 Creating hotspot room...\nHOTSPOT_AP_READY ssid=NextUI-GBA-8C82\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=86 received=88 core_polls=0 skipped=0 socket_reads=427 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14710873 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16890 send_calls=89 wait_packets=88\nGBA Link pacing: wait_calls=86 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14710873 rtt_us=22600 rttvar_us=9566 rto_us=224000 retrans_total=0 unacked=0\nGBA Link traffic: sent=385 received=403 core_polls=0 skipped=0 socket_reads=1831 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14715881 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16890 send_calls=393 wait_packets=403\nGBA Link pacing: wait_calls=385 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14715881 rtt_us=17581 rttvar_us=691 rto_us=220000 retrans_total=1 unacked=1\nGBA Link traffic: sent=684 received=720 core_polls=0 skipped=0 socket_reads=3159 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14720889 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16890 send_calls=697 wait_packets=686\nGBA Link pacing: wait_calls=684 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14720889 rtt_us=14807 rttvar_us=545 rto_us=216000 retrans_total=1 unacked=0\nGBA Link traffic: sent=983 received=1036 core_polls=0 skipped=0 socket_reads=4626 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14725893 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16890 send_calls=1001 wait_packets=996\nGBA Link pacing: wait_calls=983 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14725893 rtt_us=13127 rttvar_us=291 rto_us=216000 retrans_total=2 unacked=5\nGBA Link traffic: sent=1282 received=1351 core_polls=0 skipped=0 socket_reads=6121 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14730898 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16890 send_calls=1305 wait_packets=1311\nGBA Link pacing: wait_calls=1282 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14730898 rtt_us=12492 rttvar_us=596 rto_us=216000 retrans_total=3 unacked=0\nGBA Link traffic: sent=1581 received=1667 core_polls=0 skipped=0 socket_reads=7605 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14735905 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16890 send_calls=1609 wait_packets=1627\nGBA Link pacing: wait_calls=1581 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14735905 rtt_us=12070 rttvar_us=425 rto_us=216000 retrans_total=3 unacked=0\nRESULT frames=1800 video=1800 sent=1800 received=1897 marker=00005678 counter=14151 paused_ticks=0 status=Peer disconnected\nDUEL local_hp=19 peer_hp=18\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        },
+        "join": {
+          "code": 0,
+          "log": "DISCOVERED_HOTSPOT_ROOM GBA Link 8C82\ncontext canceled\nstate=2 Connecting to hotspot room...\nHOTSPOT_CLIENT_READY ssid=NextUI-GBA-8C82\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=277 received=265 core_polls=0 skipped=0 socket_reads=1113 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=27942856 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16168 send_calls=283 wait_packets=243\nGBA Link pacing: wait_calls=265 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=27942856 rtt_us=15858 rttvar_us=1161 rto_us=216000 retrans_total=0 unacked=1\nGBA Link traffic: sent=592 received=564 core_polls=0 skipped=0 socket_reads=2494 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=27947860 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16168 send_calls=603 wait_packets=542\nGBA Link pacing: wait_calls=564 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=27947860 rtt_us=4768 rttvar_us=984 rto_us=208000 retrans_total=0 unacked=0\nGBA Link traffic: sent=908 received=863 core_polls=0 skipped=0 socket_reads=3957 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=27952865 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16168 send_calls=924 wait_packets=841\nGBA Link pacing: wait_calls=863 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=27952865 rtt_us=4910 rttvar_us=740 rto_us=208000 retrans_total=1 unacked=0\nGBA Link traffic: sent=1223 received=1162 core_polls=0 skipped=0 socket_reads=5412 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=27957869 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16168 send_calls=1244 wait_packets=1138\nGBA Link pacing: wait_calls=1162 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=27957869 rtt_us=6969 rttvar_us=904 rto_us=208000 retrans_total=2 unacked=0\nGBA Link traffic: sent=1539 received=1461 core_polls=0 skipped=0 socket_reads=6888 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=27962871 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16168 send_calls=1565 wait_packets=1436\nGBA Link pacing: wait_calls=1461 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=27962871 rtt_us=6686 rttvar_us=2046 rto_us=208000 retrans_total=2 unacked=0\nGBA Link traffic: sent=1855 received=1760 core_polls=0 skipped=0 socket_reads=8348 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=27967880 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16168 send_calls=1886 wait_packets=1736\nGBA Link pacing: wait_calls=1760 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=27967880 rtt_us=5849 rttvar_us=862 rto_us=208000 retrans_total=3 unacked=0\nRESULT frames=1800 video=1800 sent=1897 received=1800 marker=00001234 counter=1538 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=18 peer_hp=19\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        }
+      },
+      "config_after": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "restored": [
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.70\naddress=dc:44:60:86:0c:81\nuuid=d0ecf799-95c7-51f0-8876-17c6ee2c7181\n",
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.91\naddress=dc:44:60:7d:1e:b1\nuuid=18fbe6a8-e3b6-569d-b9b6-938e8ffdac3e\n"
+      ],
+      "completed_at": 1791391922
+    },
+    "hotspot-release-reverse": {
+      "passed": true,
+      "scope": "Real ARM gpSP/core frontend over dedicated physical hotspot; open-source SIO probe, not Mario Tennis UI/game acceptance",
+      "case": "normal",
+      "requested_frame_bound": 1800,
+      "hashes": {
+        "core-runner.elf": "6397907f2f38d3cd758dd40a038857a69afb4b27a7d371a86790411f2bc0b7ab",
+        "nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10",
+        "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+        "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+      },
+      "revision": "fa076ef0e9602a20a131dfd14aa4d2837f9aa5a6",
+      "dirty_source": true,
+      "config_before": [
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8",
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a"
+      ],
+      "offline_game_pids": [
+        "9995",
+        ""
+      ],
+      "roles": {
+        "host": {
+          "code": 0,
+          "log": "state=1 Creating hotspot room...\nHOTSPOT_AP_READY ssid=NextUI-GBA-9EB2\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=99 received=103 core_polls=0 skipped=0 socket_reads=492 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=28011558 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=17955 send_calls=102 wait_packets=101\nGBA Link pacing: wait_calls=99 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=28011558 rtt_us=13721 rttvar_us=2573 rto_us=216000 retrans_total=0 unacked=4\nGBA Link traffic: sent=398 received=417 core_polls=0 skipped=0 socket_reads=1832 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=28016565 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=17955 send_calls=406 wait_packets=400\nGBA Link pacing: wait_calls=398 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=28016565 rtt_us=15462 rttvar_us=445 rto_us=216000 retrans_total=1 unacked=1\nGBA Link traffic: sent=697 received=734 core_polls=0 skipped=0 socket_reads=3094 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=28021570 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=17955 send_calls=710 wait_packets=635\nGBA Link pacing: wait_calls=697 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=28021570 rtt_us=15030 rttvar_us=351 rto_us=216000 retrans_total=1 unacked=0\nGBA Link traffic: sent=996 received=1049 core_polls=0 skipped=0 socket_reads=4409 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=28026576 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=17955 send_calls=1014 wait_packets=894\nGBA Link pacing: wait_calls=996 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=28026576 rtt_us=15922 rttvar_us=327 rto_us=216000 retrans_total=2 unacked=0\nGBA Link traffic: sent=1295 received=1365 core_polls=0 skipped=0 socket_reads=5707 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=28031581 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=17955 send_calls=1318 wait_packets=1162\nGBA Link pacing: wait_calls=1295 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=28031581 rtt_us=15286 rttvar_us=275 rto_us=216000 retrans_total=2 unacked=0\nGBA Link traffic: sent=1594 received=1681 core_polls=0 skipped=0 socket_reads=7057 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=28036588 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=17955 send_calls=1622 wait_packets=1408\nGBA Link pacing: wait_calls=1594 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=28036588 rtt_us=11792 rttvar_us=326 rto_us=212000 retrans_total=3 unacked=0\nRESULT frames=1800 video=1800 sent=1800 received=1898 marker=00005678 counter=14159 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=19 peer_hp=18\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        },
+        "join": {
+          "code": 0,
+          "log": "DISCOVERED_HOTSPOT_ROOM GBA Link 9EB2\ncontext canceled\nstate=2 Connecting to hotspot room...\nHOTSPOT_CLIENT_READY ssid=NextUI-GBA-9EB2\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=283 received=271 core_polls=0 skipped=0 socket_reads=1285 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14785464 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16155 send_calls=289 wait_packets=271\nGBA Link pacing: wait_calls=270 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14785464 rtt_us=15013 rttvar_us=13204 rto_us=216000 retrans_total=2 unacked=0\nGBA Link traffic: sent=599 received=570 core_polls=0 skipped=0 socket_reads=2750 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14790470 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16155 send_calls=610 wait_packets=570\nGBA Link pacing: wait_calls=569 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14790470 rtt_us=4525 rttvar_us=2944 rto_us=208000 retrans_total=2 unacked=0\nGBA Link traffic: sent=914 received=869 core_polls=0 skipped=0 socket_reads=4202 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14795470 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16155 send_calls=930 wait_packets=868\nGBA Link pacing: wait_calls=868 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14795470 rtt_us=6447 rttvar_us=4449 rto_us=208000 retrans_total=3 unacked=0\nGBA Link traffic: sent=1230 received=1168 core_polls=0 skipped=0 socket_reads=5670 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14800471 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16155 send_calls=1251 wait_packets=1167\nGBA Link pacing: wait_calls=1167 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14800471 rtt_us=3239 rttvar_us=159 rto_us=204000 retrans_total=3 unacked=0\nGBA Link traffic: sent=1544 received=1466 core_polls=0 skipped=0 socket_reads=7126 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14805474 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16155 send_calls=1570 wait_packets=1466\nGBA Link pacing: wait_calls=1465 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14805474 rtt_us=4054 rttvar_us=1884 rto_us=208000 retrans_total=3 unacked=1\nGBA Link traffic: sent=1860 received=1765 core_polls=0 skipped=0 socket_reads=8574 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14810480 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=16155 send_calls=1891 wait_packets=1765\nGBA Link pacing: wait_calls=1764 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nGBA Link TCP: mono_ms=14810480 rtt_us=5821 rttvar_us=958 rto_us=208000 retrans_total=4 unacked=0\nRESULT frames=1800 video=1800 sent=1898 received=1800 marker=00001234 counter=1551 paused_ticks=0 status=Peer disconnected\nDUEL local_hp=18 peer_hp=19\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        }
+      },
+      "config_after": [
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8",
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a"
+      ],
+      "restored": [
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.91\naddress=dc:44:60:7d:1e:b1\nuuid=18fbe6a8-e3b6-569d-b9b6-938e8ffdac3e\n",
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.70\naddress=dc:44:60:86:0c:81\nuuid=d0ecf799-95c7-51f0-8876-17c6ee2c7181\n"
+      ],
+      "completed_at": 1791391993
+    },
+    "hotspot-release-core": {
+      "passed": true,
+      "scope": "Real ARM gpSP/core frontend over dedicated physical hotspot; open-source SIO probe, not Mario Tennis UI/game acceptance",
+      "case": "core-mismatch",
+      "requested_frame_bound": 240,
+      "hashes": {
+        "core-runner.elf": "6397907f2f38d3cd758dd40a038857a69afb4b27a7d371a86790411f2bc0b7ab",
+        "nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10",
+        "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+        "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+      },
+      "revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
+      "dirty_source": false,
+      "config_before": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "offline_game_pids": [
+        "",
+        "9995"
+      ],
+      "roles": {
+        "join": {
+          "code": 1,
+          "log": "DISCOVERED_HOTSPOT_ROOM GBA Link 8C82\ncontext canceled\nstate=2 Connecting to hotspot room...\nHOTSPOT_CLIENT_READY ssid=NextUI-GBA-8C82\nstate=3 Checking core, ROM and link mode...\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Core build mismatch: install the same update\nDUEL local_hp=0 peer_hp=0\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        },
+        "host": {
+          "code": 1,
+          "log": "state=1 Creating hotspot room...\nHOTSPOT_AP_READY ssid=NextUI-GBA-8C82\nstate=5 Core build mismatch: install the same update\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Core build mismatch: install the same update\nDUEL local_hp=0 peer_hp=0\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        }
+      },
+      "config_after": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "restored": [
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.70\naddress=dc:44:60:86:0c:81\nuuid=d0ecf799-95c7-51f0-8876-17c6ee2c7181\n",
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.91\naddress=dc:44:60:7d:1e:b1\nuuid=18fbe6a8-e3b6-569d-b9b6-938e8ffdac3e\n"
+      ],
+      "completed_at": 1791392013
+    },
+    "hotspot-release-rom": {
+      "passed": true,
+      "scope": "Real ARM gpSP/core frontend over dedicated physical hotspot; open-source SIO probe, not Mario Tennis UI/game acceptance",
+      "case": "rom-mismatch",
+      "requested_frame_bound": 240,
+      "hashes": {
+        "core-runner.elf": "6397907f2f38d3cd758dd40a038857a69afb4b27a7d371a86790411f2bc0b7ab",
+        "nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10",
+        "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+        "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da",
+        "probe-other.gba": "9e6e59031fe7850557471d6206c54c23a245f971baf29dec43713ddef12b2d25"
+      },
+      "revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
+      "dirty_source": false,
+      "config_before": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "offline_game_pids": [
+        "",
+        "9995"
+      ],
+      "roles": {
+        "join": {
+          "code": 1,
+          "log": "DISCOVERED_HOTSPOT_ROOM GBA Link 8C82\ncontext canceled\nstate=2 Connecting to hotspot room...\nHOTSPOT_CLIENT_READY ssid=NextUI-GBA-8C82\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=ROM mismatch: use identical ROM files\nDUEL local_hp=0 peer_hp=0\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        },
+        "host": {
+          "code": 1,
+          "log": "state=1 Creating hotspot room...\nHOTSPOT_AP_READY ssid=NextUI-GBA-8C82\nstate=3 Checking core, ROM and link mode...\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=ROM mismatch: use identical ROM files\nDUEL local_hp=0 peer_hp=0\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        }
+      },
+      "config_after": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "restored": [
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.70\naddress=dc:44:60:86:0c:81\nuuid=d0ecf799-95c7-51f0-8876-17c6ee2c7181\n",
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.91\naddress=dc:44:60:7d:1e:b1\nuuid=18fbe6a8-e3b6-569d-b9b6-938e8ffdac3e\n"
+      ],
+      "completed_at": 1791392032
+    },
+    "hotspot-final-mode-mismatch": {
+      "passed": true,
+      "scope": "Real ARM gpSP/core frontend over dedicated physical hotspot; open-source SIO probe, not Mario Tennis UI/game acceptance",
+      "case": "mode-mismatch",
+      "hashes": {
+        "core-runner.elf": "6397907f2f38d3cd758dd40a038857a69afb4b27a7d371a86790411f2bc0b7ab",
+        "nextui-gba-bluetooth.elf": "65fb9b45e10c66ec958854dcbdb400f04953a5bb24cf31c2425005946ffdbc6b",
+        "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+        "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+      },
+      "revision": "fa076ef0e9602a20a131dfd14aa4d2837f9aa5a6",
+      "dirty_source": true,
+      "config_before": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "offline_game_pids": [
+        "",
+        "9995"
+      ],
+      "roles": {
+        "host": {
+          "code": 1,
+          "log": "state=1 Creating hotspot room...\nHOTSPOT_AP_READY ssid=NextUI-GBA-8C82\nstate=5 Link mode mismatch\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Link mode mismatch\nDUEL local_hp=0 peer_hp=0\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        },
+        "join": {
+          "code": 1,
+          "log": "DISCOVERED_HOTSPOT_ROOM GBA Link 8C82\ncontext canceled\nstate=2 Connecting to hotspot room...\nHOTSPOT_CLIENT_READY ssid=NextUI-GBA-8C82\nstate=3 Checking core, ROM and link mode...\nRESULT frames=0 video=0 sent=0 received=0 marker=00000000 counter=0 paused_ticks=0 status=Link mode mismatch\nDUEL local_hp=0 peer_hp=0\nHOTSPOT_RESTORED session_resources=true\ncontext canceled\n"
+        }
+      },
+      "config_after": [
+        "5dd7ac59b02d74a368b23088647b18b5818d7aa7a86af5b2f10b5c4e4905296a",
+        "e9cd670e1fff0f91cba85351d0711bc95bbddeec8409b9454cc3d9689046d6c8"
+      ],
+      "restored": [
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.70\naddress=dc:44:60:86:0c:81\nuuid=d0ecf799-95c7-51f0-8876-17c6ee2c7181\n",
+        "bssid=58:11:22:71:07:28\nfreq=2442\nssid=lishijie\nid=0\nmode=station\npairwise_cipher=CCMP\ngroup_cipher=CCMP\nkey_mgmt=WPA2-PSK\nwpa_state=COMPLETED\nip_address=192.168.50.91\naddress=dc:44:60:7d:1e:b1\nuuid=18fbe6a8-e3b6-569d-b9b6-938e8ffdac3e\n"
+      ],
+      "completed_at": 1791391671
+    },
+    "hotspot-ble-regression": {
+      "passed": true,
+      "scope": "Real ARM gpSP and production frontend BLE helper over physical radio; open-source SIO test ROM, not commercial game/UI acceptance",
+      "case": "normal",
+      "hashes": {
+        "core-runner.elf": "42d7d2439fa95ce87aad232215ffa1b9901370d2675f57b544a604fa43bfdc7b",
+        "nextui-gba-bluetooth.elf": "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10",
+        "gpsp_libretro.so": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+        "probe.gba": "d0866f6282b80b2d42c20554e0f781833ffdaca53a7572cd6424f72db6a2f4da"
+      },
+      "uncommitted_test_source": false,
+      "source_revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
+      "game_pids": [
+        "",
+        "9995"
+      ],
+      "return_codes": [
+        0,
+        0
+      ],
+      "host_log": "state=1 Preparing room...\nLEGACY_ADVERTISEMENT_PREPARED\nLEGACY_OWNED_ADVERTISEMENT_INTERVAL interval_ms=100\nROOM_READY\nSERVER_FD_ACQUIRED notify=true mtu=517\nSERVER_FD_ACQUIRED notify=false mtu=517\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=6 received=3 core_polls=0 skipped=0 socket_reads=13 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=14891319 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=18807 send_calls=8 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=240 received=249 marker=00005678 counter=1655 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=19 peer_hp=18\nHOST_SUMMARY messages=0 mtu=517\nBLE stream queue: final=true queued_bytes=0 peak_bytes=262 sent=247 confirmed=247 ack_max_us=47434\nread frontend data: connection reset by peer\n",
+      "join_log": "DISCOVERED_ROOM GBA Link 9321\nstate=2 Connecting to room...\ncontext canceled\nINTERVAL_APPLIED handle=0 actual_us=7500\nRAW_ATT_READY mtu=517 payload=512 tx=419 rx=422\nstate=3 Checking core, ROM and link mode...\nstate=4 Link connected (2 players)\nGBA Link traffic: sent=177 received=171 core_polls=0 skipped=0 socket_reads=319 tx_queue=0 RFU host_data=0/0 client_data=0/0 ack=0/0\nGBA Link latency: mono_ms=28123190 ack_samples=0 ack_avg_us=0 ack_max_us=0 ack_bins_16_33_66_200_over_ms=0/0/0/0/0 ack_unmeasured=0 outstanding=0 peak=0 poll_gap_max_us=19579 send_calls=182 wait_packets=0\nGBA Link pacing: wait_calls=0 core_video_frames=0 screen_video_frames=0 video_max_us=0 present_max_us=0 ack_cancelled=0 ack_paused=0\nRESULT frames=240 video=240 sent=251 received=240 marker=00001234 counter=176 paused_ticks=0 status=Link connected (2 players)\nDUEL local_hp=18 peer_hp=19\nBLE stream queue: final=true queued_bytes=0 peak_bytes=185 sent=258 confirmed=257 ack_max_us=90145\nEOF\n",
+      "completed_at": 1791392071
+    }
+  },
+  "transport_unchanged_from_tested_revision": "1fa13c102fcb6437da6ed81a50b02980e277e0e9",
+  "final_change": "Local getifaddrs once-per-second IP refresh only; full ARM build and actual payload install/rollback rechecked.",
+  "fixed_password": "NextUI-GBA-Link",
+  "concurrency_rejected": "AP plus router coexistence measured 40% ICMP loss; dedicated AP selected. Virtual second STA aliases failed authentication.",
+  "restoration": "Saved supplicant config hashes unchanged across physical tests; original Wi-Fi COMPLETED on both. No default route rewrite or supplicant restart.",
+  "verification_logs": [
+    "hotspot-go-tests-final.log",
+    "hotspot-tcp-regression.log",
+    "hotspot-lifecycle-mac.log",
+    "hotspot-lifecycle-arm.log",
+    "hotspot-install-regression.log",
+    "lan-wait-payload-install-rollback.log"
+  ],
+  "limits": [
+    "SIO open-source Link Duel exercises serial keys/health, not commercial Mario Tennis RFU gameplay.",
+    "1,800 frame probes are short tests, not ten-minute hotspot soak.",
+    "Mode rejection used the earlier helper before only max-profile-bound guard addition; core and ROM mismatch used final helper.",
+    "BLE 4328 ten-minute measurements retain older exact hashes and are not attributed to the new full release.",
+    "Top-tab native rendering and persistent IP page have compiled successfully but require user screen acceptance."
+  ],
+  "installed_release_short_probe": {
+    "passed": false,
+    "scope": "Synthetic NextUI wire through production Bluetooth helpers over physical BLE, not commercial game acceptance",
+    "seconds": 600,
+    "payload": 104,
+    "pattern": "padded",
+    "helper_path": "/mnt/SDCARD/.system/tg5040/bin/nextui-gba-bluetooth.elf",
+    "fixture_sha256": "8480c28a39fc170faf402c3262ddf6d3d140bf7598dfbf5ce8c00ae2da3c13c6",
+    "fixture_source_sha256": "1c4a63ba4b9d14fe0719128ea13ddbc2d4dc8cd54230a2881f56450a0f6cbb6a",
+    "uncommitted_test_source": false,
+    "source_revision": "44143440e7d5f11bd5709c92b6f8b0c75c0b94a8",
+    "game_pids": [
+      "",
+      "9995"
+    ],
+    "helper_sha256": [
+      "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10",
+      "daf6847ba8ad22eddeb468548c70d9e173ea66e41024920c23094c1009790e10"
+    ],
+    "completed_at": 1791392495,
+    "outcome": "stopped_early_by_user_request",
+    "reason": "User requested around two minutes and wanted to start own gameplay validation; own benchmark controller interrupted and both probe/helper processes confirmed absent.",
+    "last_completed_progress": {
+      "count": "8209",
+      "elapsed_ms": "205517",
+      "max_rtt_us": "123006",
+      "outstanding_limit": "1"
+    },
+    "ten_minute_requirement_satisfied_by_this_run": false
+  }
+}

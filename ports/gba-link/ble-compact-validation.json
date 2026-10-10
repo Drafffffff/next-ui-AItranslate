@@ -1,0 +1,97 @@
+{
+  "candidate_revision": "a29e3e2480221352c85d01af58a55baae0d2d63d",
+  "ble_transport_version": 4,
+  "default_build_transport_version": 3,
+  "candidate_only": true,
+  "hardware_contacted": false,
+  "deployed": false,
+  "hardware_performance_verified": false,
+  "preserved_core_hash": "425cc3f67a645b1bce816376a772a460817a14fbda6676138a2e76b7e194db99",
+  "rfu_shape_wire_costs": [
+    {
+      "data": "0",
+      "encoded": "26",
+      "old_value": "50",
+      "new_value": "39",
+      "acl": "3->2"
+    },
+    {
+      "data": "4",
+      "encoded": "34",
+      "old_value": "58",
+      "new_value": "47",
+      "acl": "3->2"
+    },
+    {
+      "data": "8",
+      "encoded": "38",
+      "old_value": "62",
+      "new_value": "51",
+      "acl": "3->3"
+    },
+    {
+      "data": "12",
+      "encoded": "42",
+      "old_value": "66",
+      "new_value": "55",
+      "acl": "3->3"
+    },
+    {
+      "data": "16",
+      "encoded": "46",
+      "old_value": "70",
+      "new_value": "59",
+      "acl": "3->3"
+    },
+    {
+      "data": "24",
+      "encoded": "54",
+      "old_value": "78",
+      "new_value": "67",
+      "acl": "4->3"
+    },
+    {
+      "data": "40",
+      "encoded": "70",
+      "old_value": "94",
+      "new_value": "83",
+      "acl": "4->4"
+    },
+    {
+      "data": "92",
+      "encoded": "122",
+      "old_value": "146",
+      "new_value": "135",
+      "acl": "6->6"
+    }
+  ],
+  "test_log_sha256": {
+    "compact-candidate-tests.log": "de7fcfcb1b9048f5ff932ae85c75d7c2b8f20809b1660a090eefc41992828018",
+    "compact-baseline-tests.log": "8f32e6891dbb4500aa837251e7adeee94c29f9509696fb1e64b7a611b118c7ac",
+    "compact-repeat-tests.log": "dc6983a95e768f76532bde9033c09773dfea2a1359c39200d1575fdebd75e593",
+    "compact-baseline-variant-test.log": "659d91d788e96a422345ef8908078ce33839be4e43ef8294cf951583fc534d3b",
+    "compact-v3-control-integration.log": "2f079c1cfb75d177b9880faf884b224b124298ad6725247d5a59f2bfcce68aae",
+    "compact-package-install-rollback.log": "fd3aa7e2651feec683508979943b35e1a3f9c637a9072f3683a2c1983cd9c454",
+    "compact-elf-variant-check.log": "f843eebcd5996a42363286ee1a2046e934f6861d0d4ba5ee61de8864984246de"
+  },
+  "local_gates": {
+    "candidate_race_suite_no_skips": true,
+    "v3_control_real_core_4_cases": true,
+    "v4_real_core_4_cases": true,
+    "crc_epoch_sequence_and_truncation": true,
+    "mtu20_23_64_512_and_max_message": true,
+    "duplex_backpressure_cancel_peer_exit": true,
+    "targeted_repeats_10": true,
+    "peripheral_bootstrap_and_build_variant": true,
+    "arm_compile_and_actual_elf_version": true,
+    "actual_candidate_install_checksums_and_rollback": true,
+    "frontend_source_unchanged": true
+  },
+  "scope": "Native Mac cores over in-memory BLE packets, byte/27-byte segmentation accounting, and offline ARM package; not physical radio or Mario Tennis gameplay. Baseline full suite intentionally skips unrequested integration; separate opt-in v3 control runs all four core cases.",
+  "prioritization": [
+    "First physical A/B compact envelope; some RFU shapes save one packet, some save no packet.",
+    "If packet count improves but tails persist, inspect owned HCI/event and process/core waits.",
+    "LE CoC requires vendor kernel/firmware proof before implementation/default changes.",
+    "Keep Wi-Fi/hotspot alternatives. No red indicator threshold or game timeout changes."
+  ]
+}
