@@ -1,0 +1,1616 @@
+{
+  "base_commit": "3c77f77",
+  "archive_branch": "codex/cdda-i-brick-memory-experiments",
+  "ui_branch": "codex/cdda-i-steam-deck-ui",
+  "note": "Original uncommitted files, byte-exact archive excluding Python bytecode; build outputs remain local and ignored. Categories apply to files, not all embedded patches. See patch-block classifications for mixed scripts.",
+  "files": [
+    {
+      "path": "ports/cdda-brick-i/README.md",
+      "sha256": "2980f0fb3c9dee399b1135e40a5b1276ed671127697223239c35855ae7d1973b",
+      "category": "mixed",
+      "size": 13504
+    },
+    {
+      "path": "ports/cdda-brick-i/active-cache-dedup-diagnostic.cpp",
+      "sha256": "6f8d107330cc8049d118b61bbef2ed3fbb3bff592aa0aa82edfeffae101650be",
+      "category": "memory-and-validation",
+      "size": 1867
+    },
+    {
+      "path": "ports/cdda-brick-i/adaptive-placement-test.cpp",
+      "sha256": "0b332d3c5c3c15079f85f09d691a95d0e05ab381018e20881d9d4d1c0de9bdfb",
+      "category": "memory-and-validation",
+      "size": 5576
+    },
+    {
+      "path": "ports/cdda-brick-i/adaptive-placement.py",
+      "sha256": "5a7a8218b66db5963da561bf5a8707580646946bcf71a5fdbf0c64cff836909c",
+      "category": "memory-and-validation",
+      "size": 2448
+    },
+    {
+      "path": "ports/cdda-brick-i/apply-port.py",
+      "sha256": "6c13aced77d20ebacececccaffac2dc356ba08d152b1bb0776a69b7b1ffb614b",
+      "category": "mixed",
+      "size": 51299
+    },
+    {
+      "path": "ports/cdda-brick-i/audio-test.cpp",
+      "sha256": "724e06e6c12b0a318684f63ed21bab4daea5ea376e62aa788f2805ef846afa09",
+      "category": "platform",
+      "size": 1833
+    },
+    {
+      "path": "ports/cdda-brick-i/baseline-report.md",
+      "sha256": "991c401c2f2c61959465ecc029b7756ff5a4a6de61c4282e20c3f36ddfea0ca8",
+      "category": "mixed",
+      "size": 189
+    },
+    {
+      "path": "ports/cdda-brick-i/bmp-test-utils.py",
+      "sha256": "19bb4adb32863f4394db14aabca233be4eb00e44dde3c1f1947bab462352cd56",
+      "category": "ui",
+      "size": 1465
+    },
+    {
+      "path": "ports/cdda-brick-i/bounded-cache-test.cpp",
+      "sha256": "b85c9a607cf5ca06b94471787063e263b2f6dbda4ab32d558070e28c3c97d69c",
+      "category": "memory-and-validation",
+      "size": 6134
+    },
+    {
+      "path": "ports/cdda-brick-i/bounded-compression.py",
+      "sha256": "589311e7b0f7312e1e3e154fe829838e8e1853a64e18a2d8374cad70948c0234",
+      "category": "memory-and-validation",
+      "size": 7725
+    },
+    {
+      "path": "ports/cdda-brick-i/bounded-font-cache.py",
+      "sha256": "effd2e1b434e222873fb9885caf227e3861723005f837de1b1d433024494d5bc",
+      "category": "memory-and-validation",
+      "size": 9414
+    },
+    {
+      "path": "ports/cdda-brick-i/bounded-json.py",
+      "sha256": "ed24e35dd4f897908d52db3891ac49364d798aa62b60ee6387802b09b89c2eb1",
+      "category": "correctness-and-validation",
+      "size": 1573
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_active_queue.cpp",
+      "sha256": "8bca28b67802071a9b18e2c725e167c5a29a7ee0f272de7a9faab5d2f72668f5",
+      "category": "memory-and-validation",
+      "size": 15853
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_active_queue.h",
+      "sha256": "e98960c5e72cc0900a89900ab02e05b1acde945521a58f14821111c5578c1934",
+      "category": "memory-and-validation",
+      "size": 477
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_adaptive_placement.h",
+      "sha256": "02abfb2aad9447a5e32b968eddc57a0e4d8bed84dc880c40d5cc37726b967c86",
+      "category": "memory-and-validation",
+      "size": 6468
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_ammo_cache.h",
+      "sha256": "a66591e985b294ff37b31b361d834c7fb0a323f8240a3272ceb8ac7cd09024f4",
+      "category": "startup-performance",
+      "size": 312
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_bounded_cache.h",
+      "sha256": "b5c4217e216da830b955729cbcfa79b24ab6a98a6d26e4cf5d527b57f6d7faa9",
+      "category": "memory-and-validation",
+      "size": 4257
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_compression_cache.h",
+      "sha256": "0bfddd95ac0d1c19b6046b79b3920ac628da34bc4dfb6801051a83bc2dd94efb",
+      "category": "memory-and-validation",
+      "size": 747
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_font_alias.h",
+      "sha256": "2057324bac32575ba6df03ac59ea7a5530d598a1835c48d282cc3e3846cee63b",
+      "category": "memory-and-validation",
+      "size": 1657
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_gui.h",
+      "sha256": "ee252181c1dc6b541c0193ee4ab6166209413621b77a70922f6ecf99dd3a400b",
+      "category": "ui",
+      "size": 91
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_gui_fallback.h",
+      "sha256": "470d28a9fce559d423bea3bd70e6ae2d95c48708923bde64795e57bdf7b99ea2",
+      "category": "ui",
+      "size": 555
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_input.cpp",
+      "sha256": "6d7663918f23281b01f2131b9c21128245f78dbe4253d5b333c66f905f77a0ed",
+      "category": "ui",
+      "size": 57459
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_input.h",
+      "sha256": "94bded59024f5b5f6f5aaa1e4fd9e847d946207ae08e8e188071b8ff32f82954",
+      "category": "ui",
+      "size": 912
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_lazy_map.h",
+      "sha256": "63ce5a7bfad87e446bec81f7f59e2004726fbb9f9ddd4d2122a3544e8c9b8e58",
+      "category": "memory-and-validation",
+      "size": 3376
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_load_timer.h",
+      "sha256": "ee6b7742e0d2405cad0f9df965d7e6db00963f83c8ea62b68043059d06281a16",
+      "category": "startup-performance",
+      "size": 1285
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_map_borrow.cpp",
+      "sha256": "89a96bf91d81d2593dd914e800d50bd20704d7619553eef3c01648b46da5f670",
+      "category": "memory-and-validation",
+      "size": 1888
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_map_borrow.h",
+      "sha256": "ab62aaf835c6f802be4ddcd9123aa0def0d256978f0c3d656914d893d734b040",
+      "category": "memory-and-validation",
+      "size": 6380
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_map_reclaim.cpp",
+      "sha256": "c4fb34f0f2510666e3d3a372996e9118fb1fe7ebe6634b8dcd01af40680a4164",
+      "category": "memory-and-validation",
+      "size": 1232
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_map_reclaim.h",
+      "sha256": "349a17d6814fa541f56ab26818f57a82d45b3f77a803564fcbb7525eb7c522a3",
+      "category": "memory-and-validation",
+      "size": 416
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_memory.cpp",
+      "sha256": "080bea428e88dc9b794e8090673494734089ecdec42e59de4c86a401870af1a3",
+      "category": "memory-and-validation",
+      "size": 23309
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_memory.h",
+      "sha256": "afd31a0bed07c3ffcd1bdb768121f78735227795e50b0cb73549316092633128",
+      "category": "memory-and-validation",
+      "size": 1751
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_parsed_pack.cpp",
+      "sha256": "080822fd1d28df3a837d79e80886f2bd0baf4f476c4b97b898e70aeeb788476b",
+      "category": "startup-performance",
+      "size": 5393
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_parsed_pack.h",
+      "sha256": "fc0228c5e427d93f8b690dc78838e5b674efc2ecfc8e44d8168345d495162aab",
+      "category": "startup-performance",
+      "size": 214
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_phase_sort.h",
+      "sha256": "d48614b23b51a60215979e3ff581cf4e50021a3c67be7a049bc50ed5bd9e3197",
+      "category": "startup-performance",
+      "size": 1661
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_placement.h",
+      "sha256": "e466dd8e84cbb8a881fd981c7ba1a98c5119d57248ed151c3e2cde6c3a8ca3c9",
+      "category": "memory-and-validation",
+      "size": 1469
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_power.cpp",
+      "sha256": "4cffa00bdeec66196aad4e8bf0300d36fc8805f4b2158195aee8ac21cb4f0127",
+      "category": "platform",
+      "size": 1958
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_power.h",
+      "sha256": "e79a649d3a5baf2304bc4383daddc28c3aaf5569c2fc040a7571857142af0518",
+      "category": "platform",
+      "size": 192
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_pressure.h",
+      "sha256": "91216577bc8d532ca282aa48d91d08edf39ab9371fccfa97a7e47ddec13ea176",
+      "category": "memory-and-validation",
+      "size": 6179
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_reload.cpp",
+      "sha256": "84c111b931504992ea03372fe6b35868c9d6bbe97ed17f679491a58291e729a8",
+      "category": "memory-and-validation",
+      "size": 4127
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_reload.h",
+      "sha256": "08561e941f8b2b9bf344a767bcb3be210d5174bec8e1f73f11de136736ba9e03",
+      "category": "memory-and-validation",
+      "size": 2425
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_stringbuf.h",
+      "sha256": "df8aa7a3c07ccddefb55e7d232de8bb4eaf6778896df597dc47d0b2ad6354900",
+      "category": "memory-and-validation",
+      "size": 1238
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_ui.h",
+      "sha256": "d34d1f925ddd7823d8b84288cafb4f47e214794ab29111aee7b2ca1ec731843a",
+      "category": "ui",
+      "size": 392
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_validation_cache.cpp",
+      "sha256": "66f6dca3ae2e25d3a30fde868c431ddeca660a5793c8bf4d0b4916e23392462d",
+      "category": "startup-performance",
+      "size": 7641
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_validation_cache.h",
+      "sha256": "4fa9451b837caf093859f6fa544f4466ad51d0541421ff6c4a52477c7c1901f1",
+      "category": "startup-performance",
+      "size": 235
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_vehicle_cache.h",
+      "sha256": "431eefe2981e38efc828adbbcc4051bd922fce69ed5b54c97803d5e01dee0fc2",
+      "category": "memory-and-validation",
+      "size": 380
+    },
+    {
+      "path": "ports/cdda-brick-i/brick_vehicle_runtime.inc",
+      "sha256": "dffa68bde679c58db3d73f415f882984bc55e90eb9ebe1207dce41583f23fdac",
+      "category": "memory-and-validation",
+      "size": 33403
+    },
+    {
+      "path": "ports/cdda-brick-i/build-parsed-pack.cpp",
+      "sha256": "9ba4a01e64ceb6c81607c5148498d3cef42e7217fe8683dd67c0a144012d4de0",
+      "category": "startup-performance",
+      "size": 1004
+    },
+    {
+      "path": "ports/cdda-brick-i/build-parsed-pack.py",
+      "sha256": "ece75b50d7ae6b7ee7681c4720f1327f96c9a564adc6fc204da63c43e809481c",
+      "category": "startup-performance",
+      "size": 1963
+    },
+    {
+      "path": "ports/cdda-brick-i/build.sh",
+      "sha256": "bc54b96ade1cbc33d8f2844f638f2ca3bfe332fa67cd63bd495fb32d6b56a813",
+      "category": "mixed",
+      "size": 2406
+    },
+    {
+      "path": "ports/cdda-brick-i/charset-test.cpp",
+      "sha256": "4d38fd731fc742db25a25dccd9098df3b1824eb53e16c90eef1daa99eb7ac92a",
+      "category": "ui",
+      "size": 663
+    },
+    {
+      "path": "ports/cdda-brick-i/check-active-cache-dedup.py",
+      "sha256": "ac2bc91e4ecbdf31a6c060591a388e61fe204fd6919c66b571a4a05f5a4c61b8",
+      "category": "memory-and-validation",
+      "size": 4524
+    },
+    {
+      "path": "ports/cdda-brick-i/check-bounded-json-stage.py",
+      "sha256": "0d392e2c42492317a8b1aace2c012ec661383d86aa2773c05e5bc8636dc27a34",
+      "category": "correctness-and-validation",
+      "size": 3504
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cache-options.py",
+      "sha256": "cfdde0935a6cd8000c0ccae805ebfef137847b599a40a3409350a0e1a9e91ecd",
+      "category": "startup-performance",
+      "size": 4934
+    },
+    {
+      "path": "ports/cdda-brick-i/check-city-memory.py",
+      "sha256": "45b81b95d05343fbc428f972f448929b724df919f217ff087d073c5c541d8c07",
+      "category": "memory-and-validation",
+      "size": 5573
+    },
+    {
+      "path": "ports/cdda-brick-i/check-city-results.py",
+      "sha256": "8c98a4b278a09a5ab5f2e6bcd268b47fac8aa15f93b225054fe2ac2d6a974a8c",
+      "category": "memory-and-validation",
+      "size": 6390
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-active-queue.py",
+      "sha256": "9393fb3829ed6bde4248ce4527f81612f711f66bdf636452d2e2ae75d528eee7",
+      "category": "memory-and-validation",
+      "size": 4338
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-lossless-items.py",
+      "sha256": "2cfc24326b5b6a4c2d3b55a4644972e02d3a244685e2e7ee78e1e1f07e90a0c4",
+      "category": "memory-and-validation",
+      "size": 7625
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-mod-order-stage.py",
+      "sha256": "a0b94dec0916fdb5f01325cc1fdea15bfcaf60b007c0494bafa2afb85a4df019",
+      "category": "memory-and-validation",
+      "size": 8010
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-payload.py",
+      "sha256": "198bb6df1ce05c681452a3770bb2cb8219550be67496b89fcadc90b25fabf14e",
+      "category": "memory-and-validation",
+      "size": 5489
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-queue-mixed.py",
+      "sha256": "aa7036fd37eb384a57570a153f956bbb049a9d66687b1358688899c4b7f34dd4",
+      "category": "memory-and-validation",
+      "size": 5682
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-queue-restore.py",
+      "sha256": "b046cbfd74dd2c2724b3953ca66095d6090b33eb5b967165fc1c3115eb12a903",
+      "category": "memory-and-validation",
+      "size": 5838
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-queue-stage.py",
+      "sha256": "99ee79de1314632299931794d4b0062ed99227fca40ebcb42efe6e2de2f21ea2",
+      "category": "memory-and-validation",
+      "size": 4993
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-queue-storage.py",
+      "sha256": "0e2123abc2cb1b21554119cca93caa0d4b4de7fbe4ac7de57c43219caa95790b",
+      "category": "memory-and-validation",
+      "size": 5703
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-reload-stage.py",
+      "sha256": "b8a6256a8bb0dd7438f95bbe145be65763c2d54f7261869fc03f7d2fcc8ec947",
+      "category": "memory-and-validation",
+      "size": 6935
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-rle.py",
+      "sha256": "128203c66ad4f6184c22f3c5c315a1f5e0ef004d0ed81ac28d43fbdaa4202f37",
+      "category": "memory-and-validation",
+      "size": 4556
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-vehicle-abort.py",
+      "sha256": "683cdd10f49659974674a56746099983e5a6df57daa7c758bce1c6f7755786bd",
+      "category": "memory-and-validation",
+      "size": 2511
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-vehicle-runtime-stage.py",
+      "sha256": "4ff378c3ad29b703d548ef68aa13405c6aefc9b3aeff92c13655a3ebb242162c",
+      "category": "memory-and-validation",
+      "size": 2555
+    },
+    {
+      "path": "ports/cdda-brick-i/check-cold-vehicle-runtime.py",
+      "sha256": "198e72c57b00563fd819195a15754e56f48ccc1bf2ddb799452e54574ea762a2",
+      "category": "memory-and-validation",
+      "size": 5795
+    },
+    {
+      "path": "ports/cdda-brick-i/check-compression-cache.py",
+      "sha256": "e6ed2998385ba403079f67675c545200b32cc714a952c4aa90858e5be688f89f",
+      "category": "memory-and-validation",
+      "size": 5809
+    },
+    {
+      "path": "ports/cdda-brick-i/check-compression-stage.py",
+      "sha256": "2fed069dc81ee47753de3bdc6d7b82edbbc7d26377ffe36eae9138dca85c78ea",
+      "category": "memory-and-validation",
+      "size": 7419
+    },
+    {
+      "path": "ports/cdda-brick-i/check-context-gameplay.py",
+      "sha256": "0d464bce2e7538ba2004fbebaca2640a4124d050160453a5b247e052f3fa7840",
+      "category": "mixed",
+      "size": 11320
+    },
+    {
+      "path": "ports/cdda-brick-i/check-empty-vehicle-trace.py",
+      "sha256": "c5dfb001ef2721fa935a534cab2d82c7b7920c0385a503d02fd11f157f03a87a",
+      "category": "memory-and-validation",
+      "size": 5353
+    },
+    {
+      "path": "ports/cdda-brick-i/check-exact-item-rle-stage.py",
+      "sha256": "b8a7dd0900acc2581b94d3444597d829a538ac831a04f8f9c63ce8639de4f7b1",
+      "category": "memory-and-validation",
+      "size": 9093
+    },
+    {
+      "path": "ports/cdda-brick-i/check-font-cache.py",
+      "sha256": "37edd39a8586079fe0ed1793105d5caf165e194dc74386ac23a46ef555f4aebb",
+      "category": "memory-and-validation",
+      "size": 4642
+    },
+    {
+      "path": "ports/cdda-brick-i/check-governor-results.py",
+      "sha256": "2a35ec20c7a803b303f8df66caf9c605ccfdac20811b16e49e1324783216f2f4",
+      "category": "memory-and-validation",
+      "size": 4869
+    },
+    {
+      "path": "ports/cdda-brick-i/check-interrupted-submaps.py",
+      "sha256": "b080bac522b9ba93d202347dccde4c96e14008985adab92f1241d476b00a0f54",
+      "category": "memory-and-validation",
+      "size": 3783
+    },
+    {
+      "path": "ports/cdda-brick-i/check-item-rle-single-pass.py",
+      "sha256": "d83eb30960ebb910bf7defc70d50a268e9e921799ab12a4db96bd256831df884",
+      "category": "memory-and-validation",
+      "size": 6542
+    },
+    {
+      "path": "ports/cdda-brick-i/check-lossless-items-stage.py",
+      "sha256": "0e8355afc2eec19f4add1b23b6e2e9c5c20817932afb2a45e2dc03ddcb30a2f2",
+      "category": "memory-and-validation",
+      "size": 7218
+    },
+    {
+      "path": "ports/cdda-brick-i/check-map-reload-diagnosis.py",
+      "sha256": "9c58b66cddd5448704a41b7028ab75b04c0ca16f8e1accc24a7b99ca5ab3ed73",
+      "category": "memory-and-validation",
+      "size": 5626
+    },
+    {
+      "path": "ports/cdda-brick-i/check-mapbuffer-save.py",
+      "sha256": "14165f9594a2580db596aeacf246f9278bcd8922e4435766a49e641f451a08dc",
+      "category": "memory-and-validation",
+      "size": 6156
+    },
+    {
+      "path": "ports/cdda-brick-i/check-mapbuffer-stage.py",
+      "sha256": "701482d4f6148d10e452436ef57e9b4a0e7758bbcbc81cea675efd41a5bb5692",
+      "category": "memory-and-validation",
+      "size": 3647
+    },
+    {
+      "path": "ports/cdda-brick-i/check-mapped-json.py",
+      "sha256": "aa781c665576613dddc83fba8a7336bb32959c0e5abcbe371997dc590a57634a",
+      "category": "correctness-and-validation",
+      "size": 3597
+    },
+    {
+      "path": "ports/cdda-brick-i/check-memory-exploration.py",
+      "sha256": "dcb5d51c303c2e7aaca5330ad4a997a3c1336becb61ad7cad11313ba5efed220",
+      "category": "memory-and-validation",
+      "size": 3999
+    },
+    {
+      "path": "ports/cdda-brick-i/check-minimap-reclaim.py",
+      "sha256": "bdd743a453e88ccbea66a998f4bf5db1d497a850973872d2e26082515e4d44cd",
+      "category": "memory-and-validation",
+      "size": 4456
+    },
+    {
+      "path": "ports/cdda-brick-i/check-npc-heartbeat-default-stage.py",
+      "sha256": "23df0bc9e5bdc232d5e89d16036c7ba8755483cd5347d0620caae13e6b68b8f5",
+      "category": "correctness-and-validation",
+      "size": 6599
+    },
+    {
+      "path": "ports/cdda-brick-i/check-npc-heartbeat-default.py",
+      "sha256": "abd48e4e79712f21920e2be6298c3a6b676636890d0eabfaa030589d7b6825e8",
+      "category": "correctness-and-validation",
+      "size": 5906
+    },
+    {
+      "path": "ports/cdda-brick-i/check-npc-heartbeat.py",
+      "sha256": "38c8034f24aea8903b7ef8aa597575cd2c48087085867da75a1a481bc369fb7e",
+      "category": "correctness-and-validation",
+      "size": 4528
+    },
+    {
+      "path": "ports/cdda-brick-i/check-parsed-pack.py",
+      "sha256": "a9706e0031bf55a4cc04267ab889c1f59b1b026607434933d0e034f5b21cdeba",
+      "category": "startup-performance",
+      "size": 2640
+    },
+    {
+      "path": "ports/cdda-brick-i/check-pressure-menus.py",
+      "sha256": "4f90dcfb50a3e45a045278ea6f9cf3199d86ff2cf540964111da1bdac04c4a11",
+      "category": "memory-and-validation",
+      "size": 2295
+    },
+    {
+      "path": "ports/cdda-brick-i/check-pressure.py",
+      "sha256": "db63c5dbadf32d8fa4ea7f2923078f8172be6d5f517990045ea62ee38a4b031e",
+      "category": "memory-and-validation",
+      "size": 11435
+    },
+    {
+      "path": "ports/cdda-brick-i/check-reload-state.py",
+      "sha256": "ff1c240e0f5496e4b27e41757298470cc875a2e31758ae7e61b57fa0d23a3dff",
+      "category": "memory-and-validation",
+      "size": 2355
+    },
+    {
+      "path": "ports/cdda-brick-i/check-save-correctness.py",
+      "sha256": "7a16cf913a2d7a95d3c4ea15b1f6a83e99ce50fd8685acb565932decfd7b1266",
+      "category": "memory-and-validation",
+      "size": 6325
+    },
+    {
+      "path": "ports/cdda-brick-i/check-shared-queue-stage.py",
+      "sha256": "ea24bb9a9f03647c1127d88d14e1c5449e1c274cf5af2b971e831ef777a34878",
+      "category": "memory-and-validation",
+      "size": 7489
+    },
+    {
+      "path": "ports/cdda-brick-i/check-sidebar-redraw.py",
+      "sha256": "7c0d4269d3dca235d892f84b581ed26a14466da0ecc422381fe1a1543dc781a7",
+      "category": "memory-and-validation",
+      "size": 5125
+    },
+    {
+      "path": "ports/cdda-brick-i/check-source-replay.py",
+      "sha256": "2ecde4f50d14810f1fdb508f361ac914cd5e7b16f7901f0b27124644e31cc1f8",
+      "category": "mixed",
+      "size": 3038
+    },
+    {
+      "path": "ports/cdda-brick-i/check-stable-vehicle-cache-stage.py",
+      "sha256": "0d15311b2202c3d30a739032bf5385e6e0a74df235d236e4c19d57ba41186933",
+      "category": "memory-and-validation",
+      "size": 5186
+    },
+    {
+      "path": "ports/cdda-brick-i/check-stable-vehicle-cache.py",
+      "sha256": "a0d80fe01c09dd255104afa5cc55d66f3a4862b21abc4dffb2873f4d63c2193a",
+      "category": "memory-and-validation",
+      "size": 6454
+    },
+    {
+      "path": "ports/cdda-brick-i/check-submap-reclaim.py",
+      "sha256": "83f8cfae933f89414c6a38fc5bf56face5f75fe799ce0d41774baa5744283e3c",
+      "category": "memory-and-validation",
+      "size": 3655
+    },
+    {
+      "path": "ports/cdda-brick-i/check-submap-stage.py",
+      "sha256": "aeeb8afbcf70847f57924ebcde4bf6c8307fc74c4cd27066a04602f32d14f058",
+      "category": "memory-and-validation",
+      "size": 8309
+    },
+    {
+      "path": "ports/cdda-brick-i/check-suspend-gameplay.py",
+      "sha256": "cba49fe7ed33aafbff2299067edbee8b5aa200926de22351b8cd746efa539358",
+      "category": "platform",
+      "size": 9764
+    },
+    {
+      "path": "ports/cdda-brick-i/check-suspend-layout-stage.py",
+      "sha256": "a06ab4be327e033f459e010bb4607f319a5e651a8a2a0d41e0038bbd7f9af016",
+      "category": "platform",
+      "size": 5395
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-active-queue-diagnostic.cpp",
+      "sha256": "b8fc5fd522a9c99e66dc5ba76714efbd0b679e74b7f546a758c48dccced06a06",
+      "category": "memory-and-validation",
+      "size": 4604
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-active-queue-test.cpp",
+      "sha256": "64c5e5dba7d821550bdebd9d4d82d494822c250a85ec508835edc031375752c1",
+      "category": "memory-and-validation",
+      "size": 7220
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-active-queue.py",
+      "sha256": "2684f4de5d9cfc951834f2560a2887b32b3382e8420f54f85896f3ae757aa21e",
+      "category": "memory-and-validation",
+      "size": 960
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-lossless-items-test.cpp",
+      "sha256": "b82bbb77d6a845ad393ba21e0ce49f8b22e481b6beb9d6b2a86ae9afc46def8b",
+      "category": "memory-and-validation",
+      "size": 12948
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-lossless-items.py",
+      "sha256": "a02dd808f6671ac53d355bcd279c4eb535ebd0c8707858a1f4c162cf270a6993",
+      "category": "memory-and-validation",
+      "size": 9797
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-payload-diagnostic.cpp",
+      "sha256": "20dd320182d8131792b5fa4a878ac1ba4c2f403d7130697362e5729578032bb1",
+      "category": "memory-and-validation",
+      "size": 2495
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-queue-mixed-test.cpp",
+      "sha256": "7518348c7437edc311e17fcd05f439f0414032b32c6445d3e8978dd90ef23512",
+      "category": "memory-and-validation",
+      "size": 12054
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-queue-storage-test.cpp",
+      "sha256": "df510af53c09e25fceaccf97f5ea05e938a536375032dab8afa0f9fa1434251e",
+      "category": "memory-and-validation",
+      "size": 13067
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-queue-storage.py",
+      "sha256": "e229c42a8929198786658cd355e3c18dfca992a93a262c006b6c354123972d19",
+      "category": "memory-and-validation",
+      "size": 11301
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-reload-game-test.cpp",
+      "sha256": "324199776705defe88fb0656cb62ba28d456f4206a960726cb2ecbb2704cf6ff",
+      "category": "memory-and-validation",
+      "size": 3157
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-reload.py",
+      "sha256": "f85d74fb312e848d69aebae11217cdcbc75cbcb6d59d511e93058bb856586c4b",
+      "category": "memory-and-validation",
+      "size": 7722
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-rle-diagnostic.cpp",
+      "sha256": "0b002784081fcb579f2780d6292551dea9d82d0fcd00825bd3b34ad707b0a320",
+      "category": "memory-and-validation",
+      "size": 1639
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-shape.py",
+      "sha256": "924190810fa0e531091c84d10119255c43d1e736beb6214f8cf451d77dbc1be5",
+      "category": "memory-and-validation",
+      "size": 4578
+    },
+    {
+      "path": "ports/cdda-brick-i/cold-vehicle-runtime-test.cpp",
+      "sha256": "0fc66c5727d1e24332fa6458649e636f6f7e48ad502c0c9a1d07d8c0cca69a9a",
+      "category": "memory-and-validation",
+      "size": 15731
+    },
+    {
+      "path": "ports/cdda-brick-i/compact-mapgen.py",
+      "sha256": "f636c7d6a8082a46f80b4002447d3ea7ef240662ed0d79e036972d1a33e4ef16",
+      "category": "memory-and-validation",
+      "size": 10516
+    },
+    {
+      "path": "ports/cdda-brick-i/compare-expanded-map-items.py",
+      "sha256": "f8032437aba0405ede7132cbce0029fa02b557d9b26a3d7efade0427c6b2a8b7",
+      "category": "memory-and-validation",
+      "size": 4425
+    },
+    {
+      "path": "ports/cdda-brick-i/compare-mapgen-diagnostics.py",
+      "sha256": "04b768f609a82efb3870f3c7f0904bc157306ec6bdeecf549154a754fef4c971",
+      "category": "memory-and-validation",
+      "size": 4133
+    },
+    {
+      "path": "ports/cdda-brick-i/compare-memory-runs.py",
+      "sha256": "179cf9a0ec14f1286a6ad94334e485f94f478ddf54915c15c635ac2e5a63f036",
+      "category": "memory-and-validation",
+      "size": 4580
+    },
+    {
+      "path": "ports/cdda-brick-i/compare-save-runs.py",
+      "sha256": "5d74d284a6ab637dda2e559461bc2faed7be7bc4ddbdec1a48b498146dd681d3",
+      "category": "memory-and-validation",
+      "size": 3920
+    },
+    {
+      "path": "ports/cdda-brick-i/compression-cache-test.cpp",
+      "sha256": "e498c45c8e30d38bed94779930886e8c2334ee16cd00e9a579e2050dd89d8415",
+      "category": "memory-and-validation",
+      "size": 10603
+    },
+    {
+      "path": "ports/cdda-brick-i/container-build.sh",
+      "sha256": "e7edf250889679e9aed124258d61de546d435921540b135b1d43c989120cd094",
+      "category": "mixed",
+      "size": 13913
+    },
+    {
+      "path": "ports/cdda-brick-i/container-gameplay.sh",
+      "sha256": "bf8c5440a1a390df779c5d5ea480253ae1eb3de813b16193fc272565196503a4",
+      "category": "mixed",
+      "size": 3820
+    },
+    {
+      "path": "ports/cdda-brick-i/container-regression.sh",
+      "sha256": "7b4259e15709931e63345b902cd02309e237219b33cacd77d2bb16d96448035e",
+      "category": "mixed",
+      "size": 2584
+    },
+    {
+      "path": "ports/cdda-brick-i/container-verify-port.sh",
+      "sha256": "cad272a9fb8604974de3013dcb913142140a34ddcdd74bcd666c993775d939b2",
+      "category": "mixed",
+      "size": 7931
+    },
+    {
+      "path": "ports/cdda-brick-i/container-verify.sh",
+      "sha256": "152141b09861919e353095913faa14bb16715bf2f0d9fca8906498677ba819a7",
+      "category": "mixed",
+      "size": 4543
+    },
+    {
+      "path": "ports/cdda-brick-i/controller-ui-report.md",
+      "sha256": "63e063d030c70a889b11ce4568883a31ed8606cbe871cb0e4327bba823160ca5",
+      "category": "ui",
+      "size": 4936
+    },
+    {
+      "path": "ports/cdda-brick-i/controller-ui.py",
+      "sha256": "a716f0359d31e1983f052bacc394f2c1d1e6c54c5146aa4af3237be6d2183ad1",
+      "category": "ui",
+      "size": 8622
+    },
+    {
+      "path": "ports/cdda-brick-i/controller.py",
+      "sha256": "cf6252416badfbe671aa072bd46c6d42978a4e6071e7723e3892de9b5095db83",
+      "category": "ui",
+      "size": 1437
+    },
+    {
+      "path": "ports/cdda-brick-i/diagnose-bash-methods.py",
+      "sha256": "01e9a65b5bcae588e7149b7a16d9e6344960057fd22856657f809dd7ab9e8563",
+      "category": "memory-and-validation",
+      "size": 4540
+    },
+    {
+      "path": "ports/cdda-brick-i/diagnose-map-rng.py",
+      "sha256": "1b305136bc794c41076b61cb593dfeea43d2a9f9fe634f3e651ef3f3a1fc5dd3",
+      "category": "memory-and-validation",
+      "size": 12085
+    },
+    {
+      "path": "ports/cdda-brick-i/fetch-music.py",
+      "sha256": "fef98765e7c6697d1b52603f84e0ebc96d709dbf23b2e9ad470fe0a9d8e97800",
+      "category": "mixed",
+      "size": 1168
+    },
+    {
+      "path": "ports/cdda-brick-i/fit-brick-menus.py",
+      "sha256": "8bd0a03866ae11bf07101e50f4e7038a4bacfd2ae82c4d74f61055ef93bed82d",
+      "category": "ui",
+      "size": 3418
+    },
+    {
+      "path": "ports/cdda-brick-i/fix-gui-fallback.py",
+      "sha256": "6226705cf83dc70adbc493f12af170914d9181fb62a89131983fd3b762aec7e4",
+      "category": "ui",
+      "size": 4396
+    },
+    {
+      "path": "ports/cdda-brick-i/focus-mapgen-diagnostic.py",
+      "sha256": "05dd33027f862e82e4b1bcb9d16dfeff77911523465c73da2e792c97571f127a",
+      "category": "memory-and-validation",
+      "size": 8810
+    },
+    {
+      "path": "ports/cdda-brick-i/font-alias-test.cpp",
+      "sha256": "66f0f45134e236533182a5afd52b1a8ca8743a33be0f8454292d963ae44b3d02",
+      "category": "memory-and-validation",
+      "size": 3206
+    },
+    {
+      "path": "ports/cdda-brick-i/font-cache-test.cpp",
+      "sha256": "c1fd64dad8deb730346145f16a2bd4d0fdda6dc6542102c766b1e591b6e5e426",
+      "category": "memory-and-validation",
+      "size": 8242
+    },
+    {
+      "path": "ports/cdda-brick-i/font-test.cpp",
+      "sha256": "c9ff654906778d13bdc47df9b93344b631b082dd7f2c1c4500c71f0fb0b8a63a",
+      "category": "ui",
+      "size": 1476
+    },
+    {
+      "path": "ports/cdda-brick-i/input-context-test.cpp",
+      "sha256": "1ccc5985f7784cd30935bacef498a0c489b91e45ac7dd65b96a6bcf7a9502673",
+      "category": "ui",
+      "size": 8260
+    },
+    {
+      "path": "ports/cdda-brick-i/input-display-test.cpp",
+      "sha256": "aff00836f611d562bb18f4d4edabff5658074033753bd41f02c8b4e34eedaed8",
+      "category": "ui",
+      "size": 4132
+    },
+    {
+      "path": "ports/cdda-brick-i/input-guide.md",
+      "sha256": "8a29acfa539f38c45d4f78cd0482d9ee11e8038c0f75533bb1b23e5ab1232f3c",
+      "category": "ui",
+      "size": 5027
+    },
+    {
+      "path": "ports/cdda-brick-i/input-report.md",
+      "sha256": "c40dccf56cc1f5a167a7fd82d30f1dd6b7ea692039dce0954eff25bd83ea05c4",
+      "category": "ui",
+      "size": 186
+    },
+    {
+      "path": "ports/cdda-brick-i/input-test.cpp",
+      "sha256": "f2e4d94825d8e39606d53d163ff0172a4a979ea3e7ee15bf1e7d96798f31211e",
+      "category": "ui",
+      "size": 8072
+    },
+    {
+      "path": "ports/cdda-brick-i/input-wait-test.cpp",
+      "sha256": "5c3a2776828fdf8ad78559aa62cc476e350315cf1aa5e41f5431d22da1b8923d",
+      "category": "ui",
+      "size": 4929
+    },
+    {
+      "path": "ports/cdda-brick-i/install-ssh.py",
+      "sha256": "7f90a1627248ff0b29932a02f9c6ed9e36b4eaf9b2dfd4b2ffab06cba4bda7e2",
+      "category": "platform",
+      "size": 10280
+    },
+    {
+      "path": "ports/cdda-brick-i/interrupted-submap-test.cpp",
+      "sha256": "d94993e3e68ae4f20097389acea03ece3a4193a9d99bce5d3aa3edd05468c371",
+      "category": "memory-and-validation",
+      "size": 9696
+    },
+    {
+      "path": "ports/cdda-brick-i/item-rle-single-pass-test.cpp",
+      "sha256": "1beac52966cf0faafe4a346043b84036485ba0f6831ab0d8684f1c8721056e42",
+      "category": "memory-and-validation",
+      "size": 4879
+    },
+    {
+      "path": "ports/cdda-brick-i/launch.sh",
+      "sha256": "2cf7a865dd8d771f1dd2f85323b60c5b7c8d56029c4ff6ba2229def382e0cff1",
+      "category": "mixed",
+      "size": 1433
+    },
+    {
+      "path": "ports/cdda-brick-i/lazy-map-test.cpp",
+      "sha256": "926684500d9e8acdca8858ee4246e26225d097a531d059d157fa94dbf7c739d0",
+      "category": "memory-and-validation",
+      "size": 2162
+    },
+    {
+      "path": "ports/cdda-brick-i/lazy-overmap.py",
+      "sha256": "19cf79866d3aaac0ef2149ab502422dcfc678e1c9236982b07a7562f6c4facf0",
+      "category": "memory-and-validation",
+      "size": 5821
+    },
+    {
+      "path": "ports/cdda-brick-i/map-borrow-test.cpp",
+      "sha256": "58f03c01a56582883eb66e92359717a3e20e9208f1e025b59c4b84f6ea075790",
+      "category": "memory-and-validation",
+      "size": 5187
+    },
+    {
+      "path": "ports/cdda-brick-i/map-memory-save-test.cpp",
+      "sha256": "ee0d8e69669d49d85bbf9b1d19adec24b31be6e95a62e9c66caf690d9b86b27e",
+      "category": "memory-and-validation",
+      "size": 6327
+    },
+    {
+      "path": "ports/cdda-brick-i/mapbuffer-save-test.cpp",
+      "sha256": "e37c0995737be58552c4c86283a52a53b66498f74a0755177788c76fb44082e7",
+      "category": "memory-and-validation",
+      "size": 8462
+    },
+    {
+      "path": "ports/cdda-brick-i/mapbuffer-save.py",
+      "sha256": "111d38d399d759e5a9d4b37337736a75ec0ab10d65aae63314422087d38dfe85",
+      "category": "memory-and-validation",
+      "size": 4745
+    },
+    {
+      "path": "ports/cdda-brick-i/mapped-json-boundary-test.cpp",
+      "sha256": "18eff9140641741b1886cf720891d1f71c7d868502a244e23607858f21f825f0",
+      "category": "correctness-and-validation",
+      "size": 6629
+    },
+    {
+      "path": "ports/cdda-brick-i/migration-report.md",
+      "sha256": "542a5e7f8fb926c4e43f4986ef39ee3a77fc72f73a21775de8d7cc8f0fb686a2",
+      "category": "mixed",
+      "size": 12954
+    },
+    {
+      "path": "ports/cdda-brick-i/minimap-bounded.py",
+      "sha256": "ab47292b3acc214d32df0701a0c3857124baec8cd974c7786e93754bdcbd983a",
+      "category": "memory-and-validation",
+      "size": 1341
+    },
+    {
+      "path": "ports/cdda-brick-i/minimap-reclaim-test.cpp",
+      "sha256": "5bf9f8de964b00824a947800780d0b210146151ba21f4d9ecdd73fed2fd04d1c",
+      "category": "memory-and-validation",
+      "size": 4538
+    },
+    {
+      "path": "ports/cdda-brick-i/music-lock.json",
+      "sha256": "60a71acc2ead1b187861cff56fad89b1dfd39eb4555faf3a0e7e5d885aa3a4f5",
+      "category": "mixed",
+      "size": 618
+    },
+    {
+      "path": "ports/cdda-brick-i/npc-heartbeat-default-test.cpp",
+      "sha256": "84efd7b77280d6547937268b908a63f4095967ec471ee5864ba46799736f9812",
+      "category": "correctness-and-validation",
+      "size": 3151
+    },
+    {
+      "path": "ports/cdda-brick-i/npc-heartbeat-default.py",
+      "sha256": "dcaefa3fb20a30afc0f806c883485b376ae249030ec66b1064570cbe72e8dfb5",
+      "category": "correctness-and-validation",
+      "size": 668
+    },
+    {
+      "path": "ports/cdda-brick-i/npc-heartbeat-diagnostic.cpp",
+      "sha256": "e0cffe30be5f375e1df42e3db11beca3ff37b29360c0b8efed460e210b179fe5",
+      "category": "correctness-and-validation",
+      "size": 1226
+    },
+    {
+      "path": "ports/cdda-brick-i/optimize-resource-pack.py",
+      "sha256": "51cebce16ec6a70483e3a2498191b15e2b67a4a7d26cb864e065ab5c62689dfc",
+      "category": "startup-performance",
+      "size": 4012
+    },
+    {
+      "path": "ports/cdda-brick-i/optimize-runtime.py",
+      "sha256": "aad35c412985571efc54289a64992a0f33996d2afbbb63a0872717a23b27f887",
+      "category": "startup-performance",
+      "size": 13723
+    },
+    {
+      "path": "ports/cdda-brick-i/optimize-startup.py",
+      "sha256": "56504fad09e4a0664ba48da8c1ee9e9c5c97766c08ce06159e3e914f611124a1",
+      "category": "startup-performance",
+      "size": 13062
+    },
+    {
+      "path": "ports/cdda-brick-i/package.py",
+      "sha256": "9e94097c20ae414fd310491ad37c523bfe9654cb1418af30513d00ed2b4ca542",
+      "category": "mixed",
+      "size": 14271
+    },
+    {
+      "path": "ports/cdda-brick-i/parsed-pack-test.cpp",
+      "sha256": "288489a341708a887c9d914177919a0ecdb2cd0878eb31287d7f0d63e02cecfa",
+      "category": "startup-performance",
+      "size": 1049
+    },
+    {
+      "path": "ports/cdda-brick-i/performance-sources.txt",
+      "sha256": "546526e89593edb6f83c53e571949bdd0a3fe848a44799d437428b97825a2e7d",
+      "category": "startup-performance",
+      "size": 417
+    },
+    {
+      "path": "ports/cdda-brick-i/phase-sort-test.cpp",
+      "sha256": "947420710669cb231668950c04a505050d33d60727efbccb9ce49c353059cd0b",
+      "category": "startup-performance",
+      "size": 1598
+    },
+    {
+      "path": "ports/cdda-brick-i/pins.env",
+      "sha256": "0c07802109eb03ef4b6d31201102fe8c03094e0d3c756ae31f9f9ce93195af9b",
+      "category": "mixed",
+      "size": 281
+    },
+    {
+      "path": "ports/cdda-brick-i/pkg-config.sh",
+      "sha256": "1e2396e504619f8432d8ad56f46564b9f05356e3b06ce4a443296bb41b297d3f",
+      "category": "platform",
+      "size": 355
+    },
+    {
+      "path": "ports/cdda-brick-i/placement-test.cpp",
+      "sha256": "d75de419148a08454f4dc5b5e135a8e9663e0b97bb71ae93c6d8fb5bb1ffe4b7",
+      "category": "memory-and-validation",
+      "size": 1927
+    },
+    {
+      "path": "ports/cdda-brick-i/prepare-memory-profile.py",
+      "sha256": "f291858f7422a2034bb608d4bf688eb9bcbcefc15d43562f5d35473c6c276c65",
+      "category": "memory-and-validation",
+      "size": 2095
+    },
+    {
+      "path": "ports/cdda-brick-i/pressure-test.cpp",
+      "sha256": "cca04d486e5b5aee87e9a7d86aa5b31d0b0b22b6a3054c5c277fce46c68820b8",
+      "category": "memory-and-validation",
+      "size": 8748
+    },
+    {
+      "path": "ports/cdda-brick-i/reload-state-test.cpp",
+      "sha256": "31a73ad52381871e64847961c03611950b3c37f9d5ec50d2800b1bed639a8fb9",
+      "category": "memory-and-validation",
+      "size": 5769
+    },
+    {
+      "path": "ports/cdda-brick-i/resource-cold-test.cpp",
+      "sha256": "d66b91c95a6ea3b8f2786b8501e7da445ee94fbc63acee0a0ca1605d8fc307f6",
+      "category": "startup-performance",
+      "size": 717
+    },
+    {
+      "path": "ports/cdda-brick-i/runtime-governor.py",
+      "sha256": "895084cee06bfb5e476546d09133cb126a9c4fc6340e06f366d7c4ca4056ad37",
+      "category": "memory-and-validation",
+      "size": 4909
+    },
+    {
+      "path": "ports/cdda-brick-i/runtime-memory-report.md",
+      "sha256": "25585d88be4e24d8896090cbd66356174c5d3afe98e4509cf0e90e94621ca3f2",
+      "category": "memory-and-validation",
+      "size": 82963
+    },
+    {
+      "path": "ports/cdda-brick-i/runtime-memory.py",
+      "sha256": "23aab28bcc32a1304fa6971f14425d82135f21394f896932112ac32dde7e275a",
+      "category": "memory-and-validation",
+      "size": 5627
+    },
+    {
+      "path": "ports/cdda-brick-i/runtime-probe.cpp",
+      "sha256": "3d9a84de7f7db27435575bc7a9d6c6a47c5949d2299a3f5a3669d1362e23e365",
+      "category": "mixed",
+      "size": 719
+    },
+    {
+      "path": "ports/cdda-brick-i/sample-memory.py",
+      "sha256": "d5cb39060e54b3f013a19349a9534e8f3e8b95c1e3cceb47592f93d9005db085",
+      "category": "memory-and-validation",
+      "size": 2632
+    },
+    {
+      "path": "ports/cdda-brick-i/save-semantic-diff.py",
+      "sha256": "0ac150e47c4ba49f2b1365c67466a09a451a4829d735b660c8b07cdadbf434c2",
+      "category": "memory-and-validation",
+      "size": 2053
+    },
+    {
+      "path": "ports/cdda-brick-i/sidebar-brick-minimal.json",
+      "sha256": "33eaca682adb093710eadb0ac401394c3d5352901aa70b9aecf285dab3cf213f",
+      "category": "ui",
+      "size": 1541
+    },
+    {
+      "path": "ports/cdda-brick-i/sidebar-layout.py",
+      "sha256": "8f067e535209ea5bde156dd65a48e50f192cf67788b63dfdc221810bd4c41cf8",
+      "category": "ui",
+      "size": 1685
+    },
+    {
+      "path": "ports/cdda-brick-i/stable-vehicle-cache-test.cpp",
+      "sha256": "d2f37b1e7d64aada0647c1d11fc82454f8aae5e326e23612f08b570c5354ec5a",
+      "category": "memory-and-validation",
+      "size": 6793
+    },
+    {
+      "path": "ports/cdda-brick-i/stable-vehicle-cache.py",
+      "sha256": "b585afa3af096e8cf34c492d7361263153719853559de0f52c7fdf01d395c8ee",
+      "category": "memory-and-validation",
+      "size": 3992
+    },
+    {
+      "path": "ports/cdda-brick-i/startup-assets-test.py",
+      "sha256": "f9014d591301dededa84ed21f963a9f38018c5714d9e58a57f7c7aef0f5ea315",
+      "category": "startup-performance",
+      "size": 2625
+    },
+    {
+      "path": "ports/cdda-brick-i/startup-report.md",
+      "sha256": "845cb4bfb1e2e10a949e206d42fac71fa66ac425cf2baf9f0682ca3a7c5b9f42",
+      "category": "startup-performance",
+      "size": 192
+    },
+    {
+      "path": "ports/cdda-brick-i/submap-borrow.py",
+      "sha256": "2ebd8aa980e5f744c1de7fb826b4bddde6751864b206e53a5b71aecb1774cb47",
+      "category": "memory-and-validation",
+      "size": 5527
+    },
+    {
+      "path": "ports/cdda-brick-i/submap-reclaim-test.cpp",
+      "sha256": "42196fd658d2d74c881d2c6d3905d2bfced92c3117d282dac7f50112a01ea498",
+      "category": "memory-and-validation",
+      "size": 16434
+    },
+    {
+      "path": "ports/cdda-brick-i/submap-reclaim.py",
+      "sha256": "3b1160fe16b66bf7f4951be2e34f5bd3bdc92e18a32c2f3f69b85045234bb795",
+      "category": "memory-and-validation",
+      "size": 9661
+    },
+    {
+      "path": "ports/cdda-brick-i/suspend-guide.md",
+      "sha256": "99df99ab4c5f284caa652177ea0a40138006630fa0b2bf199a573b24de7fe3ad",
+      "category": "platform",
+      "size": 1469
+    },
+    {
+      "path": "ports/cdda-brick-i/suspend-helper-mock.cpp",
+      "sha256": "71de0f4a53dc7202f5a6647039580ef4ae67c5731fd4f772eb940d0490d0a82f",
+      "category": "platform",
+      "size": 934
+    },
+    {
+      "path": "ports/cdda-brick-i/suspend-helper.cpp",
+      "sha256": "5effc24d4effd1b0aa279ebc85c7ebce29f4270a7276664f448bbd39fbf68ac3",
+      "category": "platform",
+      "size": 4544
+    },
+    {
+      "path": "ports/cdda-brick-i/suspend-redraw.py",
+      "sha256": "e3199fc6bcce32b982df6c8f2fe5a3e1a8a9bd79d8a131a05b57aecc302980b6",
+      "category": "platform",
+      "size": 2219
+    },
+    {
+      "path": "ports/cdda-brick-i/suspend-report.md",
+      "sha256": "b5991df581ef95dd0802b64c653e89ae350ee2f0875196aa601798f324d394ba",
+      "category": "platform",
+      "size": 186
+    },
+    {
+      "path": "ports/cdda-brick-i/suspend-test.cpp",
+      "sha256": "7a786fe19fed14a3b06d0057183f7dfee4dad7023d3a483317b1caa1d6f3388c",
+      "category": "platform",
+      "size": 2338
+    },
+    {
+      "path": "ports/cdda-brick-i/trace-empty-vehicle.py",
+      "sha256": "6f7d49f285567530bfffe54c48498a20b8674b0fa7280a8bb6bc948c0800414a",
+      "category": "memory-and-validation",
+      "size": 5673
+    },
+    {
+      "path": "ports/cdda-brick-i/update-ssh.py",
+      "sha256": "5624a262bb85f3201f6067b4b1b990a42ddf3a531beba1597da90e656a0c86bc",
+      "category": "platform",
+      "size": 4270
+    },
+    {
+      "path": "ports/cdda-brick-i/verify-port.sh",
+      "sha256": "f552049fd924b1edcb8643980c4a18f8d04c89606ee0b4861fb41545e2ffd865",
+      "category": "mixed",
+      "size": 744
+    },
+    {
+      "path": "ports/cdda-brick-i/verify-startup-assets.sh",
+      "sha256": "49ccc2e7124ee326dfe2152c85179a93be7b8abab908aa1046124ab3a73b0cee",
+      "category": "startup-performance",
+      "size": 1038
+    },
+    {
+      "path": "ports/cdda-brick-i/verify.Dockerfile",
+      "sha256": "58d9bc901319ac145ba88db1c97b740bad762da7604442ecaadb10bf8d1d9978",
+      "category": "mixed",
+      "size": 403
+    },
+    {
+      "path": "ports/cdda-brick-i/verify.sh",
+      "sha256": "fb9c82af7f64e6302af064a1e7f5ab3f6b76a23ecdbaffbef08fd40e00468d7e",
+      "category": "mixed",
+      "size": 123
+    },
+    {
+      "path": "ports/cdda-brick-i/virtual-controller.cpp",
+      "sha256": "735169528373301a751d50531e3ca9552f5b1fc9341be62bfa9cb7dd3130a231",
+      "category": "ui",
+      "size": 5866
+    },
+    {
+      "path": "ports/cdda-brick/README.md",
+      "sha256": "ef1c887ec6edbed4a34d9bf55beb5ea70c5236734d3c5e55e672297513ebd9f2",
+      "category": "legacy-mixed",
+      "size": 19836
+    },
+    {
+      "path": "ports/cdda-brick/apply-port.py",
+      "sha256": "7a9c270f85594fd0df0b86a3c83579d12d2afbe1091dd03124035d5a1e2b96e3",
+      "category": "legacy-mixed",
+      "size": 32337
+    },
+    {
+      "path": "ports/cdda-brick/audio-test.cpp",
+      "sha256": "724e06e6c12b0a318684f63ed21bab4daea5ea376e62aa788f2805ef846afa09",
+      "category": "legacy-mixed",
+      "size": 1833
+    },
+    {
+      "path": "ports/cdda-brick/baseline-report.md",
+      "sha256": "83a4d2faa5aa44c8dc508ec9ca7a812efbca4fd92ce7f9157614d8a64d83f51c",
+      "category": "legacy-mixed",
+      "size": 5137
+    },
+    {
+      "path": "ports/cdda-brick/brick_ammo_cache.h",
+      "sha256": "a66591e985b294ff37b31b361d834c7fb0a323f8240a3272ceb8ac7cd09024f4",
+      "category": "legacy-mixed",
+      "size": 312
+    },
+    {
+      "path": "ports/cdda-brick/brick_input.cpp",
+      "sha256": "7b6c5048c05f83d86e96d9b667ae1227832d4c150399c70072925839f9f43aa5",
+      "category": "legacy-mixed",
+      "size": 46888
+    },
+    {
+      "path": "ports/cdda-brick/brick_input.h",
+      "sha256": "e180401b82aa5ddde513460ab566b8eaffa3c47f6ea5084fa4f76ffdd3a3aa01",
+      "category": "legacy-mixed",
+      "size": 822
+    },
+    {
+      "path": "ports/cdda-brick/brick_load_timer.h",
+      "sha256": "ee6b7742e0d2405cad0f9df965d7e6db00963f83c8ea62b68043059d06281a16",
+      "category": "legacy-mixed",
+      "size": 1285
+    },
+    {
+      "path": "ports/cdda-brick/brick_parsed_pack.cpp",
+      "sha256": "e305b0286a97bde41a7a1c15bc9af2482e2f0a5633a7ddba9c9274810be04026",
+      "category": "legacy-mixed",
+      "size": 5171
+    },
+    {
+      "path": "ports/cdda-brick/brick_parsed_pack.h",
+      "sha256": "e4a57c04b7697260d76fcc52a5146c2f60a52120c238085ff5cd58aef988fcfe",
+      "category": "legacy-mixed",
+      "size": 190
+    },
+    {
+      "path": "ports/cdda-brick/brick_phase_sort.h",
+      "sha256": "d48614b23b51a60215979e3ff581cf4e50021a3c67be7a049bc50ed5bd9e3197",
+      "category": "legacy-mixed",
+      "size": 1661
+    },
+    {
+      "path": "ports/cdda-brick/brick_power.cpp",
+      "sha256": "4cffa00bdeec66196aad4e8bf0300d36fc8805f4b2158195aee8ac21cb4f0127",
+      "category": "legacy-mixed",
+      "size": 1958
+    },
+    {
+      "path": "ports/cdda-brick/brick_power.h",
+      "sha256": "e79a649d3a5baf2304bc4383daddc28c3aaf5569c2fc040a7571857142af0518",
+      "category": "legacy-mixed",
+      "size": 192
+    },
+    {
+      "path": "ports/cdda-brick/brick_validation_cache.cpp",
+      "sha256": "27a056899144905366d401358baa9ff484aa2521730d123ac0d3b7320cdb59c4",
+      "category": "legacy-mixed",
+      "size": 7617
+    },
+    {
+      "path": "ports/cdda-brick/brick_validation_cache.h",
+      "sha256": "4fa9451b837caf093859f6fa544f4466ad51d0541421ff6c4a52477c7c1901f1",
+      "category": "legacy-mixed",
+      "size": 235
+    },
+    {
+      "path": "ports/cdda-brick/build-parsed-pack.cpp",
+      "sha256": "9ba4a01e64ceb6c81607c5148498d3cef42e7217fe8683dd67c0a144012d4de0",
+      "category": "legacy-mixed",
+      "size": 1004
+    },
+    {
+      "path": "ports/cdda-brick/build-parsed-pack.py",
+      "sha256": "795b2e19f626244c2480324e2a4db3ed2373c1b8ee36847942c4e9071eb46cb4",
+      "category": "legacy-mixed",
+      "size": 1955
+    },
+    {
+      "path": "ports/cdda-brick/build.sh",
+      "sha256": "a529b277a92e67cd3a337f12e34ffe0647ba90265511fbcfbcd8e895631f7c9c",
+      "category": "legacy-mixed",
+      "size": 2390
+    },
+    {
+      "path": "ports/cdda-brick/charset-test.cpp",
+      "sha256": "4d38fd731fc742db25a25dccd9098df3b1824eb53e16c90eef1daa99eb7ac92a",
+      "category": "legacy-mixed",
+      "size": 663
+    },
+    {
+      "path": "ports/cdda-brick/check-cache-options.py",
+      "sha256": "305e20e138e945df06bccc5bf0acfbd401764f805ec5d2db5498dc97f6a3c8eb",
+      "category": "legacy-mixed",
+      "size": 4930
+    },
+    {
+      "path": "ports/cdda-brick/check-context-gameplay.py",
+      "sha256": "8aefb56d4e30f15869a686b2115e9887fd8abbb22e33369007854bb55a71e2ff",
+      "category": "legacy-mixed",
+      "size": 5877
+    },
+    {
+      "path": "ports/cdda-brick/check-parsed-pack.py",
+      "sha256": "f0869a1779232bedd55e11bc87ead1975ace2c2fa8cbc1e9e1f61aef3a93fb20",
+      "category": "legacy-mixed",
+      "size": 2638
+    },
+    {
+      "path": "ports/cdda-brick/check-suspend-gameplay.py",
+      "sha256": "1a1675e0346e555b809c23a6c8152560f69b04008837b0d03759a7e92ac82e39",
+      "category": "legacy-mixed",
+      "size": 7394
+    },
+    {
+      "path": "ports/cdda-brick/container-build.sh",
+      "sha256": "9f6fdf0b92e92d430e5f3ff05ccb6fb18e0e6ca50b1489e67bd2d4226a4f0789",
+      "category": "legacy-mixed",
+      "size": 6182
+    },
+    {
+      "path": "ports/cdda-brick/container-gameplay.sh",
+      "sha256": "20319daf174edc9b311098be1459709567b9ecc43e9210db554f527b58995888",
+      "category": "legacy-mixed",
+      "size": 2074
+    },
+    {
+      "path": "ports/cdda-brick/container-verify-port.sh",
+      "sha256": "1358ca482a07884ae733134b8570f0580fe04fb7323de62817dc84931b136056",
+      "category": "legacy-mixed",
+      "size": 7413
+    },
+    {
+      "path": "ports/cdda-brick/container-verify.sh",
+      "sha256": "152141b09861919e353095913faa14bb16715bf2f0d9fca8906498677ba819a7",
+      "category": "legacy-mixed",
+      "size": 4543
+    },
+    {
+      "path": "ports/cdda-brick/controller.py",
+      "sha256": "cf6252416badfbe671aa072bd46c6d42978a4e6071e7723e3892de9b5095db83",
+      "category": "legacy-mixed",
+      "size": 1437
+    },
+    {
+      "path": "ports/cdda-brick/fetch-music.py",
+      "sha256": "e3fde0ac6c9327ede612c178b0213df56ab1dd673f1a2317f2942ad14ed99399",
+      "category": "legacy-mixed",
+      "size": 1164
+    },
+    {
+      "path": "ports/cdda-brick/font-test.cpp",
+      "sha256": "c9ff654906778d13bdc47df9b93344b631b082dd7f2c1c4500c71f0fb0b8a63a",
+      "category": "legacy-mixed",
+      "size": 1476
+    },
+    {
+      "path": "ports/cdda-brick/input-context-test.cpp",
+      "sha256": "4645a95aa2c55ff99ecac5193b3a439da7c9b526839895d1ad287a1c77f448bc",
+      "category": "legacy-mixed",
+      "size": 6344
+    },
+    {
+      "path": "ports/cdda-brick/input-display-test.cpp",
+      "sha256": "aff00836f611d562bb18f4d4edabff5658074033753bd41f02c8b4e34eedaed8",
+      "category": "legacy-mixed",
+      "size": 4132
+    },
+    {
+      "path": "ports/cdda-brick/input-guide.md",
+      "sha256": "76734d70a2e1f77bc89847236b66dcd7c443e4125602711aa7e3a25572c7a033",
+      "category": "legacy-mixed",
+      "size": 3394
+    },
+    {
+      "path": "ports/cdda-brick/input-report.md",
+      "sha256": "43df8f988124109a1993f3c8aa7c9f389d516ac9da5009edf90d4f299b5d57b3",
+      "category": "legacy-mixed",
+      "size": 3538
+    },
+    {
+      "path": "ports/cdda-brick/input-test.cpp",
+      "sha256": "14f59c34b23e8258928bd03b862f02adc26ecdbcb1552e15cc8dd21037e9eab3",
+      "category": "legacy-mixed",
+      "size": 8072
+    },
+    {
+      "path": "ports/cdda-brick/input-wait-test.cpp",
+      "sha256": "5c3a2776828fdf8ad78559aa62cc476e350315cf1aa5e41f5431d22da1b8923d",
+      "category": "legacy-mixed",
+      "size": 4929
+    },
+    {
+      "path": "ports/cdda-brick/install-ssh.py",
+      "sha256": "522eaeabb6ddbcdee5abf6f4d68d98e8053901553afb2672d18939f567fc78c3",
+      "category": "legacy-mixed",
+      "size": 10248
+    },
+    {
+      "path": "ports/cdda-brick/launch.sh",
+      "sha256": "eb04f6c294e892999644090b10bc49a31440d93551ac4cf7b5e4496722449f50",
+      "category": "legacy-mixed",
+      "size": 1369
+    },
+    {
+      "path": "ports/cdda-brick/music-lock.json",
+      "sha256": "60a71acc2ead1b187861cff56fad89b1dfd39eb4555faf3a0e7e5d885aa3a4f5",
+      "category": "legacy-mixed",
+      "size": 618
+    },
+    {
+      "path": "ports/cdda-brick/optimize-resource-pack.py",
+      "sha256": "bbddbb0e514717ff1c956bbcde0968706c6261895b8620048401a3e16cb50bab",
+      "category": "legacy-mixed",
+      "size": 3958
+    },
+    {
+      "path": "ports/cdda-brick/optimize-runtime.py",
+      "sha256": "704c334e14c8979daa2647fe40e74dc378b94cd41669c6131537a195c979d636",
+      "category": "legacy-mixed",
+      "size": 14103
+    },
+    {
+      "path": "ports/cdda-brick/optimize-startup.py",
+      "sha256": "401fd42bf08ef315143630499058778472bf6121842b8aa888d6d8a8d55b1955",
+      "category": "legacy-mixed",
+      "size": 12898
+    },
+    {
+      "path": "ports/cdda-brick/package.py",
+      "sha256": "2b6c972d6c3d0d35e42616756a7bd3da22822e2c20d4ee89d97952e85da3fae9",
+      "category": "legacy-mixed",
+      "size": 11686
+    },
+    {
+      "path": "ports/cdda-brick/parsed-pack-test.cpp",
+      "sha256": "43398b2da355e828ffbb915dee3e23064f299ad32022499fc557dd4aa3a23f8c",
+      "category": "legacy-mixed",
+      "size": 1677
+    },
+    {
+      "path": "ports/cdda-brick/performance-sources.txt",
+      "sha256": "546526e89593edb6f83c53e571949bdd0a3fe848a44799d437428b97825a2e7d",
+      "category": "legacy-mixed",
+      "size": 417
+    },
+    {
+      "path": "ports/cdda-brick/phase-sort-test.cpp",
+      "sha256": "947420710669cb231668950c04a505050d33d60727efbccb9ce49c353059cd0b",
+      "category": "legacy-mixed",
+      "size": 1598
+    },
+    {
+      "path": "ports/cdda-brick/pins.env",
+      "sha256": "acbaf177f22353409dc5011ec201210c2bfde55f7f15de8f3475b2209e4c1856",
+      "category": "legacy-mixed",
+      "size": 299
+    },
+    {
+      "path": "ports/cdda-brick/pkg-config.sh",
+      "sha256": "3d7004841d9e565ce13cc0a46ae48a5982ce2e701d20b615130baa8f44d1fa7e",
+      "category": "legacy-mixed",
+      "size": 314
+    },
+    {
+      "path": "ports/cdda-brick/resource-cold-test.cpp",
+      "sha256": "d66b91c95a6ea3b8f2786b8501e7da445ee94fbc63acee0a0ca1605d8fc307f6",
+      "category": "legacy-mixed",
+      "size": 717
+    },
+    {
+      "path": "ports/cdda-brick/runtime-probe.cpp",
+      "sha256": "3d9a84de7f7db27435575bc7a9d6c6a47c5949d2299a3f5a3669d1362e23e365",
+      "category": "legacy-mixed",
+      "size": 719
+    },
+    {
+      "path": "ports/cdda-brick/sidebar-brick-minimal.json",
+      "sha256": "11bba78f06623fa6ca22789d47f58fb983572d1ea57fd0811e297ef7c74d48c0",
+      "category": "legacy-mixed",
+      "size": 1538
+    },
+    {
+      "path": "ports/cdda-brick/startup-assets-test.py",
+      "sha256": "f9014d591301dededa84ed21f963a9f38018c5714d9e58a57f7c7aef0f5ea315",
+      "category": "legacy-mixed",
+      "size": 2625
+    },
+    {
+      "path": "ports/cdda-brick/startup-report.md",
+      "sha256": "b568b239294c185c59426d084935339369d0102a4d5c3cd95b0dd1eebafde9ac",
+      "category": "legacy-mixed",
+      "size": 22946
+    },
+    {
+      "path": "ports/cdda-brick/suspend-guide.md",
+      "sha256": "8b481dda79f0e70022ad096a43dd53f23f8941275c15f5132ea85ab21fade5cb",
+      "category": "legacy-mixed",
+      "size": 1465
+    },
+    {
+      "path": "ports/cdda-brick/suspend-helper.cpp",
+      "sha256": "5effc24d4effd1b0aa279ebc85c7ebce29f4270a7276664f448bbd39fbf68ac3",
+      "category": "legacy-mixed",
+      "size": 4544
+    },
+    {
+      "path": "ports/cdda-brick/suspend-report.md",
+      "sha256": "b9a1c97d52072c077aa63e0c7642e5d4c7970c0c50cd4e9b96225093800a835d",
+      "category": "legacy-mixed",
+      "size": 4039
+    },
+    {
+      "path": "ports/cdda-brick/suspend-test.cpp",
+      "sha256": "7a786fe19fed14a3b06d0057183f7dfee4dad7023d3a483317b1caa1d6f3388c",
+      "category": "legacy-mixed",
+      "size": 2338
+    },
+    {
+      "path": "ports/cdda-brick/verify-port.sh",
+      "sha256": "46a017c0b00a9ea4ea109dbc2bab01c955ab9db6c8c49afcde50850f46803a58",
+      "category": "legacy-mixed",
+      "size": 730
+    },
+    {
+      "path": "ports/cdda-brick/verify-startup-assets.sh",
+      "sha256": "49ccc2e7124ee326dfe2152c85179a93be7b8abab908aa1046124ab3a73b0cee",
+      "category": "legacy-mixed",
+      "size": 1038
+    },
+    {
+      "path": "ports/cdda-brick/verify.Dockerfile",
+      "sha256": "58d9bc901319ac145ba88db1c97b740bad762da7604442ecaadb10bf8d1d9978",
+      "category": "legacy-mixed",
+      "size": 403
+    },
+    {
+      "path": "ports/cdda-brick/verify.sh",
+      "sha256": "af5d2930f2703e1474575bef7bec578bfe996f3d87922a2552fae1031d2b9994",
+      "category": "legacy-mixed",
+      "size": 2350
+    },
+    {
+      "path": "ports/cdda-brick/virtual-controller.cpp",
+      "sha256": "653f828b2ac87c81a5e1a32a87c8065a5342468e739629747a12b1a58fc92ded",
+      "category": "legacy-mixed",
+      "size": 5693
+    },
+    {
+      "path": "docs/cdda-i-interaction-framework.html",
+      "sha256": "d3ca7e25fa612e8c1859b9dc17177a3159f3e535b387fd35e164410c4822a946",
+      "category": "ui-documentation",
+      "size": 206949
+    },
+    {
+      "path": "docs/images/cdda-i-framework-preview.jpg",
+      "sha256": "4ea3b2924f2d9ec4d09398bdc39c4d0d4e87e2b129ea97a15de18648ca2b259d",
+      "category": "ui-documentation",
+      "size": 37931
+    }
+  ]
+}

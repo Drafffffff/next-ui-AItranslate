@@ -1,0 +1,63 @@
+[
+  {
+    "id": "brick_hp_layout",
+    "type": "widget",
+    "style": "layout",
+    "label": "Limbs",
+    "arrange": "columns",
+    "widgets": ["lcom_limbs_left_layout", "lcom_limbs_mid_layout"]
+  },
+  {
+    "id": "brick_motion_layout",
+    "type": "widget",
+    "style": "layout",
+    "label": "Stamina",
+    "arrange": "columns",
+    "widgets": ["stamina_graph_classic", "move_mode_letter", "safe_mode_classic_desc_right"]
+  },
+  {
+    "id": "brick_needs_left_layout",
+    "type": "widget",
+    "style": "layout",
+    "arrange": "rows",
+    "widgets": ["hunger_desc_no_label", "thirst_desc_no_label", "sleepiness_desc_no_label"]
+  },
+  {
+    "id": "brick_needs_right_layout",
+    "type": "widget",
+    "style": "layout",
+    "arrange": "rows",
+    "widgets": ["pain_desc_no_label", "body_temp_desc_no_label", "weariness_desc_no_label"]
+  },
+  {
+    "id": "brick_needs_layout",
+    "type": "widget",
+    "style": "layout",
+    "label": "Needs",
+    "arrange": "columns",
+    "widgets": ["brick_needs_left_layout", "brick_needs_right_layout"]
+  },
+  {
+    "id": "brick_visible_creatures",
+    "type": "widget",
+    "copy-from": "compass_legend_text_alt",
+    "height": 2
+  },
+  {
+    "id": "brick_minimal_sidebar",
+    "type": "widget",
+    "style": "sidebar",
+    "label": "Brick",
+    "separator": " ",
+    "padding": 1,
+    "width": 28,
+    "widgets": [
+      "brick_hp_layout",
+      "brick_motion_layout",
+      "brick_needs_layout",
+      "lcom_time_layout",
+      "wielding_desc_no_label",
+      "brick_visible_creatures"
+    ]
+  }
+]

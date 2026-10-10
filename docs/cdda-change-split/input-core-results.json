@@ -1,0 +1,33 @@
+{
+  "target": "ARM64 SDK (preserved adapter core), not Steam Deck",
+  "steam_deck_verified": false,
+  "full_game_verified": false,
+  "production_input_sha256": "fefca837d73782109fb8ba57bd8d555773d1a7fad9b440f9974497a61c9c2fc9",
+  "runner_sha256": "dc80d9062f98fefb272d61f055f2a264f4d85cbae8bf938339ebf1cc9eb34499",
+  "tests": [
+    {
+      "name": "input-test",
+      "passed": true,
+      "source_sha256": "f2e4d94825d8e39606d53d163ff0172a4a979ea3e7ee15bf1e7d96798f31211e",
+      "output_sha256": "c4e4430a6535956c31ca30a6e767a3f4b751da2393acf87c0c9a6a51f2ef25ee",
+      "binary_sha256": "bdb2ed51e452ba3e3e6cf71888d17fa6f4ecbfc64018631d9700d7572fb660b8",
+      "summary": "PASS: native buttons, diagonal coalescing, repeat/release, save/yes chords, keyboard, focus cleanup, SDL virtual device/unplug"
+    },
+    {
+      "name": "input-context-test",
+      "passed": true,
+      "source_sha256": "1ccc5985f7784cd30935bacef498a0c489b91e45ac7dd65b96a6bcf7a9502673",
+      "output_sha256": "80df04a93fd233b23d6c78d627fdf5c3334fcb9fe82cfe4b22838d4d9f9832b5",
+      "binary_sha256": "d800efbb5e0f801fe0abb593e730136a66e36c1d4d213e2634dd302b60f99984",
+      "summary": "PASS: contextual inventory/multiselect/crafting/map/yes-no actions, automatic text keyboard, hint widths, fast menu repeat and held-input boundary"
+    },
+    {
+      "name": "input-wait-test",
+      "passed": true,
+      "source_sha256": "5c3a2776828fdf8ad78559aa62cc476e350315cf1aa5e41f5431d22da1b8923d",
+      "output_sha256": "60c5236f5724ce02762a1f5f727cafa8dbaabd0c3a84cb71f7f09bd914bf2462",
+      "binary_sha256": "b50a6bc7038dcd930803086ff6c042520b1d7364eaf9b547193223e31c1badad",
+      "summary": "PASS: idle 200ms=8 wakeups, thread CPU=1.351ms; event delivery, diagonal deadlines and bounded processing trace"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "branch": "codex/cdda-i-brick-memory-experiments",
+  "head": "9b44f80df0b63aa5cf9ae8c66bf3f1dcb07ec09e",
+  "base": "3c77f77e53ce492686f7f07fde95fa2881671549",
+  "commits": [
+    {
+      "message": "feat(cdda): preserve handheld UI and controller work",
+      "commit": "133c69a4bafd7c7832c4d633d939532672142db9",
+      "files": 25
+    },
+    {
+      "message": "archive(cdda): park Brick memory experiments and validation",
+      "commit": "0c30f7bb0fa08e457e4566e16453ac837ce582f4",
+      "files": 126
+    },
+    {
+      "message": "archive(cdda): retain startup and Brick platform adaptations",
+      "commit": "80eaebabe8039c32640bb2d4f94634f050f162bd",
+      "files": 97
+    },
+    {
+      "message": "docs(cdda): classify mixed integration and preserve original pipeline",
+      "commit": "72940ae8518e37b70bbf58767a7839deafbf44e2",
+      "files": 24
+    },
+    {
+      "message": "docs(cdda): record UI extraction and refine correctness classification",
+      "commit": "9b44f80df0b63aa5cf9ae8c66bf3f1dcb07ec09e",
+      "files": 5
+    }
+  ],
+  "exact_source_files": 268,
+  "all_archived_hashes_equal": true,
+  "archive_checkpoint_head": "72940ae8518e37b70bbf58767a7839deafbf44e2"
+}

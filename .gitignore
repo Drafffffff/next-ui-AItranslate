@@ -48,5 +48,7 @@ CLAUDE.md
 .worktrees/
 **/ai-keys.txt
 **/ai-key-backups/
+
+# Local Python bytecode is not a portable source snapshot.
 __pycache__/
 *.py[cod]
