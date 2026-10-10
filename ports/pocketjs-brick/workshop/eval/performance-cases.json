@@ -1,0 +1,157 @@
+{
+  "schema": 1,
+  "cases": [
+    {
+      "id": "grid-feedback-create",
+      "name": "推箱子 · 输入与声音连接",
+      "category": "输入/音频",
+      "turns": [
+        "制作一个经典推箱子小游戏，三关小型手工关卡，方向键移动，X撤销，O重开，标题用O开始。长按首步立即、随后均匀重复，换方向及时响应，重开不会因长按重复触发。轻柔音乐要有持续声部，操作音效是独立短反馈。不要把休止全删除，也不要猜测卡顿原因。其余你决定，直接完成。"
+      ],
+      "rubric": [
+        "首按、长按与松开有明确且均匀的节拍",
+        "确认和重开不受默认重复影响",
+        "规则与动画分离，撤销恢复完整状态",
+        "音乐状态切换单次触发，操作音效是短事件反馈"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "eval_music=0 eval_feedback=0 local m=music local s=sfx music=function(n,...) eval_music+=1 m(n,...) end sfx=function(n,...) if n>=0 then eval_feedback+=1 end s(n,...) end",
+          "name": "observe-events"
+        },
+        {
+          "frames": 60,
+          "mask": 2,
+          "name": "held"
+        },
+        {
+          "assert": "assert(eval_music<=2,'BGM restarted repeatedly during held input') assert(eval_feedback<=40,'feedback repeated every display update')",
+          "name": "event-budget"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "restart"
+        },
+        {
+          "assert": "eval_music=0",
+          "name": "restart-boundary"
+        },
+        {
+          "frames": 60,
+          "mask": 16,
+          "name": "hold-restart"
+        },
+        {
+          "assert": "assert(eval_music==0,'held restart retriggered BGM')",
+          "name": "single-restart"
+        }
+      ]
+    },
+    {
+      "id": "tetris-feedback-create",
+      "name": "落块 · 操作保留与短音",
+      "category": "输入/音频",
+      "turns": [
+        "制作一个完整的小型俄罗斯方块，O从标题开始/游玩时旋转，X硬降，方向左右移动、下软降。横移首按立即，长按等待后均匀重复；软降首按在当前更新就下一格，按住均匀重复；不能等旧重力倒计时结束。加入BGM和独立短移动/旋转音效，移动成功才发声，不要拿BGM低音声部作步进音。O旋转和X硬降都必须严格单次，长按或从标题进入时仍按住O不再旋转。结束能重开，其余你决定，直接完成。"
+      ],
+      "rubric": [
+        "左右首次/延迟/重复职责独立",
+        "下软降代码始终可达，硬降不重复锁定",
+        "音乐声部与事件音效分工明确",
+        "生成堵塞、消行、结束与重開完整"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "eval_music=0 local m=music music=function(n,...) eval_music+=1 m(n,...) end",
+          "name": "observe-bgm"
+        },
+        {
+          "assert": "eval_piece=nil local found=nil for k,v in pairs(_ENV) do if type(v)=='table' and type(v.x)=='number' and type(v.y)=='number' and (v.r!=nil or v.rot!=nil or v.rotation!=nil) then assert(found==nil,'ambiguous active-piece observer') found=v end end eval_piece=found assert(eval_piece!=nil,'evaluator cannot locate current piece; review source') eval_piece_y=eval_piece.y",
+          "name": "observe-soft-drop"
+        },
+        {
+          "frames": 1,
+          "mask": 8,
+          "name": "soft-first"
+        },
+        {
+          "assert": "assert(eval_piece.y>eval_piece_y,'soft-drop first press waited for normal gravity')",
+          "name": "immediate-soft-drop"
+        },
+        {
+          "frames": 9,
+          "mask": 8,
+          "name": "soft-held"
+        },
+        {
+          "frames": 12,
+          "mask": 2,
+          "name": "lateral"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release"
+        },
+        {
+          "assert": "eval_feedback=0 local s=sfx sfx=function(n,...) if n>=0 then eval_feedback+=1 end s(n,...) end",
+          "name": "observe-single-action"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "rotate"
+        },
+        {
+          "frames": 30,
+          "mask": 16,
+          "name": "hold-rotate"
+        },
+        {
+          "assert": "assert(eval_music==0,'input retriggered BGM')",
+          "name": "stable-bgm"
+        },
+        {
+          "assert": "assert(eval_feedback<=1,'held O repeatedly triggered action feedback')",
+          "name": "single-rotation"
+        }
+      ]
+    }
+  ]
+}

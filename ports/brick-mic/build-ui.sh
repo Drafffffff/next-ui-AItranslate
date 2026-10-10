@@ -38,7 +38,7 @@ if [ "$MODE" = mac ]; then
         -DPOCKET_RUNTIME_EXTENSION -DPOCKETJS_CUSTOM_EXTENSION -DDYNAMIC_PX=40 \
         -DPOCKETJS_TARGET_ID=\"brick-experimental\" -DPOCKETJS_HOST_ABI=1 -DPOCKETJS_REV=\""$POCKETJS_REV"\" \
         "$TASK_ROOT/ports/brick-mic/brick/pocket-host.c" "$TASK_ROOT/ports/brick-mic/brick/mic-native.c" "$TASK_ROOT/ports/brick-mic/brick/mic-power.c" \
-        "$TASK_ROOT/ports/pocketjs-brick/brick-services.c" "$TASK_ROOT/ports/pocketjs-brick/brick-hardware.c" \
+        "$TASK_ROOT/ports/brick-mic/brick/mic-services.c" "$TASK_ROOT/ports/pocketjs-brick/brick-hardware.c" \
         "$UPSTREAM/engine/quickjs-c/pocket_runtime.c" "$UPSTREAM/engine/quickjs-c/rust_eh_personality.c" \
         "$CORE/mac-preview/objects/"*.o "$STATIC" $(pkg-config --libs sdl2 SDL2_ttf) -lm -lpthread \
         -o "$PKG/pocketjs-mic"

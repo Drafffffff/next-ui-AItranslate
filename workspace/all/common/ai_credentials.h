@@ -80,12 +80,24 @@ static inline int nextui_ai_read_key(const char *provider, char *out, size_t siz
 }
 
 static inline const char *nextui_ai_provider_for_url(const char *url) {
-    const char *deepseek = "https://api.deepseek.com";
-    const char *bailian = "https://dashscope.aliyuncs.com";
-    size_t n = strlen(deepseek);
-    if (!strncmp(url, deepseek, n) && (url[n] == '/' || !url[n])) return "deepseek";
-    n = strlen(bailian);
-    if (!strncmp(url, bailian, n) && (url[n] == '/' || !url[n])) return "bailian";
+    if (!url || strncmp(url, "https://", 8)) return NULL;
+    const char *start = url+8, *end = strchr(start, '/');
+    size_t length = end ? (size_t)(end-start) : strlen(start);
+    char host[256];
+    if (!length || length >= sizeof(host)) return NULL;
+    memcpy(host, start, length); host[length] = 0;
+    if (!strcmp(host, "api.deepseek.com")) return "deepseek";
+    if (!strcmp(host, "dashscope.aliyuncs.com") || !strcmp(host, "dashscope-intl.aliyuncs.com") || !strcmp(host, "dashscope-us.aliyuncs.com")) return "bailian";
+    /* Official workspace domains only; no suffix matching on untrusted URLs. */
+    const char *dot = strchr(host, '.');
+    if (!dot || dot == host) return NULL;
+    for (const char *p=host; p<dot; p++)
+        if (!((*p>='a'&&*p<='z')||(*p>='A'&&*p<='Z')||(*p>='0'&&*p<='9')||*p=='-'||*p=='_')) return NULL;
+    const char *regions[]={"cn-beijing","ap-southeast-1","us-east-1","eu-central-1","ap-northeast-1","cn-hongkong"};
+    for (size_t i=0; i<sizeof(regions)/sizeof(regions[0]); i++) {
+        char suffix[80]; snprintf(suffix,sizeof(suffix),".%s.maas.aliyuncs.com",regions[i]);
+        if (!strcmp(dot,suffix)) return "bailian";
+    }
     return NULL;
 }
 

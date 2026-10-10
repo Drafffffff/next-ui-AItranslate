@@ -11,7 +11,11 @@ if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
     chmod +x /work/build/pocketjs-port/rustup-init
     /work/build/pocketjs-port/rustup-init -y --no-modify-path --profile minimal --default-toolchain "$RUST_CHANNEL"
 fi
-rustup toolchain install "$RUST_CHANNEL" --profile minimal
+# This dated toolchain is pinned. Reuse its verified installed compiler rather
+# than requiring a network refresh for every isolated evaluation build.
+if ! rustup run "$RUST_CHANNEL" rustc --version >/dev/null 2>&1; then
+    rustup toolchain install "$RUST_CHANNEL" --profile minimal
+fi
 export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-nextui-linux-gnu-gcc
 export RUSTFLAGS='-C target-cpu=cortex-a53'
 UPSTREAM=/work/build/pocketjs-port/upstream

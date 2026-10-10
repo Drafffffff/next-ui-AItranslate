@@ -15,7 +15,7 @@ aarch64-nextui-linux-gnu-gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Wno-unused-pa
     -DPOCKET_RUNTIME_EXTENSION -DPOCKETJS_CUSTOM_EXTENSION -DDYNAMIC_PX=40 \
     -DPOCKETJS_TARGET_ID=\"brick-experimental\" -DPOCKETJS_HOST_ABI=1 -DPOCKETJS_REV=\""$POCKETJS_REV"\" \
     ports/brick-mic/brick/pocket-host.c ports/brick-mic/brick/mic-native.c ports/brick-mic/brick/mic-power.c \
-    ports/pocketjs-brick/brick-services.c ports/pocketjs-brick/brick-hardware.c ports/pocketjs-brick/compat.c \
+    ports/brick-mic/brick/mic-services.c ports/pocketjs-brick/brick-hardware.c ports/pocketjs-brick/compat.c \
     "$UPSTREAM/engine/quickjs-c/pocket_runtime.c" "$UPSTREAM/engine/quickjs-c/rust_eh_personality.c" \
     "$CORE/quickjs-objects/"*.o "$STATIC" $(pkg-config --libs sdl2) -lSDL2_ttf -lm -ldl -lpthread \
     -o "$PKG/pocketjs-mic.elf"

@@ -91,7 +91,11 @@ static JSValue metrics(JSContext *ctx,JSValueConst self,int argc,JSValueConst *a
 int brick_hardware_boot(JSContext *ctx,JSValue bridge){
     const char *flag=getenv("POCKETJS_HARDWARE");enabled=flag&&!strcmp(flag,"1");canvas_on=0;frames=0;led_owned=motor_owned=0;led_error=motor_error=0;battery=temperature=-1;led_pending=pulse=0;running=1;
     if(pthread_create(&thread,NULL,hardware_loop,NULL)){free(composite);composite=NULL;running=0;return 0;}thread_started=1;
-    JS_SetPropertyStr(ctx,bridge,"canvas",JS_NewCFunction(ctx,set_canvas,"canvas",1));JS_SetPropertyStr(ctx,bridge,"feedback",JS_NewCFunction(ctx,feedback,"feedback",2));JS_SetPropertyStr(ctx,bridge,"metrics",JS_NewCFunction(ctx,metrics,"metrics",0));return 1;
+    JS_SetPropertyStr(ctx,bridge,"canvas",JS_NewCFunction(ctx,set_canvas,"canvas",1));JS_SetPropertyStr(ctx,bridge,"feedback",JS_NewCFunction(ctx,feedback,"feedback",2));JS_SetPropertyStr(ctx,bridge,"hardwareMetrics",JS_NewCFunction(ctx,metrics,"hardwareMetrics",0));
+#ifdef POCKETJS_CUSTOM_EXTENSION
+    JS_SetPropertyStr(ctx,bridge,"metrics",JS_NewCFunction(ctx,metrics,"metrics",0));
+#endif
+    return 1;
 }
 void brick_hardware_shutdown(void){pthread_mutex_lock(&mutex);running=0;pthread_mutex_unlock(&mutex);if(thread_started)pthread_join(thread,NULL);thread_started=0;free(composite);composite=NULL;canvas_on=0;}
 const uint8_t *brick_canvas_render(const uint8_t *source){

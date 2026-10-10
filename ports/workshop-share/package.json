@@ -1,0 +1,1 @@
+{"name":"workshop-share","private":true,"type":"module","scripts":{"build":"node build.mjs","verify":"node verify.mjs"},"dependencies":{"@vercel/blob":"2.3.0"},"devDependencies":{"esbuild":"0.28.1","@vercel/node":"5.6.1"}}

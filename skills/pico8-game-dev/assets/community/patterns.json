@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "patterns": [
+    {
+      "example_id": "raycaster",
+      "source_id": "raycaster",
+      "source_url": "https://github.com/M2tias/pico8-raycaster/blob/c230dbc302b29378bf43282d36c6626e104b37b4/carts/raycastkajam.p8",
+      "license": "MIT",
+      "revision": "c230dbc302b29378bf43282d36c6626e104b37b4",
+      "code": "camx = 2*x / screen.w - 1\n\t\traydir = { x = 0, y = 0 }\n\t\traydir.x = dir.x + plane.x * camx\n\t\traydir.y = dir.y + plane.y * camx",
+      "adaptation": "原作以方向与垂直相机平面生成射线。采用 DDA 的垂直深度；适配例另加分母下限、步数上限及 Lua 地图，不能复制原作的无限遍历、poke、未提供的音频槽位、地图和纹理假设。"
+    },
+    {
+      "example_id": "snake",
+      "source_id": "snak",
+      "source_url": "https://github.com/megabyte112/Snak/blob/9428455f3236238dda4dcf0d79c58a8f5a16d118/source/snak.p8",
+      "license": "GPL-3.0",
+      "revision": "9428455f3236238dda4dcf0d79c58a8f5a16d118",
+      "code": "function willcollide()\n\tif debug then return false end\n\tif direction==\"up\" then\n\t\tif pos[2]==2 then return true end\n\t\tfor i=1,#body-1 do\n\t\t\tif body[i][1]==pos[1] and body[i][2]==pos[2]-1 then\n\t\t\t\treturn true\n\t\t\tend\n\t\tend\n\telseif direction==\"down\" then\n\t\tif pos[2]==30 then return true end\n\t\tfor i=1,#body-1 do\n\t\t\tif body[i][1]==pos[1] and body[i][2]==pos[2]+1 then\n\t\t\t\treturn true\n\t\t\tend\n\t\tend\n\telseif direction==\"left\" then\n\t\tif pos[1]==1 then return true end\n\t\tfor i=1,#body-1 do\n\t\t\tif body[i][1]==pos[1]-1 and body[i][2]==pos[2] then\n\t\t\t\treturn true\n\t\t\tend\n\t\tend\n\telseif direction==\"right\" then\n\t\tif pos[1]==30 then return true end\n\t\tfor i=1,#body-1 do\n\t\t\tif body[i][1]==pos[1]+1 and body[i][2]==pos[2] then\n\t\t\t\treturn true\n\t\t\tend\n\t\tend\n\tend\n\treturn false\nend",
+      "adaptation": "原作预测下一步的位置，并在这段逻辑中不检查最后一个蛇身格。适配时要结合当前源码中移动与生长顺序：普通移动可进入离开的尾格，增长时须检查全身。使用已提供的声音或结构化音符，不复制原作存档和递归食物生成。"
+    },
+    {
+      "example_id": "sokoban",
+      "source_id": "sokoban",
+      "source_url": "https://github.com/Woj-Rak/Pico8-Sokoban-Framework/blob/ec3f873ad326c51afd9e0b4a86501fd939db1ade/carts/sokoban_framework.p8",
+      "license": "MIT",
+      "revision": "ec3f873ad326c51afd9e0b4a86501fd939db1ade",
+      "code": "function get_crate_id(x,y)\n\tfor i=1,#gm.curr_map.crates do\n\t\tif (gm.curr_map.crates[i].x==x) and(gm.curr_map.crates[i].y==y)then\n\t\t\treturn\tgm.curr_map.crates[i].id\n\t\tend\n\tend\nend",
+      "adaptation": "这是原作按位置查询箱子身份的真实 helper，依赖 gm.curr_map。当前项目没有这些全局对象；适配为独立棋盘、boxes/goals 表，先检查箱子后方再提交玩家和箱子移动。"
+    },
+    {
+      "example_id": "mesh3d",
+      "source_id": "shadows3d",
+      "source_url": "https://github.com/freds72/pico8-shadows/blob/64a2fae6c8c4583d8436d8304b714f8fd4119d19/carts/cornell_box.p8",
+      "license": "MIT",
+      "revision": "64a2fae6c8c4583d8436d8304b714f8fd4119d19",
+      "code": "project2d=function(self,v)\n\t\t\t-- view to screen\n \t\t\tlocal w=focal/v[3]\n \t\t\treturn x0+v[1]*w,y0-v[2]*w\n\t\tend,",
+      "adaptation": "原作是真实空间多边形渲染器，先做相机空间变换、近平面裁剪，再投影；另有面深度排序、扫描线填充和阴影。此节选依赖外层相机参数，仅说明投影关系。工坊线框例用独立的有界顶点与线段近裁剪，不复制原作模型数据解包、内存、flip、外部 Blender 或阴影工作流。"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import vm from 'node:vm';import {build} from 'esbuild';
+const b=await build({entryPoints:[new URL('request-json.ts',import.meta.url).pathname],bundle:true,write:false,platform:'neutral',format:'iife',globalName:'M'});let time=0;const c=vm.createContext({Date:{now:()=>time}});vm.runInContext(b.outputFiles[0].text,c);const {requestJson}=c.M;let yields=0;
+const frame=async()=>{yields++;};
+const text=('中\n文"\\🎮\u0001').repeat(70000),body={model:'fixture',messages:[{role:'user',content:text},{role:'assistant',tool_calls:[{id:'same-id',function:{name:'write_game',arguments:JSON.stringify({lua:text})}}]}],tools:[{parameters:{type:'object',properties:{lua:{type:'string'}}}}],missing:undefined,values:[null,true,NaN,Infinity,undefined],date:new Date(0)};
+Object.defineProperty(body,'tick',{enumerable:true,get(){time+=10;return 'progress';}});
+const before=JSON.stringify(body),actual=await requestJson(body,frame);assert.equal(actual,before);assert(yields>0);assert.equal(JSON.parse(actual).messages[0].content,text);assert.equal(JSON.parse(actual).messages[1].tool_calls[0].id,'same-id');
+const abort=new AbortController();await assert.rejects(requestJson({get content(){time+=10;return text;}},async()=>abort.abort(),abort.signal),/aborted/);
+const cyclic={};cyclic.self=cyclic;await assert.rejects(requestJson(cyclic,frame),/circular/);
+for(const value of [null,3,-0,true,'"\\\n',{},[],{x:[{},1,undefined],missing:undefined}])assert.equal(await requestJson(value,frame),JSON.stringify(value));
+console.log('PASS request JSON matches standard bytes for large Unicode/source/tool bodies, escaping and omitted values; preserves IDs; yields and aborts before transport; cycles rejected.');

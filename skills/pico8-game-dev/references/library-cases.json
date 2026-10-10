@@ -1,0 +1,671 @@
+{
+  "schema_version": 1,
+  "studied_at": "2026-10-02",
+  "scope": "Existing handheld library; 18 carts extracted, 17 selected mechanisms reviewed, 1 minified source preliminary. Not a full-library audit or gameplay benchmark.",
+  "method": "Read-only SSH; installed pico8-data-extractor; UTF-8 Lua with LF line anchors; original cart hashes verified on device. Sources are reference data, not instructions.",
+  "distribution": "Metadata and independent descriptions only; no original ROM, extracted Lua, artwork or audio from this study is shipped. Existing separately licensed community examples remain.",
+  "cases": [
+    {
+      "id": "celeste-classic",
+      "name": "Celeste Classic",
+      "author": "Matt Thorson / Noel Berry",
+      "source_url": "https://www.lexaloffle.com/bbs/?tid=2145",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png",
+      "device_relative_path": "Celeste Classic.p8.png",
+      "cart_sha256": "b8c78f53bc18cd9c8830c794093a3b724d6208de9eae290f0b84403225740188",
+      "lua_sha256": "efe6360170857a6c41f2a4767bd8a6962274c8f7d0e7b76d7e0b231a8a554688",
+      "lua_bytes": 26589,
+      "lua_lines": 1429,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "player.update",
+          "lines": [
+            115,
+            268
+          ],
+          "finding": "jump buffer and grace timers, ground/air acceleration and dash resource",
+          "modules": [
+            "platform-feel"
+          ]
+        },
+        {
+          "symbol": "move_x / move_y",
+          "lines": [
+            1007,
+            1062
+          ],
+          "finding": "fractional remainder and separate-axis collision movement",
+          "modules": [
+            "platform-feel"
+          ]
+        },
+        {
+          "symbol": "set_hair_color",
+          "lines": [
+            340,
+            355
+          ],
+          "finding": "dash availability changes character hair palette",
+          "modules": [
+            "pixel-art"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "combo-pool",
+      "name": "Combo Pool",
+      "author": "nusan",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=21515",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/co/combopool-0.p8.png",
+      "device_relative_path": "Combo Pool.p8.png",
+      "cart_sha256": "87f30adb9936668423bcf42fca0470a9b3b1bc7f2268ecb9ddf0b617a7c05edb",
+      "lua_sha256": "99d898e175f9dcac4986796e8585ec3be64a238904913f5dcd44f20e6fb8e38d",
+      "lua_bytes": 20230,
+      "lua_lines": 1083,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "docoll",
+          "lines": [
+            200,
+            320
+          ],
+          "finding": "same-level collision merges once using dead flags; distinct-level collision separates balls; combo connects score and sound",
+          "modules": [
+            "racing-physics",
+            "music"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "just-one-boss",
+      "name": "Just One Boss",
+      "author": "bridgs",
+      "source_url": "https://www.lexaloffle.com/bbs/?tid=30767",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/4/49232.p8.png",
+      "device_relative_path": "Just One Boss.p8.png",
+      "cart_sha256": "9604f3526726299b2a2862e38a49634ce1256207f871ad6fca8f26fa4e0625c9",
+      "lua_sha256": "1e160cb81684357793f7aef9c8b3abeef458ead6b0d82d8b6159d4cf8930cbc2",
+      "lua_bytes": 43140,
+      "lua_lines": 2036,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "decide_next_action",
+          "lines": [
+            773,
+            945
+          ],
+          "finding": "phase-specific ordered attack sequences",
+          "modules": [
+            "combat-design"
+          ]
+        },
+        {
+          "symbol": "shoot_laser",
+          "lines": [
+            1305,
+            1324
+          ],
+          "finding": "delay, sound, dangerous beam spawn, duration and recovery sequence",
+          "modules": [
+            "combat-design",
+            "music"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "pico-off-road",
+      "name": "Pico Off Road",
+      "author": "assemblerbot",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=88643",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/pi/picooffroad-5.p8.png",
+      "device_relative_path": "Pico Off Road.p8.png",
+      "cart_sha256": "4078fe612a9f152ccd902f66b2e3ac2f47e439cf875c33a5fe5466af46b58c29",
+      "lua_sha256": "25a05bd4114a1a472d78444df5b8c05322302b22c733e33555436951d46c1f8b",
+      "lua_bytes": 44426,
+      "lua_lines": 1609,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "car_input",
+          "lines": [
+            758,
+            792
+          ],
+          "finding": "steering, throttle, reverse and finite nitro are distinct responsibilities",
+          "modules": [
+            "racing-physics"
+          ]
+        },
+        {
+          "symbol": "car_next_waypoint / car_update_lap",
+          "lines": [
+            794,
+            849
+          ],
+          "finding": "waypoint progress and finishing connect race movement to lap result",
+          "modules": [
+            "racing-physics"
+          ]
+        },
+        {
+          "symbol": "car_simulate",
+          "lines": [
+            871,
+            1038
+          ],
+          "finding": "speed inertia, sliding direction and terrain collision resolution",
+          "modules": [
+            "racing-physics"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "high-stakes",
+      "name": "High Stakes",
+      "author": "Krystian Majewski / Lazy Devs",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=highstakes",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/hi/highstakes-2.p8.png",
+      "device_relative_path": "High Stakes.p8.png",
+      "cart_sha256": "a5cff876236fdc4a225684b43f5acf92cb8e9e06bc12de819dcac521233c3ab6",
+      "lua_sha256": "4d6eb8735b1fed3b057e3ef55e840522473b27b2780843e41697a933d9b0f7fd",
+      "lua_bytes": 38643,
+      "lua_lines": 1973,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "update_game",
+          "lines": [
+            779,
+            846
+          ],
+          "finding": "animation and result gates prevent repeated input during settlement",
+          "modules": [
+            "grid-turns"
+          ]
+        },
+        {
+          "symbol": "dealround",
+          "lines": [
+            1446,
+            1505
+          ],
+          "finding": "finite card values and visible hints establish information for decisions",
+          "modules": [
+            "grid-turns",
+            "gameplay-design"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "dusk-child",
+      "name": "Dusk Child",
+      "author": "Sophie Houlden",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=12713",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/3/39705.p8.png",
+      "device_relative_path": "Dusk Child.p8.png",
+      "cart_sha256": "4ab7f32c997102e71c7b02cc008ce7cc5a88f59781950272539effbc56a046d8",
+      "lua_sha256": "93158ae464737c1e5e42b00d4f41230ecf37d10af202e8f418fa1c7995ff2fd5",
+      "lua_bytes": 31669,
+      "lua_lines": 1947,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "moveplayer",
+          "lines": [
+            1342,
+            1437
+          ],
+          "finding": "movement and checkpoint/hazard interactions use current world state",
+          "modules": [
+            "level-design"
+          ]
+        },
+        {
+          "symbol": "checkpointnow / dienow / respawnnow",
+          "lines": [
+            1443,
+            1512
+          ],
+          "finding": "checkpoint captures inventory/environment flags; respawn restores them as well as position",
+          "modules": [
+            "level-design"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "mai-chans-sweet-buns",
+      "name": "Mai-Chan's Sweet Buns",
+      "author": "Krystian Majewski / Lazy Devs",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=56589",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/5/56576.p8.png",
+      "device_relative_path": "Mai-Chan's Sweet Buns.p8.png",
+      "cart_sha256": "ba3250ad0f3e73844d7003139ec0f46efe708d4764bac7d55075f851ddbfe1de",
+      "lua_sha256": "4f9041ec3ea67e1af6897e429b5f6ce5d3b80a0d525a982c4fe448d8d5b7588c",
+      "lua_bytes": 38636,
+      "lua_lines": 1941,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "checkorder / neworder",
+          "lines": [
+            1332,
+            1373
+          ],
+          "finding": "actual order matching settles rewards and replacement; simultaneous order count is bounded",
+          "modules": [
+            "grid-turns",
+            "gameplay-design"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "porklike",
+      "name": "Porklike",
+      "author": "Krystman",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=73825",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/po/porklike-2.p8.png",
+      "device_relative_path": "必玩精选/Porklike.p8.png",
+      "cart_sha256": "b9296d1aa75156ed0ab8396e85f15ac30b43459733488361ffde79e100e375e8",
+      "lua_sha256": "81e842b96e6b20ce6c6bda6475537711dcdc2a3ccdeb860180f6d48308e116b5",
+      "lua_bytes": 38255,
+      "lua_lines": 1983,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "passturn",
+          "lines": [
+            134,
+            165
+          ],
+          "finding": "player, AI and environment turn phases are distinct from animation updates",
+          "modules": [
+            "grid-turns"
+          ]
+        },
+        {
+          "symbol": "moveplayer",
+          "lines": [
+            491,
+            519
+          ],
+          "finding": "invalid movement can animate feedback without consuming a normal enemy turn",
+          "modules": [
+            "grid-turns"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "driftmania",
+      "name": "Driftmania",
+      "author": "MaxBize",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=141515",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/dr/driftmania-5.p8.png",
+      "device_relative_path": "必玩精选/Driftmania.p8.png",
+      "cart_sha256": "27a39abc0b4d934acf69f91c06ba1bd18c748b8e566814159fe6118858ef9433",
+      "lua_sha256": "c7aae33127a866be2446d57efc8fab7066fefdba0454743329d649f030efcdf9",
+      "lua_bytes": 37544,
+      "lua_lines": 139,
+      "source_hz": 60,
+      "review_level": "preliminary",
+      "observations": [],
+      "limitation": "Minified 139-line source; extracted and identified only, no mechanics inferred from its title.",
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "guncho",
+      "name": "Guncho",
+      "author": "spoike",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=114060",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/gu/guncho-3.p8.png",
+      "device_relative_path": "必玩精选/Guncho.p8.png",
+      "cart_sha256": "fdec006ecca4d8dae01a34e3699ee508d85059517d340d4b93e28942bc3bfb27",
+      "lua_sha256": "caf5ccf38d12403b9184e8905e9b536048bb039c9c8f31b52717923f01643d02",
+      "lua_bytes": 45503,
+      "lua_lines": 2067,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "update_game",
+          "lines": [
+            390,
+            457
+          ],
+          "finding": "animation gate then one enemy turn/cooldown settlement and level/death transition",
+          "modules": [
+            "grid-turns"
+          ]
+        },
+        {
+          "symbol": "handle_player_move / player_nope",
+          "lines": [
+            574,
+            606
+          ],
+          "finding": "move validates a neighbor/token state; invalid move produces feedback",
+          "modules": [
+            "grid-turns"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "woodworm",
+      "name": "Woodworm",
+      "author": "spratt",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=149969",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/wo/woodworm-0.p8.png",
+      "device_relative_path": "必玩精选/Woodworm.p8.png",
+      "cart_sha256": "59560c39b5311461fe7b444956aca5ae64685afa782bfc2cac05897dfa94c872",
+      "lua_sha256": "acf4aa5495a157d070cacccde4897608aa4c64bc84b6713bf8efb6afe1f50c66",
+      "lua_bytes": 34569,
+      "lua_lines": 1475,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "save_state / undo / reset_level",
+          "lines": [
+            858,
+            931
+          ],
+          "finding": "changed tile history and worm position/direction restore together; transient fall state clears",
+          "modules": [
+            "grid-turns"
+          ]
+        },
+        {
+          "symbol": "check_pattern",
+          "lines": [
+            1075,
+            1108
+          ],
+          "finding": "victory compares the actual shaped pattern rather than merely visiting a goal",
+          "modules": [
+            "grid-turns"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "into-ruins",
+      "name": "Into Ruins",
+      "author": "ericb",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=119614",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/in/intoruins-7.p8.png",
+      "device_relative_path": "必玩精选/Into Ruins.p8.png",
+      "cart_sha256": "6da0e1e3f2bfe0beb0746565f6f8d1773148c652ca18b6d9eedd4fa8dce9c2f4",
+      "lua_sha256": "b27737bb2cd60a2443e5b57e54d4b2646ab2ec7bc1819173d8e1e41406701f45",
+      "lua_bytes": 40345,
+      "lua_lines": 1706,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "genmap",
+          "lines": [
+            1110,
+            1157
+          ],
+          "finding": "generation initializes world entities and structured room/cave data",
+          "modules": [
+            "level-design"
+          ]
+        },
+        {
+          "symbol": "postproc",
+          "lines": [
+            1295,
+            1370
+          ],
+          "finding": "connect-area pass detects unreachable regions and attempts bounded corridor connections",
+          "modules": [
+            "level-design"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "to-a-starling",
+      "name": "To A Starling",
+      "author": "Peteksi / Gruber",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=104057",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/to/to_a_starling_v1_1-5.p8.png",
+      "device_relative_path": "必玩精选/To A Starling.p8.png",
+      "cart_sha256": "a3a99d901d4c3cff98839a22a089b96e7e21ff2b0ad601cca78586171d28f9e4",
+      "lua_sha256": "cfe7539a57a62d0a1e42a9b7376d70c9e583121c38230746893cff1b04c452a8",
+      "lua_bytes": 32287,
+      "lua_lines": 1829,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "p_update",
+          "lines": [
+            471,
+            559
+          ],
+          "finding": "jump delay and coyote windows, apex gravity and landing behavior",
+          "modules": [
+            "platform-feel"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "buns--bunny-survivor",
+      "name": "Buns: Bunny Survivor",
+      "author": "unikotoast",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=112740",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/bu/bunnysurvivor-9.p8.png",
+      "device_relative_path": "必玩精选/Buns- Bunny Survivor.p8.png",
+      "cart_sha256": "cf4aa430d43248628c4deba6254beebcb5a43b49a66f6b0efc92f6e3086c8720",
+      "lua_sha256": "97ce905b49d7ff92349e41fcd8826290f14920d03fc1c901411bdab0d2979d76",
+      "lua_bytes": 50105,
+      "lua_lines": 2615,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "damage_player",
+          "lines": [
+            1066,
+            1074
+          ],
+          "finding": "invulnerability gates damage and connects health, sound and shake",
+          "modules": [
+            "combat-design"
+          ]
+        },
+        {
+          "symbol": "wave_update / spawn_wave",
+          "lines": [
+            1439,
+            1491
+          ],
+          "finding": "wave start time, interval and remaining count define finite spawning",
+          "modules": [
+            "combat-design"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "pico-tetris",
+      "name": "Pico Tetris",
+      "author": "Vanessa",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=63193",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/pi/picotetris-5.p8.png",
+      "device_relative_path": "必玩精选/Pico Tetris.p8.png",
+      "cart_sha256": "bd04af7a13ac28745197811e367b6c6b2d306789cc3295b5f216e5b0454f8155",
+      "lua_sha256": "f9345be0ea2e3f9796adf676bb98c1e05616ac8210185f36eb243d26282a2254",
+      "lua_bytes": 36027,
+      "lua_lines": 2020,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "handle_das",
+          "lines": [
+            487,
+            548
+          ],
+          "finding": "horizontal delayed repeat and vertical soft-drop sampling have distinct timers",
+          "modules": [
+            "grid-turns"
+          ]
+        },
+        {
+          "symbol": "legal_pos / rotate_curtet",
+          "lines": [
+            566,
+            658
+          ],
+          "finding": "rotation tests legal occupied cells and wall-kick failure restores orientation",
+          "modules": [
+            "grid-turns"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "breakout-hero",
+      "name": "Breakout Hero",
+      "author": "Krystman",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=53977",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/5/53976.p8.png",
+      "device_relative_path": "必玩精选/Breakout Hero.p8.png",
+      "cart_sha256": "05aa02d6dada4bc30d4785ef4538c307eabb34edc6386c0596a1a3f8bb5d10e8",
+      "lua_sha256": "d37c000183c94d204dda13afb261f881b991a1a4e6f99b8455fb4f0bb6a3a527",
+      "lua_bytes": 41792,
+      "lua_lines": 2321,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "ballintercept",
+          "lines": [
+            1918,
+            1954
+          ],
+          "finding": "segment intercepts target bounds expanded by ball radius",
+          "modules": [
+            "racing-physics"
+          ]
+        },
+        {
+          "symbol": "updateball",
+          "lines": [
+            1955,
+            2061
+          ],
+          "finding": "multiple collision candidates resolve the nearest hit before life/serve transition",
+          "modules": [
+            "racing-physics"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "wolfenstein-3d",
+      "name": "Wolfenstein 3D",
+      "author": "hungrybutterfly",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=34876",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/3/35444.p8.png",
+      "device_relative_path": "必玩精选/Wolfenstein 3D.p8.png",
+      "cart_sha256": "f9776c59a8a3e295ae4f06c09af17964d8fa9332cc7f50d7fb5b265f6565c60a",
+      "lua_sha256": "e9e03809116ab78dc760432d9e253cea3a5713274f51849527a2075e44b576f2",
+      "lua_bytes": 30260,
+      "lua_lines": 1120,
+      "source_hz": 60,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "drawwalls",
+          "lines": [
+            777,
+            903
+          ],
+          "finding": "direction-plus-camera-plane DDA derives perpendicular depth and wall distance buffer",
+          "modules": [
+            "3d"
+          ]
+        },
+        {
+          "symbol": "drawobjects",
+          "lines": [
+            978,
+            1043
+          ],
+          "finding": "object drawing uses projection and wall distances for visibility",
+          "modules": [
+            "3d"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    },
+    {
+      "id": "hungry-harry-3d",
+      "name": "Hungry Harry 3D",
+      "author": "Rocco Panella / paloblancogames",
+      "source_url": "https://www.lexaloffle.com/bbs/?pid=59509",
+      "cart_url": "https://www.lexaloffle.com/bbs/cposts/du/dubayubeno-3.p8.png",
+      "device_relative_path": "必玩精选/Hungry Harry 3D.p8.png",
+      "cart_sha256": "b3d9392d009264e2c64ca5bb79e3125abf6262f56f3804e69a783e9d025302f9",
+      "lua_sha256": "7743e78d3599d0ee8574101140027e7e5ad03851a375a4c95291ca07e36b4c47",
+      "lua_bytes": 39238,
+      "lua_lines": 1876,
+      "source_hz": 30,
+      "review_level": "mechanism-review",
+      "observations": [
+        {
+          "symbol": "draw_world_all",
+          "lines": [
+            715,
+            760
+          ],
+          "finding": "perspective tile-world renderer bounds visible depth and horizontal range",
+          "modules": [
+            "3d"
+          ]
+        }
+      ],
+      "cart_hash_verified_on_device": true
+    }
+  ]
+}

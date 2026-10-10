@@ -7,6 +7,9 @@ UPSTREAM="$OUTPUT/upstream"
 QJS="$OUTPUT/quickjs/libquickjs-sys/embed/quickjs"
 MAC="$OUTPUT/${POCKETJS_MAC_DIR:-mac-preview}"
 ENTRY="${POCKETJS_APP_SOURCE:-$TASK_ROOT/ports/pocketjs-brick/app/brick-app.tsx}"
+if [ "$ENTRY" = "$TASK_ROOT/ports/pocketjs-brick/workshop/app.tsx" ]; then
+    node "$TASK_ROOT/ports/pocketjs-brick/workshop/build-skill.mjs"
+fi
 [ "$(uname -s)" = Darwin ] || { echo 'This preview requires macOS.' >&2; exit 1; }
 pkg-config --exists sdl2 SDL2_ttf || { echo 'Run: brew install sdl2_ttf pkgconf' >&2; exit 1; }
 if [ ! -f "$QJS/quickjs.c" ] || [ ! -f "$UPSTREAM/tools/build.ts" ]; then
@@ -43,16 +46,22 @@ for source in quickjs cutils libregexp libunicode dtoa; do
     clang -std=gnu11 -O2 -D_GNU_SOURCE -DCONFIG_VERSION=\""$QUICKJS_VERSION"\" -I"$QJS" \
         -c "$QJS/$source.c" -o "$MAC/objects/$source.o"
 done
+clang -std=gnu11 -O2 -c "$TASK_ROOT/ports/pocketjs-brick/workshop/third-party/lodepng.c" -o "$MAC/objects/workshop-png.o"
 clang -std=gnu11 -O2 -Wall -Wextra -Werror -Wno-unused-parameter \
     -I"$UPSTREAM/engine/ui-cabi/include" -I"$UPSTREAM/engine/quickjs-c" \
     -I"$UPSTREAM/hosts/nokia-e7/runtime" -I"$UPSTREAM/contracts/generated" -I"$QJS" $(pkg-config --cflags sdl2 SDL2_ttf) \
     -DPOCKET_RUNTIME_EXTENSION -DPOCKET_RUNTIME_HARNESS -DPOCKETJS_TARGET_ID=\"brick-experimental\" -DPOCKETJS_HOST_ABI=1 \
     -DPOCKETJS_REV=\""$POCKETJS_REV"\" \
-    "$TASK_ROOT/ports/pocketjs-brick/app-host.c" "$TASK_ROOT/ports/pocketjs-brick/brick-services.c" "$TASK_ROOT/ports/pocketjs-brick/brick-hardware.c" \
+    "$TASK_ROOT/ports/pocketjs-brick/app-host.c" "$TASK_ROOT/ports/pocketjs-brick/brick-services.c" "$TASK_ROOT/ports/pocketjs-brick/brick-hardware.c" "$TASK_ROOT/ports/pocketjs-brick/workshop-native.c" "$TASK_ROOT/ports/pocketjs-brick/workshop-voice.c" "$TASK_ROOT/ports/pocketjs-brick/workshop-visual.c" \
     "$UPSTREAM/engine/quickjs-c/pocket_runtime.c" "$UPSTREAM/engine/quickjs-c/rust_eh_personality.c" "$MAC/objects/"*.o \
     "$OUTPUT/mac-target/$TARGET/release/libpocketjs_symbian_core.a" \
     $(pkg-config --libs sdl2 SDL2_ttf) -lm -lpthread -o "$MAC/pocketjs-app"
 cp "$TASK_ROOT/fonts/NotoSansSC-Regular.otf" "$MAC/"
+if [ "$ENTRY" = "$TASK_ROOT/ports/pocketjs-brick/workshop/app.tsx" ]; then
+    /bin/bash "$TASK_ROOT/ports/pocketjs-brick/workshop/build-check.sh" "$MAC/workshop-check"
+
+fi
+clang -std=gnu11 -O2 -Wall -Wextra -Werror -Wno-unused-parameter -I"$QJS" "$TASK_ROOT/ports/pocketjs-brick/workshop-terminal.c" "$MAC/objects/quickjs.o" "$MAC/objects/cutils.o" "$MAC/objects/libregexp.o" "$MAC/objects/libunicode.o" "$MAC/objects/dtoa.o" -lm -lpthread -o "$MAC/workshop-terminal"
 mkdir -p "$MAC/PocketJS Preview.app/Contents/MacOS"
 cp "$MAC/pocketjs-app" "$MAC/PocketJS Preview.app/Contents/MacOS/pocketjs-app.new"
 mv -f "$MAC/PocketJS Preview.app/Contents/MacOS/pocketjs-app.new" "$MAC/PocketJS Preview.app/Contents/MacOS/pocketjs-app"

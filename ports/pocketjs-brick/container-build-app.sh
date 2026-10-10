@@ -22,20 +22,28 @@ for source in quickjs cutils libregexp libunicode dtoa; do
 done
 # A local experimental host contract; no registered upstream Brick build plan exists.
 # The bundle uses the upstream plan-less custom-host pipeline at density 1 / 60 Hz.
+aarch64-nextui-linux-gnu-gcc -std=gnu11 -O2 -c ports/pocketjs-brick/workshop/third-party/lodepng.c -o "$OUTPUT/quickjs-objects/workshop-png.o"
 aarch64-nextui-linux-gnu-gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Wno-unused-parameter -mcpu=cortex-a53 \
     -I"$UPSTREAM/engine/ui-cabi/include" -I"$UPSTREAM/engine/quickjs-c" \
     -I"$UPSTREAM/hosts/nokia-e7/runtime" -I"$UPSTREAM/contracts/generated" -I"$QJS" $(pkg-config --cflags sdl2) \
     -DPOCKET_RUNTIME_EXTENSION -DPOCKET_RUNTIME_HARNESS -DPOCKETJS_TARGET_ID=\"brick-experimental\" -DPOCKETJS_HOST_ABI=1 \
     -DPOCKETJS_REV=\""$POCKETJS_REV"\" \
-    ports/pocketjs-brick/app-host.c ports/pocketjs-brick/brick-services.c ports/pocketjs-brick/brick-hardware.c ports/pocketjs-brick/compat.c \
+    ports/pocketjs-brick/app-host.c ports/pocketjs-brick/brick-services.c ports/pocketjs-brick/brick-hardware.c ports/pocketjs-brick/workshop-native.c ports/pocketjs-brick/workshop-voice.c ports/pocketjs-brick/workshop-visual.c ports/pocketjs-brick/compat.c \
     "$UPSTREAM/engine/quickjs-c/pocket_runtime.c" "$UPSTREAM/engine/quickjs-c/rust_eh_personality.c" \
     "$OUTPUT/quickjs-objects/"*.o \
     "$OUTPUT/rust-app-target/aarch64-unknown-linux-gnu/release/libpocketjs_symbian_core.a" \
     $(pkg-config --libs sdl2) -lSDL2_ttf -lm -ldl -lpthread -o "$PKG/pocketjs-app.elf"
+aarch64-nextui-linux-gnu-gcc -std=gnu11 -O2 -Wall -Wextra -Werror ports/pocketjs-brick/workshop-cover.c "$OUTPUT/quickjs-objects/workshop-png.o" -ldl -o "$PKG/workshop-cover"
+aarch64-nextui-linux-gnu-gcc -std=gnu11 -O2 -Wall -Wextra -Werror -Wno-unused-parameter -I"$QJS" ports/pocketjs-brick/workshop-terminal.c "$OUTPUT/quickjs-objects/quickjs.o" "$OUTPUT/quickjs-objects/cutils.o" "$OUTPUT/quickjs-objects/libregexp.o" "$OUTPUT/quickjs-objects/libunicode.o" "$OUTPUT/quickjs-objects/dtoa.o" -lm -ldl -lpthread -o "$PKG/workshop-terminal"
 cp "$OUTPUT/ca-bundle.crt" "$PKG/ca-bundle.crt"
 cp "$BUNDLE/brick-app.js" "$BUNDLE/brick-app.pak" "$PKG/"
-cp ports/pocketjs-brick/launch-app.sh "$PKG/launch.sh"
-cp ports/pocketjs-brick/APP.md "$PKG/README.md"
+if [ "${POCKETJS_PACKAGE_NAME:-PocketJS App.pak}" = 'AI Game Workshop.pak' ]; then
+    cp ports/pocketjs-brick/workshop/launch.sh "$PKG/launch.sh"
+    cp ports/pocketjs-brick/workshop/README.md "$PKG/README.md"
+else
+    cp ports/pocketjs-brick/launch-app.sh "$PKG/launch.sh"
+    cp ports/pocketjs-brick/APP.md "$PKG/README.md"
+fi
 cp LICENSE "$PKG/NEXTUI-PORT-LICENSE.txt"
 cp fonts/NotoSansSC-Regular.otf fonts/NotoSansSC-OFL.txt "$PKG/"
 cp "$UPSTREAM/LICENSE" "$PKG/POCKETJS-LICENSE.txt"

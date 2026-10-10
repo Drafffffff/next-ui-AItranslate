@@ -1,0 +1,10 @@
+name = "workshop-game-share-gateway"
+main = "worker.mjs"
+compatibility_date = "2026-10-02"
+workers_dev = true
+preview_urls = false
+routes = [{ pattern = "games.dong-xi.cn", custom_domain = true, zone_name = "dong-xi.cn" }]
+
+# Uploaded credentials, cart bodies and query strings must not enter invocation logs.
+[observability]
+enabled = false

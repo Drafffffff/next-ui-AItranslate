@@ -1,0 +1,1394 @@
+{
+  "schema": 1,
+  "dataset": "workshop-agent-iteration-2026-10-02",
+  "policy": "客观源码/严格VM断言与模型代码审阅分别记录；审阅不是玩法真值。案例同名规则变动必须递增case_version，不能跨规则直接比较通过率。",
+  "cases": [
+    {
+      "id": "platform-create",
+      "name": "平台动作 · 新建",
+      "category": "平台",
+      "turns": [
+        "做一个精致的单屏平台小游戏：方向键移动、O跳跃、X短冲刺，拿到钥匙后到出口获胜。需要可靠的跳跃手感、至少两个可达平台、可见的冲刺可用状态、危险和死亡重开、BGM与操作音效。玩法细节你决定，直接完成。"
+      ],
+      "rubric": [
+        "跳跃与冲刺输入可靠，缓冲请求不会重复消费",
+        "钥匙和出口依赖成立，布局与跳跃能力相匹配",
+        "危险、能力状态和结果有可辨识反馈",
+        "结束与重开完整清理本轮状态"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "race-create",
+      "name": "赛车 · 三圈与检查点",
+      "category": "物理",
+      "turns": [
+        "做一个俯视迷你赛车。方向键操控，O加速，X刹车；短闭合赛道跑三圈获胜。要有惯性、合理转向、撞墙后能脱离，检查点放在可行驶区，倒着过终点不能刷圈。BGM、撞击和完成反馈要有。你决定其余细节，直接完成。"
+      ],
+      "rubric": [
+        "车辆朝向、速度和位置分工明确",
+        "检查点在路面内且按序，终点触发方向合理",
+        "碰撞能恢复，不产生永久卡墙或穿越边界",
+        "比赛倒计时、圈数、胜利和重开形成闭环"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "boss-create",
+      "name": "Boss · 可预判战斗",
+      "category": "战斗",
+      "turns": [
+        "做一个单屏Boss战：方向键躲避，O攻击。Boss有直线冲锋和扫射两种招式，每招有明显预告、行动和恢复窗口。玩家三条命、受击短暂无敌，击败Boss获胜，O可重开。音乐与声音反馈要有，你决定细节直接完成。"
+      ],
+      "rubric": [
+        "两种招式产生不同应对，危险区与预告一致",
+        "攻击和阶段使用有界状态机，不每帧随机重启",
+        "同帧多次接触只扣一次血，恢复窗口可反击",
+        "实体上限、死亡优先级、胜利与重开正确"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "dungeon-3d",
+      "name": "3D地牢 · 钥匙与出口",
+      "category": "3D",
+      "turns": [
+        "做一个第一人称3D小地牢，用方向键转向和前进、O交互。寻找钥匙开启出口，包含一个危险和可重新开始的失败状态。必须保持3D，有闭合外墙，钥匙在开门前可达，物品不能显示在墙后；提示、音乐和音效要清楚。其余你决定，直接完成。"
+      ],
+      "rubric": [
+        "实际透视/射线实现而非俯视代替3D",
+        "方向、深度、近面、物体遮挡和碰撞使用一致坐标",
+        "钥匙不锁在自己的门后，出口路径存在",
+        "射线、对象与生成预算有限，重开保持有效场景"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "speed-change",
+      "name": "已有收集游戏 · 局部减速",
+      "category": "修改",
+      "seed": "collect",
+      "turns": [
+        "把当前猫的水平和垂直移动速度从每帧1.5像素改为每帧1像素，其他玩法、按键、精灵、声音、目标和时间都不变。直接修改。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "player.x+dx*1.5",
+            "player.x+dx*1"
+          ],
+          [
+            "player.y+dy*1.5",
+            "player.y+dy*1"
+          ]
+        ],
+        "precise_replace_alternatives": {
+          "player.x+dx*1.5": [
+            "player.x+dx"
+          ],
+          "player.y+dy*1.5": [
+            "player.y+dy"
+          ]
+        }
+      },
+      "rubric": [
+        "仅修改两个相关位移系数，不重写玩法",
+        "对角归一化、输入、目标与倒计时保留",
+        "所有现有图像和声音完全保留"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "assert(state=='play') eval_x=player.x",
+          "name": "start-state"
+        },
+        {
+          "frames": 10,
+          "mask": 2,
+          "name": "move"
+        },
+        {
+          "assert": "assert(abs(player.x-eval_x-10)<.01,'horizontal speed')",
+          "name": "move-speed"
+        },
+        {
+          "assert": "fish={x=player.x,y=player.y,w=8,h=8} score=9",
+          "name": "set-goal-boundary"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "win"
+        },
+        {
+          "assert": "assert(state=='win' and score==10,'goal settlement')",
+          "name": "goal"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "restart"
+        },
+        {
+          "assert": "assert(state=='play' and score==0 and left==30,'reset state')",
+          "name": "restart-state"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "platform-change",
+      "name": "已有平台游戏 · 只改跳高",
+      "category": "修改",
+      "seed": "platform",
+      "turns": [
+        "把当前跳跃初速度从-3.5改成-3.0，其余代码和所有素材保持原样，直接修改。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "vy=-3.5",
+            "vy=-3.0"
+          ]
+        ]
+      },
+      "rubric": [
+        "仅改变起跳参数，原输入和碰撞完整保留",
+        "不重写关卡、不改变跑速和重力",
+        "重开和按住O不会反复起跳"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 3,
+          "mask": 0,
+          "name": "ground"
+        },
+        {
+          "assert": "assert(state=='play' and grounded,'grounded start')",
+          "name": "grounded"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "jump"
+        },
+        {
+          "assert": "assert(vy<0 and vy>-3.1,'requested jump')",
+          "name": "jump-speed"
+        },
+        {
+          "frames": 90,
+          "mask": 16,
+          "name": "held"
+        },
+        {
+          "assert": "assert(grounded and vy==0 and player.y==112,'held jump')",
+          "name": "held-no-repeat"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "grid-feedback-create",
+      "name": "推箱子 · 输入与声音连接",
+      "category": "输入/音频",
+      "turns": [
+        "制作一个经典推箱子小游戏，三关小型手工关卡，方向键移动，X撤销，O重开，标题用O开始。长按首步立即、随后均匀重复，换方向及时响应，重开不会因长按重复触发。轻柔音乐要有持续声部，操作音效是独立短反馈。不要把休止全删除，也不要猜测卡顿原因。其余你决定，直接完成。"
+      ],
+      "rubric": [
+        "首按、长按与松开有明确且均匀的节拍",
+        "确认和重开不受默认重复影响",
+        "规则与动画分离，撤销恢复完整状态",
+        "音乐状态切换单次触发，操作音效是短事件反馈"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "eval_music=0 eval_feedback=0 local m=music local s=sfx music=function(n,...) eval_music+=1 m(n,...) end sfx=function(n,...) if n>=0 then eval_feedback+=1 end s(n,...) end",
+          "name": "observe-events"
+        },
+        {
+          "frames": 60,
+          "mask": 2,
+          "name": "held"
+        },
+        {
+          "assert": "assert(eval_music<=2,'BGM restarted repeatedly during held input') assert(eval_feedback<=40,'feedback repeated every display update')",
+          "name": "event-budget"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "restart"
+        },
+        {
+          "assert": "eval_music=0",
+          "name": "restart-boundary"
+        },
+        {
+          "frames": 60,
+          "mask": 16,
+          "name": "hold-restart"
+        },
+        {
+          "assert": "assert(eval_music==0,'held restart retriggered BGM')",
+          "name": "single-restart"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "tetris-feedback-create",
+      "name": "落块 · 操作保留与短音",
+      "category": "输入/音频",
+      "turns": [
+        "制作一个完整的小型俄罗斯方块，O从标题开始/游玩时旋转，X硬降，方向左右移动、下软降。横移首按立即，长按等待后均匀重复；软降首按在当前更新就下一格，按住均匀重复；不能等旧重力倒计时结束。加入BGM和独立短移动/旋转音效，移动成功才发声，不要拿BGM低音声部作步进音。O旋转和X硬降都必须严格单次，长按或从标题进入时仍按住O不再旋转。结束能重开，其余你决定，直接完成。"
+      ],
+      "rubric": [
+        "左右首次/延迟/重复职责独立",
+        "下软降代码始终可达，硬降不重复锁定",
+        "音乐声部与事件音效分工明确",
+        "生成堵塞、消行、结束与重開完整"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "eval_music=0 local m=music music=function(n,...) eval_music+=1 m(n,...) end",
+          "name": "observe-bgm"
+        },
+        {
+          "assert": "eval_piece=nil local found=nil for k,v in pairs(_ENV) do if type(v)=='table' and type(v.x)=='number' and type(v.y)=='number' and (v.r!=nil or v.rot!=nil or v.rotation!=nil) then assert(found==nil,'ambiguous active-piece observer') found=v end end eval_piece=found assert(eval_piece!=nil,'evaluator cannot locate current piece; review source') eval_piece_y=eval_piece.y",
+          "name": "observe-soft-drop"
+        },
+        {
+          "frames": 1,
+          "mask": 8,
+          "name": "soft-first"
+        },
+        {
+          "assert": "assert(eval_piece.y>eval_piece_y,'soft-drop first press waited for normal gravity')",
+          "name": "immediate-soft-drop"
+        },
+        {
+          "frames": 9,
+          "mask": 8,
+          "name": "soft-held"
+        },
+        {
+          "frames": 12,
+          "mask": 2,
+          "name": "lateral"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release"
+        },
+        {
+          "assert": "eval_feedback=0 local s=sfx sfx=function(n,...) if n>=0 then eval_feedback+=1 end s(n,...) end",
+          "name": "observe-single-action"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "rotate"
+        },
+        {
+          "frames": 30,
+          "mask": 16,
+          "name": "hold-rotate"
+        },
+        {
+          "assert": "assert(eval_music==0,'input retriggered BGM')",
+          "name": "stable-bgm"
+        },
+        {
+          "assert": "assert(eval_feedback<=1,'held O repeatedly triggered action feedback')",
+          "name": "single-rotation"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "sokoban-repeat-edit",
+      "name": "推箱子 · 只改输入节拍",
+      "category": "局部修改",
+      "seed": "sokoban",
+      "turns": [
+        "把当前推箱子长按方向键的初始等待改为4帧，后续重复改为每2帧，首次仍立即响应。只改 grid_request 调用的参数，其他Lua、撤销、重开、关卡和图像/音乐完全不变，直接修改。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "grid_request(6,3)",
+            "grid_request(4,2)"
+          ]
+        ]
+      },
+      "rubric": [
+        "保留输入组件逻辑，仅改实际调用参数",
+        "严格首按与重复间隔",
+        "原有关卡、声音和恢复完整保留"
+      ],
+      "replay": [
+        {
+          "assert": "eval_requests=0 local st=step step=function(...) eval_requests+=1 st(...) end",
+          "name": "observe"
+        },
+        {
+          "frames": 1,
+          "mask": 2,
+          "name": "first"
+        },
+        {
+          "assert": "assert(eval_requests==1)",
+          "name": "instant"
+        },
+        {
+          "frames": 3,
+          "mask": 2,
+          "name": "wait"
+        },
+        {
+          "assert": "assert(eval_requests==1)",
+          "name": "delay"
+        },
+        {
+          "frames": 1,
+          "mask": 2,
+          "name": "repeat"
+        },
+        {
+          "assert": "assert(eval_requests==2)",
+          "name": "four-frame-delay"
+        },
+        {
+          "frames": 2,
+          "mask": 2,
+          "name": "next"
+        },
+        {
+          "assert": "assert(eval_requests==3)",
+          "name": "two-frame-repeat"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "snake-tempo-edit",
+      "name": "贪吃蛇 · 只改移动节拍",
+      "category": "局部修改",
+      "seed": "snake",
+      "turns": [
+        "把当前贪吃蛇的移动节拍从每6帧一步改成每9帧一步。只改这一处阈值，其他代码、输入、不能反向、目标、精灵和音乐全部保留，直接修改。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "if tick<6 then return end",
+            "if tick<9 then return end"
+          ]
+        ]
+      },
+      "rubric": [
+        "只改阈值，速度不混同于音乐",
+        "完整保留蛇身、食物与反向约束",
+        "实际第9帧移动"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "assert": "food={x=0,y=0} eval_x=body[1].x",
+          "name": "observe"
+        },
+        {
+          "frames": 8,
+          "mask": 2,
+          "name": "before-tick"
+        },
+        {
+          "assert": "assert(body[1].x==eval_x)",
+          "name": "not-early"
+        },
+        {
+          "frames": 1,
+          "mask": 2,
+          "name": "tick"
+        },
+        {
+          "assert": "assert(body[1].x==eval_x+1)",
+          "name": "nine-frame-step"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "music-only-edit",
+      "name": "音乐 · 慢25%并保留玩法",
+      "category": "音频修改",
+      "seed": "collect",
+      "turns": [
+        "把当前BGM的每行时长由speed16改到20，让音乐慢25%。所有音符、波形、音量、效果、乐句与循环关系原样保留，操作音效不变。其他玩法、按键、倒计时和精灵不变。若原BGM槽位只读，复制到可写槽位并只调整必要music播放编号，其余Lua不变。直接完成。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "only_music_calls_changed": true,
+        "music_speed_clone": {
+          "original_pattern": 6,
+          "speed": 20
+        }
+      },
+      "rubric": [
+        "时长与BPM区别正确",
+        "保护内置只读曲目，拷贝到自定义槽位",
+        "仅必要音乐调用变化，保留操作音效和所有音符"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "assert(state==\"play\" and left==30)",
+          "name": "rules-preserved"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "discussion-only",
+      "name": "共创 · 只讨论不修改",
+      "category": "交互语义",
+      "seed": "collect",
+      "turns": [
+        "先不要修改或发布游戏。围绕当前收集玩法给我两个有风险取舍的创意方向，每个用一句话解释。我确认方向后再改。"
+      ],
+      "expect": {
+        "operation": "read_only",
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "final_reply_max_chars": 240
+      },
+      "rubric": [
+        "尊重仅讨论授权，不保存/发布源码",
+        "围绕当前游戏而非强行替换题材",
+        "简短呈现两个具体取舍"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 3,
+      "answers": [
+        {
+          "answer": "先只讨论，不确认任何方向；不要修改或发布。按原请求给两个一行创意后结束。"
+        }
+      ]
+    },
+    {
+      "id": "design-continuity",
+      "name": "连续修改 · 保留设计决策",
+      "category": "连续迭代",
+      "turns": [
+        "做一个三条命的小型躲避游戏，方向移动，O短暂护盾、X冲刺。收集5颗星获胜，护盾有代价或冷却，保留清楚的视觉提示、BGM和短音效。其他你决定，直接完成。",
+        "现在把胜利目标从5颗星改成7颗星，保留三条命、护盾和冲刺，以及所有已有精灵和声音。只改目标相关内容，直接修改。"
+      ],
+      "expect": {
+        "preserve_between_turns": [
+          "gfx",
+          "audio"
+        ],
+        "design_required": true
+      },
+      "rubric": [
+        "目标、取舍、操作和状态形成实际循环",
+        "第二次读取真实源码，保留两个动作键",
+        "设计记录随两次发布保持一致并更新目标"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "billboard-clip-repair",
+      "name": "3D · 修复半出屏纹理取样",
+      "category": "真实失败修复",
+      "seed_project": "fixtures/round01-billboard.json",
+      "turns": [
+        "修复当前3D游戏的物体屏幕裁剪：draw_obj先把c0/c1夹到屏幕范围，再用裁剪后的span计算纹理源列，导致物体半出屏时剩余部分从源纹理左端重新开始、被拉伸。请保持完整投影范围用于纹理取样，再只裁剪绘制列；只修这个问题，其他函数、玩法、地图、按键、精灵和音乐全部保留。直接完成。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true
+      },
+      "rubric": [
+        "用未裁剪投影计算纹理坐标",
+        "可见绘制范围有界，墙遮挡与近面保留",
+        "保留已有玩法/按键/素材"
+      ],
+      "replay": [
+        {
+          "assert": "local oldp=p local oldsspr=sspr local oldzb=zb p={x=0,y=0,a=0} zb={} for i=0,31 do zb[i]=99 end eval_first_source=nil sspr=function(sx,...) if eval_first_source==nil then eval_first_source=sx end end draw_obj({x=1,y=-.66,z=.5,h=.5,s=32,w=.8},1,0) sspr=oldsspr p=oldp zb=oldzb assert(eval_first_source>=3 and eval_first_source<=5,\"clipped billboard must sample texture center, not restart from left edge\")",
+          "name": "clipped-texture"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "title-only-edit",
+      "name": "项目标题 · 元数据精确更新",
+      "category": "局部修改",
+      "seed": "collect",
+      "turns": [
+        "只把当前项目标题改成“猫咪归家”，所有Lua、图像、音乐、规则均保持原样。直接更新游戏入口。"
+      ],
+      "expect": {
+        "operation": "metadata",
+        "title": "猫咪归家",
+        "unchanged_lua": true,
+        "unchanged_sprites": true,
+        "unchanged_audio": true
+      },
+      "rubric": [
+        "只改宿主标题，不修改游戏源码或素材"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "question-voice-answer",
+      "name": "共创提问 · 自由回答后的精确修改",
+      "category": "交互语义",
+      "seed": "collect",
+      "turns": [
+        "我想修改目标数量，但还没有决定多少。请先调用ask_user_question问我想改为多少条鱼，等待我的真实回答，再只改目标数字与相关HUD和注释，其他代码、按键、图像、声音保持原样。"
+      ],
+      "answers": [
+        {
+          "answer": "改成12条鱼，30秒不变。只改目标数字、HUD和对应注释，其余不变。"
+        }
+      ],
+      "expect": {
+        "question_required": true,
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "collect 10 fish",
+            "collect 12 fish"
+          ],
+          [
+            "score>=10",
+            "score>=12"
+          ],
+          [
+            "score..\"/10\"",
+            "score..\"/12\""
+          ]
+        ]
+      },
+      "rubric": [
+        "先提问并等待实际回答，再定位真实当前代码",
+        "只改回答指定目标，保留其他规则"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "question-skip-discussion",
+      "name": "共创提问 · 跳过不等于同意",
+      "category": "交互语义",
+      "seed": "collect",
+      "turns": [
+        "先问我是否要把游戏改成带负重送鱼。只有我明确同意才能修改；我没有同意时，只解释方案并结束，不改文件也不发布。"
+      ],
+      "answers": [
+        {
+          "answer": "跳过，还没决定，保持游戏原样。",
+          "skipped": true
+        }
+      ],
+      "expect": {
+        "operation": "read_only",
+        "question_required": true,
+        "unchanged_sprites": true,
+        "unchanged_audio": true
+      },
+      "rubric": [
+        "跳过没有转换成默认同意",
+        "保留原游戏和资源"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "grid-name-repair",
+      "name": "推箱子 · 修复全局名称覆盖",
+      "category": "真实失败修复",
+      "seed_project": "fixtures/round03-grid.json",
+      "turns": [
+        "当前推箱子第一帧报错：cell先是12像素的尺寸，后又被function cell(x,y)覆盖，draw_board中的x*cell拿函数做乘法。只把表示像素尺寸的变量改名为tile_size，并修改全部尺寸引用；棋盘查询函数cell与关卡、规则、输入节拍、所有精灵和声音保持原样。直接修复。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true
+      },
+      "rubric": [
+        "尺寸与查询函数分开，不再同名覆盖",
+        "保留所有玩法与素材"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "eval_music=0 eval_feedback=0 local m=music local s=sfx music=function(n,...) eval_music+=1 m(n,...) end sfx=function(n,...) if n>=0 then eval_feedback+=1 end s(n,...) end",
+          "name": "observe-events"
+        },
+        {
+          "frames": 60,
+          "mask": 2,
+          "name": "held"
+        },
+        {
+          "assert": "assert(eval_music<=2,'BGM restarted repeatedly during held input') assert(eval_feedback<=40,'feedback repeated every display update')",
+          "name": "event-budget"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "restart"
+        },
+        {
+          "assert": "eval_music=0",
+          "name": "restart-boundary"
+        },
+        {
+          "frames": 60,
+          "mask": 16,
+          "name": "hold-restart"
+        },
+        {
+          "assert": "assert(eval_music==0,'held restart retriggered BGM')",
+          "name": "single-restart"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "tetris-scalar-input-review",
+      "name": "已有落块 · 标题更新与真实输入复核",
+      "category": "输入验收",
+      "seed_project": "fixtures/round03-tetris.json",
+      "turns": [
+        "只把当前项目标题改成“方块试炼”，不改Lua、规则、图像、音乐。直接更新入口。"
+      ],
+      "expect": {
+        "operation": "metadata",
+        "title": "方块试炼",
+        "unchanged_lua": true,
+        "unchanged_sprites": true,
+        "unchanged_audio": true
+      },
+      "rubric": [
+        "只更新宿主标题，所有玩法和素材保持原样"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "assert": "eval_rot=rot eval_locks=0 local lk=lock_piece lock_piece=function(...) eval_locks+=1 lk(...) end",
+          "name": "observe-title-boundary"
+        },
+        {
+          "frames": 30,
+          "mask": 16,
+          "name": "held-title-o"
+        },
+        {
+          "assert": "assert(rot==eval_rot,\"held title O rotates active piece\")",
+          "name": "title-o-single"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release"
+        },
+        {
+          "assert": "eval_y=py",
+          "name": "observe-y"
+        },
+        {
+          "frames": 1,
+          "mask": 8,
+          "name": "soft-first"
+        },
+        {
+          "assert": "assert(py>eval_y,\"soft drop waited\")",
+          "name": "soft-immediate"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release-soft"
+        },
+        {
+          "frames": 1,
+          "mask": 32,
+          "name": "hard-first"
+        },
+        {
+          "assert": "assert(eval_locks==1,\"hard drop must lock once\")",
+          "name": "hard-one"
+        },
+        {
+          "frames": 30,
+          "mask": 32,
+          "name": "hard-held"
+        },
+        {
+          "assert": "assert(eval_locks==1,\"held X repeatedly locks\")",
+          "name": "hard-held-one"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "collect-deadline-edit",
+      "name": "生命周期 · 只改时限与终局边界",
+      "category": "生命周期",
+      "seed": "collect",
+      "turns": [
+        "只把reset_round中的left=30改为left=45，其余Lua（包括注释）、按键、目标、图像和音乐完全不变，直接修改。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "left=30",
+            "left=45"
+          ]
+        ]
+      },
+      "rubric": [
+        "只改实际时限，保留其他规则和素材",
+        "失败时停止更新，重开完整清理",
+        "最后一条鱼与时间边界同时到达时只结算一次"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "assert(left==45) fish={x=4,y=20,w=8,h=8} left=1 tick=29 score=3",
+          "name": "last-second"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "expired"
+        },
+        {
+          "assert": "assert(state==\"over\" and left==0) eval_score=score eval_x=player.x",
+          "name": "over-state"
+        },
+        {
+          "frames": 30,
+          "mask": 2,
+          "name": "ended-move"
+        },
+        {
+          "assert": "assert(player.x==eval_x and score==eval_score and left==0,\"game progresses after end\")",
+          "name": "end-frozen"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "restart"
+        },
+        {
+          "assert": "assert(state==\"play\" and score==0 and left==45)",
+          "name": "clean-restart"
+        },
+        {
+          "frames": 30,
+          "mask": 16,
+          "name": "held-restart"
+        },
+        {
+          "assert": "assert(left==44,\"held O repeats reset\") score=9 left=1 tick=29 fish={x=player.x,y=player.y,w=8,h=8}",
+          "name": "final-goal"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "goal-expiry"
+        },
+        {
+          "assert": "assert(state==\"win\" and score==10,\"goal and expiry must not settle twice\")",
+          "name": "win-priority"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "breakout-holdout",
+      "name": "未见玩法 · 单屏打砖块",
+      "category": "生命周期",
+      "turns": [
+        "做一个单屏打砖块小游戏，方向左右移动挡板，O从标题发球，X在游玩时短暂加宽挡板但有冷却。三条命、砖块有限并可清完，球不会卡墙或穿砖，失败/胜利后O重开，按住O不会重复重开。BGM和短音效要有，你决定其余细节直接完成。"
+      ],
+      "rubric": [
+        "反弹使用一致球半径和有限子步，砖块一次结算",
+        "全部砖块清空与三命耗尽可达",
+        "加宽与冷却独立，结束/重开清理球速和能力状态"
+      ],
+      "case_version": 1,
+      "coverage_kind": "live-production-agent"
+    },
+    {
+      "id": "long-history-edit",
+      "name": "长对话 · 500000窗口真实摘要后局部修改",
+      "category": "上下文",
+      "seed": "collect",
+      "turns": [
+        "把当前猫的水平和垂直移动速度从每帧1.5像素改为每帧1像素，其他玩法、按键、精灵、声音、目标和时间都不变。直接修改。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "player.x+dx*1.5",
+            "player.x+dx*1"
+          ],
+          [
+            "player.y+dy*1.5",
+            "player.y+dy*1"
+          ]
+        ],
+        "precise_replace_alternatives": {
+          "player.x+dx*1.5": [
+            "player.x+dx"
+          ],
+          "player.y+dy*1.5": [
+            "player.y+dy"
+          ]
+        },
+        "compaction_required": true,
+        "history_preserved": true
+      },
+      "rubric": [
+        "真实摘要后仍按最新请求仅修改两个速度值",
+        "保留原始历史，摘要不替代当前源码"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "ready"
+        },
+        {
+          "assert": "assert(state=='play') eval_x=player.x",
+          "name": "start-state"
+        },
+        {
+          "frames": 10,
+          "mask": 2,
+          "name": "move"
+        },
+        {
+          "assert": "assert(abs(player.x-eval_x-10)<.01,'horizontal speed')",
+          "name": "move-speed"
+        },
+        {
+          "assert": "fish={x=player.x,y=player.y,w=8,h=8} score=9",
+          "name": "set-goal-boundary"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "win"
+        },
+        {
+          "assert": "assert(state=='win' and score==10,'goal settlement')",
+          "name": "goal"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "restart"
+        },
+        {
+          "assert": "assert(state=='play' and score==0 and left==30,'reset state')",
+          "name": "restart-state"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1,
+      "history_fixture": {
+        "pairs": 1100,
+        "user_text": "【合成历史压力夹具，不是真实用户记录】此前只讨论表现细节，没有授权改变胜利数量、时限、输入或音乐。保持当前游戏，每次修改都读源码；目标10条鱼，O开始重开，方向移动，30秒。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。这些已经讨论的候选表现未实施，不要当作当前源码，不需要修改目标和按键。",
+        "assistant_text": "已记录，仍是讨论，没有写入或发布游戏。"
+      }
+    },
+    {
+      "id": "dodge-goal-only-edit",
+      "name": "目标局部修改 · 不追加敌人",
+      "category": "连续迭代",
+      "seed_project": "fixtures/round06-dodge.json",
+      "turns": [
+        "把胜利目标从5颗星改为7颗星，同步注释、标题与结算文案、HUD数量；HUD星星起点由42改为34。设计记录同步目标。敌人仍只在第2/4颗星生成，禁止新增第6颗星追踪者；其他Lua、生命、O护盾、X冲刺、图像和声音全部保持原样。直接修改。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "collect 5 stars",
+            "collect 7 stars"
+          ],
+          [
+            "stars>=5",
+            "stars>=7"
+          ],
+          [
+            "collect 5 stars",
+            "collect 7 stars"
+          ],
+          [
+            "for i=1,5 do",
+            "for i=1,7 do"
+          ],
+          [
+            "local sx=42+(i-1)*10",
+            "local sx=34+(i-1)*10"
+          ],
+          [
+            "all 5 stars",
+            "all 7 stars"
+          ],
+          [
+            "stars..\"/5\"",
+            "stars..\"/7\""
+          ]
+        ],
+        "design_required": true
+      },
+      "rubric": [
+        "仅修改目标与明确指定的HUD起点，不扩展敌人生成",
+        "设计记录更新目标并保留机制与素材"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "syntax-review-only",
+      "name": "只检查 · 不改写不发布",
+      "category": "交互语义",
+      "seed": "collect",
+      "turns": [
+        "只调用check_game检查当前草稿的语法和声音引用，并简短解释检查范围。不要write_game，也不要publish_game，不改任何代码或素材。"
+      ],
+      "expect": {
+        "operation": "read_only",
+        "unchanged_sprites": true,
+        "unchanged_audio": true
+      },
+      "rubric": [
+        "检查操作正常完成，不强制发布",
+        "不把语法通过称为已试玩"
+      ],
+      "case_version": 1,
+      "coverage_kind": "live-production-agent"
+    },
+    {
+      "id": "light-budget-holdout",
+      "name": "未见机制 · 光能取舍迷宫",
+      "category": "玩法创意",
+      "turns": [
+        "做一个俯视单屏小迷宫：方向移动，O开/关灯。光亮能驱散巡逻怪物，但持续消耗有限电池；暗处走得慢但不耗电。取到钥匙回入口获胜，电池耗尽仍能暗行而非死锁，碰怪三条命、短暂无敌。手工地图保证钥匙与出口可达，失败/胜利O严格单次重开。BGM与短反馈都有，玩法细节你决定直接完成。"
+      ],
+      "rubric": [
+        "灯、怪物、速度、能量产生实际风险取舍",
+        "电池为零仍有合法行动，钥匙路径不会被自己的门锁住",
+        "结束与重开保留O切灯边沿并清理本轮状态"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "memory-budget-holdout",
+      "name": "未见机制 · 有限次数记忆翻牌",
+      "category": "玩法创意",
+      "turns": [
+        "做一个4x4记忆翻牌小游戏，8对不同图案，方向键选择，O翻牌、X返回标题。每次只显示最多两张，不匹配短暂显示后盖回，匹配保留；移动首按立即、长按均匀重复，O/X严格单次。有有限尝试数，全部配对获胜，失败可O重开；图案不能只靠颜色区分。BGM与短反馈要有。其余你决定直接完成。"
+      ],
+      "rubric": [
+        "有限牌组每种恰好两张，洗牌有界",
+        "同一牌/已匹配牌不重复消耗，等待状态不接第三次翻牌",
+        "胜负、严格单次输入与重开构成完整循环"
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "breakout-reserve-life-repair",
+      "name": "打砖块 · 剩余生命重新发球",
+      "category": "真实失败修复",
+      "seed_project": "fixtures/round07-breakout.json",
+      "turns": [
+        "当前打砖块失去一条命后newball设置b.stuck=true，但play分支没有O发球处理，剩两条命仍无法继续。只在游玩分支的b.stuck中，更新球随挡板位置后增加if o then launch() end。其他代码（包括注释）、规则、图像和声音全部保持原样，不重写游戏，直接修复。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "  if b.stuck then\n   b.x=pad.x+pad.w/2\n   b.y=py-3\n  else",
+            "  if b.stuck then\n   b.x=pad.x+pad.w/2\n   b.y=py-3\n   if o then launch() end\n  else"
+          ]
+        ]
+      },
+      "rubric": [
+        "剩余生命时O发球实际可达并使用现有边沿",
+        "不扩展其他规则或改素材"
+      ],
+      "replay": [
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "title"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "start"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release"
+        },
+        {
+          "assert": "lose_life() assert(lives==2 and b.stuck) eval_launches=0 local l=launch launch=function(...) eval_launches+=1 l(...) end",
+          "name": "lost-one"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "serve-again"
+        },
+        {
+          "assert": "assert(not b.stuck and eval_launches==1,\"reserve-life serve\")",
+          "name": "reserve-serve"
+        },
+        {
+          "frames": 30,
+          "mask": 16,
+          "name": "held-serve"
+        },
+        {
+          "assert": "assert(eval_launches==1,\"held O repeats serve\") lives=1 lose_life() assert(state==\"over\" and lives==0)",
+          "name": "zero-life-end"
+        },
+        {
+          "frames": 1,
+          "mask": 0,
+          "name": "release-end"
+        },
+        {
+          "frames": 1,
+          "mask": 16,
+          "name": "restart"
+        },
+        {
+          "assert": "assert(state==\"play\" and lives==3 and #bricks==48 and pad.wide==0 and pad.cool==0)",
+          "name": "reset-all"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "race-time-direction-repair",
+      "name": "赛车 · 定点计时与转向修复",
+      "category": "真实失败修复",
+      "seed_project": "fixtures/round10-race-create.json",
+      "turns": [
+        "当前赛车tstr用frames*100/30，330帧时16.16中间乘法已溢出导致11秒显示为负；请先flr(f/30)算整秒，再flr((f%30)*100/30)算百分秒并用两位格式。P8 sin正方向导致当前右键向车头左侧转，修正update_race的st符号（右键时a减少，左键时a增加）。只改这两处，其他Lua（包括注释）、规则、素材和音乐完全保留，直接修复。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            " local cs=flr(f*100/30)\n return flr(cs/100)..\".\"..sub(\"0\"..(cs%100),-2)",
+            " local sec=flr(f/30)\n local cs=flr((f%30)*100/30)\n return sec..\".\"..sub(\"0\"..cs,-2)"
+          ],
+          [
+            "if inp then st=(btn(1) and 1 or 0)-(btn(0) and 1 or 0) end",
+            "if inp then st=(btn(0) and 1 or 0)-(btn(1) and 1 or 0) end"
+          ]
+        ],
+        "precise_replace_alternatives": {
+          " local cs=flr(f*100/30)\n return flr(cs/100)..\".\"..sub(\"0\"..(cs%100),-2)": [
+            " local s=flr(f/30)\n local cs=flr((f%30)*100/30)\n return s..\".\"..sub(\"0\"..cs,-2)"
+          ]
+        }
+      },
+      "rubric": [
+        "避免16.16乘法中间溢出，时值单调",
+        "实际方向符合P8屏幕正弦且其他规则保留"
+      ],
+      "replay": [
+        {
+          "assert": "assert(tstr(0)==\"0.00\" and tstr(30)==\"1.00\" and tstr(329)==\"10.96\" and tstr(330)==\"11.00\" and tstr(1800)==\"60.00\") state=\"race\" car={x=20,y=112,a=0,vx=1,vy=0}",
+          "name": "time-boundaries"
+        },
+        {
+          "frames": 1,
+          "mask": 2,
+          "name": "right-turn"
+        },
+        {
+          "assert": "assert(car.vy>0,\"right steering points upward\") car={x=20,y=112,a=0,vx=1,vy=0}",
+          "name": "right-sign"
+        },
+        {
+          "frames": 1,
+          "mask": 1,
+          "name": "left-turn"
+        },
+        {
+          "assert": "assert(car.vy<0,\"left steering points downward\") cp=0 lap=0 car={x=110,y=48,a=0,vx=0,vy=0} check_gates(110,52) assert(cp==1) car={x=62,y=30} check_gates(66,30) assert(cp==2) car={x=20,y=72} check_gates(20,68) assert(cp==3) car={x=42,y=100} check_gates(38,100) assert(lap==1 and cp==0)",
+          "name": "checkpoint-order"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 2
+    },
+    {
+      "id": "boss-p8-direction-repair",
+      "name": "Boss · 斩击与场内扫射方向",
+      "category": "真实失败修复",
+      "seed_project": "fixtures/round10-boss-create.json",
+      "turns": [
+        "当前Boss战FA向上/向下的斩击图像角度写反了：P8 sin(.25)=-1才是向上；把FA改为{0.5,0,0.25,0.75}。另外Boss在上方，fire_wave的base=.125+wave/12让所有弹丸dy<0出场；把base改为.625+wave/12朝场地内下方扫射，并把draw_tele对应预告的.125改为.625。只改这三个数值，其他Lua（包括注释）、规则、素材、音乐全部保留。直接修复。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "precise_replace": [
+          [
+            "FA={0.5,0,0.75,0.25}",
+            "FA={0.5,0,0.25,0.75}"
+          ],
+          [
+            "local base=0.125+b.wave/12",
+            "local base=0.625+b.wave/12"
+          ],
+          [
+            "local a=0.125+k/24",
+            "local a=0.625+k/24"
+          ]
+        ]
+      },
+      "rubric": [
+        "斩击图像与上/下命中方向一致",
+        "扫射朝场内且预告与实际角度一致",
+        "原有无敌、阶段、恢复和资源保留"
+      ],
+      "replay": [
+        {
+          "assert": "assert(sin(FA[3])<0 and sin(FA[4])>0) state=\"play\" reset() for wave=0,3 do bullets={} b.wave=wave fire_wave() assert(#bullets==5) for bl in all(bullets) do assert(bl.dy>0,\"sweep exits upper arena\") end end p.lives=3 p.inv=0 hurt_player() hurt_player() assert(p.lives==2,\"same settlement hit twice\") p.inv=0 p.lives=1 hurt_player() assert(state==\"over\")",
+          "name": "directions-and-invincibility"
+        },
+        {
+          "assert": "state=\"play\" reset() b.hp=1 hit_boss() assert(state==\"win\" and b.hp==0)",
+          "name": "win-path"
+        }
+      ],
+      "coverage_kind": "live-production-agent",
+      "case_version": 1
+    },
+    {
+      "id": "dungeon-object-schema-repair",
+      "name": "3D · 怪物绘制字段与纹理源修复",
+      "case_version": 2,
+      "category": "真实运行失败修复",
+      "seed_project": "fixtures/round11-dungeon-3d.json",
+      "turns": [
+        "当前drawobj读取size和yc，但reset的mon没有它们，进入视野会nil算术崩溃；补齐怪物size=0.8、yc=0、spr=33。drawobj的sspr(su,0,...)也忽略每个对象spr，请按16列精灵表计算sx和sy，再使用sx+su,sy。屏幕左边裁剪也要保持原投影UV、只画有效目的像素。仅修这些渲染问题，其他玩法、地图、音频和素材保留，直接检查并发布。"
+      ],
+      "expect": {
+        "unchanged_sprites": true,
+        "unchanged_audio": true,
+        "design_required": true
+      },
+      "rubric": [
+        "可见怪物和重开不会nil崩溃",
+        "精灵源地址使用各对象编号，边缘裁剪有界"
+      ],
+      "replay": [
+        {
+          "assert": "assert(mon.size==0.8 and mon.yc==0 and mon.spr==33) state=\"play\" px=mon.x-1 py=mon.y dirx=1 diry=0 mon.chase=true _draw()",
+          "name": "visible-monster"
+        },
+        {
+          "assert": "reset() assert(mon.size==0.8 and mon.yc==0 and mon.spr==33) state=\"play\" px=mon.x-1 py=mon.y dirx=1 diry=0 _draw()",
+          "name": "reset-visible"
+        },
+        {
+          "frames": 30,
+          "mask": 0,
+          "name": "scene"
+        }
+      ]
+    }
+  ]
+}
