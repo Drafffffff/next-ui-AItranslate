@@ -61,6 +61,8 @@ type State struct {
 }
 type Mic struct {
 	discoveryUntil    time.Time
+	lastHostLog       string
+	lastHostLogAt     time.Time
 	mu                sync.Mutex
 	wire              sync.Mutex
 	conn              *dbus.Conn
@@ -491,17 +493,23 @@ func (c *Characteristic) WriteValue(value []byte, options map[string]dbus.Varian
 	c.m.mu.Lock()
 	defer c.m.mu.Unlock()
 	if v.Op != "hello" && (c.m.receiver == "" || c.m.receiver != device) || c.m.receiver != "" && c.m.receiver != device {
+		if v.Op == "hello" {
+			c.m.logHostHandshake("another_receiver_active")
+		}
 		return dbus.NewError("org.bluez.Error.NotPermitted", nil)
 	}
 	switch v.Op {
 	case "hello":
 		if c.m.deepReserved {
+			c.m.logHostHandshake("deep_sleep_pending")
 			return dbus.NewError("org.bluez.Error.NotReady", nil)
 		}
 		if !validReceiver(device) {
+			c.m.logHostHandshake("invalid_device_path")
 			return dbus.NewError("org.bluez.Error.NotPermitted", nil)
 		}
 		if !c.m.notify {
+			c.m.logHostHandshake("audio_subscription_not_ready")
 			return dbus.NewError("org.bluez.Error.NotReady", nil)
 		}
 		if c.m.state.Hosts.Discovering && time.Now().After(c.m.discoveryUntil) {
@@ -511,6 +519,7 @@ func (c *Characteristic) WriteValue(value []byte, options map[string]dbus.Varian
 			go c.m.disconnectHost(device)
 			return dbus.NewError("org.bluez.Error.NotPermitted", nil)
 		}
+		c.m.logHostHandshake("selected_receiver_accepted")
 		c.m.state.Hosts.Active = v.ReceiverID
 		c.m.receiver = device
 		c.m.controls = v.Version == 2 && len(v.Token) == 16
