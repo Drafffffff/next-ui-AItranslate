@@ -1,0 +1,499 @@
+{
+  "schema_version": 1,
+  "name": "Pocket PICO-8 Starter Assets",
+  "description": "Small original 8x8 pixel sprites for AI-generated games. The SVG is a human preview only; the .p8 cartridge is the runtime source.",
+  "license": "GPL-3.0-only",
+  "license_file": "../../../LICENSE",
+  "provenance": {
+    "source": "Original pixel art authored for this repository; no third-party artwork or downloads.",
+    "palette": "Standard PICO-8 palette indices 0 through 15."
+  },
+  "usage": {
+    "starter_cartridge": "starter.p8",
+    "preview": "sprite-atlas.svg",
+    "sprite_size": [
+      8,
+      8
+    ],
+    "sprite_sheet_size": [
+      128,
+      128
+    ],
+    "reserved_sprite_ids": [
+      0
+    ],
+    "transparent_color_index": 0,
+    "pixel_encoding": "Each sprite has eight strings of eight lowercase hexadecimal palette indices. Rows are top-to-bottom; columns are left-to-right.",
+    "draw": "spr(id, x, y) draws one 8x8 sprite. Coordinates are the upper-left corner. Sprite 0 is fully transparent.",
+    "sheet_mapping": "A sprite starts at x=(id%16)*8, y=flr(id/16)*8. The starter includes a complete 128x128 __gfx__ section.",
+    "collision": "The sprites do not set collision flags or movement rules; define hitboxes and collisions in Lua.",
+    "editing": "Preserve the __gfx__ section and fixed built-in IDs 1 through 12 when modifying Lua. Sprite 0 stays fully transparent. First-version model-created sprites may only use IDs 32 through 63; IDs 13 through 31 are reserved for future built-in packs. Do not use IDs 128 through 255 because their sheet region shares storage with the map.",
+    "sound": "No sounds are supplied. This avoids requiring any nonessential audio or cartridge section format.",
+    "model_custom_sprite_id_range": {
+      "min": 32,
+      "max": 63
+    },
+    "future_builtin_sprite_id_range": {
+      "min": 13,
+      "max": 31
+    }
+  },
+  "palette": [
+    {
+      "index": 0,
+      "nibble": "0",
+      "hex": "#000000",
+      "name": "black / transparent sprite pixel"
+    },
+    {
+      "index": 1,
+      "nibble": "1",
+      "hex": "#1d2b53",
+      "name": "dark blue"
+    },
+    {
+      "index": 2,
+      "nibble": "2",
+      "hex": "#7e2553",
+      "name": "dark purple"
+    },
+    {
+      "index": 3,
+      "nibble": "3",
+      "hex": "#008751",
+      "name": "dark green"
+    },
+    {
+      "index": 4,
+      "nibble": "4",
+      "hex": "#ab5236",
+      "name": "brown"
+    },
+    {
+      "index": 5,
+      "nibble": "5",
+      "hex": "#5f574f",
+      "name": "dark gray"
+    },
+    {
+      "index": 6,
+      "nibble": "6",
+      "hex": "#c2c3c7",
+      "name": "light gray"
+    },
+    {
+      "index": 7,
+      "nibble": "7",
+      "hex": "#fff1e8",
+      "name": "cream"
+    },
+    {
+      "index": 8,
+      "nibble": "8",
+      "hex": "#ff004d",
+      "name": "red"
+    },
+    {
+      "index": 9,
+      "nibble": "9",
+      "hex": "#ffa300",
+      "name": "orange"
+    },
+    {
+      "index": 10,
+      "nibble": "a",
+      "hex": "#ffec27",
+      "name": "yellow"
+    },
+    {
+      "index": 11,
+      "nibble": "b",
+      "hex": "#00e436",
+      "name": "green"
+    },
+    {
+      "index": 12,
+      "nibble": "c",
+      "hex": "#29adff",
+      "name": "blue"
+    },
+    {
+      "index": 13,
+      "nibble": "d",
+      "hex": "#83769c",
+      "name": "lavender"
+    },
+    {
+      "index": 14,
+      "nibble": "e",
+      "hex": "#ff77a8",
+      "name": "pink"
+    },
+    {
+      "index": 15,
+      "nibble": "f",
+      "hex": "#ffccaa",
+      "name": "peach"
+    }
+  ],
+  "sprites": [
+    {
+      "id": 1,
+      "name": "cat",
+      "width": 8,
+      "height": 8,
+      "purpose": "Friendly cat, player or companion.",
+      "pixels": [
+        "09000900",
+        "09909900",
+        "09999900",
+        "09f9f900",
+        "09919900",
+        "00999090",
+        "09999990",
+        "09000900"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "dog",
+      "width": 8,
+      "height": 8,
+      "purpose": "Dog, chaser or companion.",
+      "pixels": [
+        "04000400",
+        "04444440",
+        "04f4f440",
+        "04414440",
+        "04444440",
+        "00444440",
+        "04444400",
+        "04004000"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "fish",
+      "width": 8,
+      "height": 8,
+      "purpose": "Fish, food or collectible.",
+      "pixels": [
+        "000cc000",
+        "00ccccc0",
+        "0ccc1ccc",
+        "cc7ccccc",
+        "0ccccccc",
+        "00ccccc0",
+        "000cc000",
+        "00000000"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "hero",
+      "width": 8,
+      "height": 8,
+      "purpose": "Human player character.",
+      "pixels": [
+        "000aa000",
+        "00aaaa00",
+        "00f1f100",
+        "00ffff00",
+        "000cc000",
+        "00cccc00",
+        "00c00c00",
+        "00500500"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "enemy",
+      "width": 8,
+      "height": 8,
+      "purpose": "Simple red enemy or hazard.",
+      "pixels": [
+        "08000080",
+        "00888800",
+        "08888880",
+        "08a88a80",
+        "08811880",
+        "00888800",
+        "08800880",
+        "08000080"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "coin",
+      "width": 8,
+      "height": 8,
+      "purpose": "Coin, score collectible or currency.",
+      "pixels": [
+        "000aa000",
+        "00a77a00",
+        "0a7aa7a0",
+        "0a7aa7a0",
+        "0a7aa7a0",
+        "0a7aa7a0",
+        "00a77a00",
+        "000aa000"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "heart",
+      "width": 8,
+      "height": 8,
+      "purpose": "Health pickup or life indicator.",
+      "pixels": [
+        "00000000",
+        "08800880",
+        "8e888e88",
+        "8e888888",
+        "08888880",
+        "00888800",
+        "00088000",
+        "00000000"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "wall",
+      "width": 8,
+      "height": 8,
+      "purpose": "Solid wall tile; use game code for collision.",
+      "pixels": [
+        "66666666",
+        "65556655",
+        "65556655",
+        "55555555",
+        "66666666",
+        "66555665",
+        "66555665",
+        "55555555"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "floor",
+      "width": 8,
+      "height": 8,
+      "purpose": "Background floor tile; walkable by convention.",
+      "pixels": [
+        "55555555",
+        "55555555",
+        "55565555",
+        "55555555",
+        "55555555",
+        "55555555",
+        "56555555",
+        "55555555"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "bullet",
+      "width": 8,
+      "height": 8,
+      "purpose": "Projectile facing right; motion is controlled in code.",
+      "pixels": [
+        "00000000",
+        "00000000",
+        "000aa000",
+        "00a77a00",
+        "00a77a00",
+        "000aa000",
+        "00000000",
+        "00000000"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "goal",
+      "width": 8,
+      "height": 8,
+      "purpose": "Goal flag, exit marker or checkpoint.",
+      "pixels": [
+        "007bbb00",
+        "007bbbb0",
+        "007bbb00",
+        "00700000",
+        "00700000",
+        "00700000",
+        "00700000",
+        "06660000"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "star",
+      "width": 8,
+      "height": 8,
+      "purpose": "Star, reward or bonus collectible.",
+      "pixels": [
+        "000a0000",
+        "000a0000",
+        "0aaaaaa0",
+        "00aaaa00",
+        "00aaaa00",
+        "0aa00aa0",
+        "0a0000a0",
+        "00000000"
+      ]
+    }
+  ],
+  "sounds": [
+    {
+      "id": 0,
+      "name": "collect",
+      "speed": 5,
+      "loop_start": 4,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    },
+    {
+      "id": 1,
+      "name": "jump",
+      "speed": 4,
+      "loop_start": 4,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    },
+    {
+      "id": 2,
+      "name": "hit",
+      "speed": 5,
+      "loop_start": 3,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    },
+    {
+      "id": 3,
+      "name": "win",
+      "speed": 8,
+      "loop_start": 8,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    },
+    {
+      "id": 4,
+      "name": "lose",
+      "speed": 10,
+      "loop_start": 5,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    },
+    {
+      "id": 5,
+      "name": "step",
+      "speed": 3,
+      "loop_start": 2,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    },
+    {
+      "id": 8,
+      "name": "kajam_4",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "community-adaptation",
+      "source_id": "raycaster",
+      "upstream_sfx": 4
+    },
+    {
+      "id": 9,
+      "name": "kajam_5",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "community-adaptation",
+      "source_id": "raycaster",
+      "upstream_sfx": 5
+    },
+    {
+      "id": 10,
+      "name": "kajam_6",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "community-adaptation",
+      "source_id": "raycaster",
+      "upstream_sfx": 6
+    },
+    {
+      "id": 11,
+      "name": "kajam_7",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "community-adaptation",
+      "source_id": "raycaster",
+      "upstream_sfx": 7
+    },
+    {
+      "id": 12,
+      "name": "kajam_8",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "community-adaptation",
+      "source_id": "raycaster",
+      "upstream_sfx": 8
+    },
+    {
+      "id": 13,
+      "name": "kajam_9",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "community-adaptation",
+      "source_id": "raycaster",
+      "upstream_sfx": 9
+    },
+    {
+      "id": 14,
+      "name": "gentle_melody",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    },
+    {
+      "id": 15,
+      "name": "gentle_bass",
+      "speed": 16,
+      "loop_start": 0,
+      "loop_end": 0,
+      "origin": "workshop-original"
+    }
+  ],
+  "music": [
+    {
+      "id": 0,
+      "name": "kajam_maze",
+      "description": "社区 Kajam 迷宫主题，六个 pattern，保留声道 3 给音效",
+      "patterns": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "origin": "community-adaptation",
+      "source_id": "raycaster",
+      "adaptation": "Upstream SFX 4..9 remapped to 8..13; volume capped at 3; music channels remapped. MIT attribution/license retained."
+    },
+    {
+      "id": 6,
+      "name": "gentle_loop",
+      "description": "原创轻快双声部循环，保留声道 2/3 给音效",
+      "patterns": [
+        6
+      ],
+      "origin": "workshop-original"
+    }
+  ],
+  "audio_resource": "audio.json"
+}

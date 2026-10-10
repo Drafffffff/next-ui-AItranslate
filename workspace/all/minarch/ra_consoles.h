@@ -63,8 +63,9 @@ static const RA_ConsoleMapping ra_console_table[] = {
 	{ "NGP",     RC_CONSOLE_NEOGEO_POCKET },
 	// Neo Geo Pocket Color
 	{ "NGPC",    RC_CONSOLE_NEOGEO_POCKET },
-	// PICO-8
-	{ "P8",      RC_CONSOLE_PICO },
+	// PICO-8 is unsupported; RC_CONSOLE_PICO identifies Sega Pico.
+	{ "P8",      RC_CONSOLE_UNKNOWN },
+	{ "PICO",    RC_CONSOLE_UNKNOWN },
 	// PC Engine
 	{ "PCE",     RC_CONSOLE_PC_ENGINE },
 	// Not supported (no RA)

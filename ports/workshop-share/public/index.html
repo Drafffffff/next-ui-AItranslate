@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#1d2b53">
+  <title>游戏生成器 · 在线游玩</title>
+  <link rel="stylesheet" href="/player.4f1bf14226ecfed1.css">
+</head>
+<body>
+<main aria-label="游戏播放器">
+  <div class="stage">
+    <div class="game-area">
+      <div class="console">
+        <canvas width="128" height="128" id="screen" tabindex="0" aria-label="游戏画面"></canvas>
+        <div class="overlay" id="overlay"><div class="prompt">
+          <p id="status" role="status" aria-live="polite">正在加载游戏</p>
+          <button id="start" hidden>开始游玩</button>
+        </div></div>
+      </div>
+    </div>
+    <div class="controls" aria-label="游戏控制">
+      <div class="dpad">
+        <button data-key="2" class="up" aria-label="上">↑</button><button data-key="0" class="left" aria-label="左">←</button>
+        <span class="center" aria-hidden="true"></span><button data-key="1" class="right" aria-label="右">→</button><button data-key="3" class="down" aria-label="下">↓</button>
+      </div>
+      <div class="actions"><button data-key="4" aria-label="游戏 O 键">O</button><button data-key="5" aria-label="游戏 X 键">X</button></div>
+    </div>
+    <div class="toolbar" aria-label="播放器设置">
+      <button id="pause" disabled>暂停</button><button id="restart" disabled>重开</button>
+      <button id="sound" disabled aria-pressed="true">声音开</button><button id="fullscreen">全屏</button>
+    </div>
+  </div>
+</main>
+<script type="module" src="/player.ce9940dd366ea5f1.js"></script>
+</body>
+</html>

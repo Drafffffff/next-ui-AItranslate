@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {build} from 'esbuild';
+import {createHash} from 'node:crypto';
+const files=new Map(),roms=new Map();let script=[],checks=0,publishes=0,failPublish=false;
+const complete=(name,args={})=>({status:200,text:JSON.stringify({choices:[{message:{role:'assistant',content:name?null:'已完成。',...(name?{tool_calls:[{id:'state-'+Math.random(),type:'function',function:{name,arguments:JSON.stringify(args)}}]}:{})},finish_reason:name?'tool_calls':'stop'}]})});
+const harness={read:async n=>files.get(n),write:async(n,s)=>files.set(n,s),task:input=>{if(input.op==='syntax'){checks++;return {promise:Promise.resolve({text:'syntax checked'})};}publishes++;if(failPublish)return {promise:Promise.reject(Error('publication unavailable'))};roms.set(input.name,input.text);return {promise:Promise.resolve({text:'published'})};},request:(u,k,raw)=>{assert(script.length);return {promise:Promise.resolve(script.shift()(JSON.parse(raw))),cancel(){}};}};
+const bundle=await build({entryPoints:[new URL('model.ts',import.meta.url).pathname],bundle:true,write:false,platform:'neutral',format:'iife',globalName:'Model',plugins:[{name:'native',setup(b){b.onResolve({filter:/services\.ts$/},()=>({path:'native',namespace:'native'}));b.onLoad({filter:/.*/,namespace:'native'},()=>({contents:'export const read=(...a)=>globalThis.H.read(...a);export const write=(...a)=>globalThis.H.write(...a);export const task=(...a)=>globalThis.H.task(...a);export const writeChunks=async(n,f)=>{let s="";await f(c=>s+=c);return write(n,s);};export const delay=async()=>{};export const requestStream=undefined;export const request=(...a)=>globalThis.H.request(...a);'}));}}]});
+const ctx=vm.createContext({H:harness});vm.runInContext(bundle.outputFiles[0].text,ctx);const M=ctx.Model,config={key:'not-in-history',endpoint:'https://invalid.example',model:'deepseek-flash',timeoutMs:1000};
+const design={core_action:'跳跃',goal:'到出口',risk:'碰刺失败',controls:'方向移动，O跳',scenes:'单屏',audiovisual:'BGM与跳跃音效',preserve:['O跳跃','松开短跳'],unresolved:['需用户确认手感']};
+let p=M.newProject();script=[()=>complete('write_game',{design_record:design}),()=>complete('check_game'),()=>complete()];
+await assert.rejects(M.projectAgent(p,config,()=>{},()=>{}).prompt('完善平台玩法'),/尚未提交/);
+assert.equal(p.work.phase,'checked');assert.equal(p.work.check.hash,M.draftHash(p));assert.equal(p.work.check.hash.length,64);assert.equal(p.design.goal,design.goal);
+let reopened=M.decodeProject(files.get('projects/'+p.id+'.json'));assert(M.canResumeProject(reopened));
+script=[body=>{assert(body.messages.at(-1).content.startsWith('[宿主恢复'));return complete('publish_game');},()=>complete()];
+await M.projectAgent(reopened,config,()=>{},()=>{}).resume();assert.equal(reopened.revision,1);assert.equal(reopened.versions.length,1);assert.equal(reopened.work.phase,'complete');assert(!M.canResumeProject(reopened));assert(!JSON.stringify(reopened).includes(config.key));
+const first=reopened.versions[0];script=[()=>complete('write_game',{lua:reopened.lua+'\n-- revision2'}),()=>complete('check_game'),()=>complete('publish_game'),()=>complete()];await M.projectAgent(reopened,config,()=>{},()=>{}).prompt('修改');
+assert.equal(reopened.revision,2);await M.restoreVersion(reopened,1);assert.equal(reopened.revision,3);assert.equal(reopened.lua,first.lua);assert.equal(reopened.versions.length,3);assert.equal(reopened.versions.at(-1).design.goal,design.goal);assert.equal(roms.size,1);
+// A cancelled pending intent must not be replayed. The published game remains.
+reopened.pending={...first,revision:4};reopened.work.phase='cancelled';reopened.work.check={hash:'0'.repeat(64),validator:'old',checkedAt:1};reopened.lua+='\n-- cancelled draft';const cancelledLua=reopened.lua;
+const before=publishes;await M.recoverProject(reopened);assert.equal(reopened.revision,3);assert.equal(publishes,before+1);assert(!M.canResumeProject(reopened));assert.equal(reopened.work.phase,'cancelled');assert.equal(reopened.pending,undefined);assert.equal(reopened.work.check,undefined);assert.equal(reopened.lua,cancelledLua);assert.equal(roms.get(reopened.id),M.cartridge(reopened.versions.at(-1).lua,reopened.versions.at(-1).gfx,reopened.versions.at(-1).audio));
+const cancelledReopen=M.decodeProject(files.get('projects/'+reopened.id+'.json'));assert.equal(cancelledReopen.work.phase,'cancelled');assert(!M.canResumeProject(cancelledReopen));
+script=[()=>complete()];await M.projectAgent(reopened,config,()=>{},()=>{}).prompt('只是讨论，不修改游戏');assert.equal(reopened.revision,3);assert.equal(reopened.pending,undefined);assert.equal(reopened.lua,cancelledLua);
+// Stale content hashes/validator versions lose their proof on restart.
+reopened.work.phase='checked';reopened.work.check={hash:'0'.repeat(64),validator:'old',checkedAt:1};await M.recoverProject(reopened);assert.equal(reopened.work.check,undefined);assert.equal(reopened.work.phase,'draft_saved');
+assert(reopened.diagnostics.some(d=>d.kind==='request_start'));assert(reopened.diagnostics.some(d=>d.kind==='tool_end'));
+const revisionBeforeCheck=reopened.revision,luaBeforeCheck=reopened.lua,publishesBeforeCheck=publishes;script=[()=>complete('check_game'),()=>complete()];await M.projectAgent(reopened,config,()=>{},()=>{}).prompt('只检查当前草稿，不修改不发布');assert.equal(reopened.revision,revisionBeforeCheck);assert.equal(reopened.lua,luaBeforeCheck);assert.equal(publishes,publishesBeforeCheck);assert.equal(reopened.work.phase,'complete');assert(reopened.work.check);
+console.log('PASS durable SHA256 check/phase/design, resume only missing publication, completed/cancelled not resumed, stale proof invalidated, version restore uses unique ROM, bounded credential-free diagnostics.');

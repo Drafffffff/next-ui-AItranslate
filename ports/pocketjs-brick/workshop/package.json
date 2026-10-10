@@ -1,0 +1,36 @@
+{
+  "name": "pocketjs-game-workshop-agent",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:skill": "node build-skill.mjs",
+    "verify": "node build-skill.mjs --check && node verify-agent.mjs && node verify-stream.mjs && node verify-request-json.mjs && node verify-transcript.mjs && node verify-models.mjs && node verify-avatar.mjs && node verify-skill.mjs && node verify-context.mjs && node verify-context-batches.mjs && node verify-harness.mjs && node verify-questions.mjs && node verify-editing.mjs && node verify-audio.mjs && node verify-return-view.mjs && node verify-retry.mjs && node verify-performance.mjs && node verify-delivery.mjs && node verify-state.mjs && node verify-display-projection.mjs && node verify-journal.mjs && node verify-sharing.mjs",
+    "verify:stream": "node verify-stream.mjs",
+    "verify:transcript": "node verify-transcript.mjs",
+    "verify:skill": "node build-skill.mjs --check && node verify-skill.mjs",
+    "verify:quickjs": "node verify-agent-quickjs.mjs",
+    "verify:context": "node verify-context.mjs",
+    "verify:examples": "python3 ../../../skills/pico8-game-dev/scripts/verify_examples.py",
+    "verify:audio": "node build-skill.mjs --check && node verify-audio.mjs",
+    "verify:audio-runtime": "node verify-audio.mjs && python3 ../../../skills/pico8-game-dev/scripts/verify_audio_runtime.py",
+    "verify:harness": "node verify-harness.mjs",
+    "verify:editing": "node verify-editing.mjs",
+    "eval:build": "bash eval/build.sh",
+    "eval:run": "python3 eval/run.py",
+    "eval:verify": "python3 eval/verify.py",
+    "eval:freeze": "python3 eval/freeze.py",
+    "eval:export": "python3 eval/export.py",
+    "verify:game-experience": "node verify-game-experience.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "0.81.1",
+    "@earendil-works/pi-ai": "0.81.1",
+    "@noble/hashes": "1.8.0",
+    "diff": "8.0.4",
+    "qrcode-generator": "1.4.4"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "esbuild": "0.28.1"
+  }
+}

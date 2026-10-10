@@ -1,6 +1,8 @@
 # PocketJS / NextUI / TrimUI Brick：第一阶段
 
-本目录是 **PocketJS 原生 UI 核心 + SDL2 显示验证程序**。仅面向运行 NextUI 的 TrimUI Brick（`tg5040`）。当前没有接入 TypeScript/QuickJS 应用，也不是上游已支持的正式目标。
+本目录面向运行 NextUI 的 TrimUI Brick（`tg5040`），包含原生显示验证程序和 TypeScript/QuickJS 应用宿主。已实现的 [AI 游戏工坊](workshop/README.md) 使用 PocketJS + Pi Agent Core，支持 SSH 部署和同一游戏项目的持续修改；通用宿主见 [APP.md](APP.md)。
+
+以下记录原生 Smoke 程序的第一阶段验证。Brick 端口仍是实验目标，未成为 PocketJS 上游的正式目标。
 
 [阶段计划](../../docs/POCKETJS-BRICK-PLAN.md)。
 
@@ -73,3 +75,7 @@ Tools/tg5040/PocketJS Smoke.pak/
 - 输入映射采用 NextUI tg5040 定义：A=1、B=0、MENU=8，方向键来自 SDL hat。
 
 新增适配文件按本仓库许可证分发；PocketJS 上游为 MIT，构建包附上其许可证。
+
+## 游戏生成器 Agent 的 Mac 评测
+
+[Agent 实验室](workshop/eval/README.md) 复用掌机原生运行时、Pi、提示词和工具，支持并行案例、fake-08 按键回放、截图/音频、提示词版本对比和自动 HTML 报告。构建与测试入口为 workshop 的 `eval:build`、`eval:run`、`eval:verify`。

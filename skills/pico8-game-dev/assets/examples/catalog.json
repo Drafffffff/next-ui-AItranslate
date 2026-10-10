@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "license": "GPL-3.0-only",
+  "purpose": "Compact complete workshop examples; original and community-informed adaptations are identified separately.",
+  "examples": [
+    {
+      "id": "collect",
+      "path": "assets/examples/collect.lua",
+      "title": "限时收集",
+      "when": "移动角色收集目标、限时目标、吃鱼或金币",
+      "keywords": [
+        "收集",
+        "吃鱼",
+        "捡",
+        "金币",
+        "collect",
+        "catch",
+        "coin"
+      ],
+      "origin": "workshop-original"
+    },
+    {
+      "id": "dodge",
+      "path": "assets/examples/dodge.lua",
+      "title": "三命躲避",
+      "when": "连续移动、躲避落下的障碍、生存计分",
+      "keywords": [
+        "躲",
+        "避",
+        "落下",
+        "掉落",
+        "生存",
+        "dodge",
+        "falling",
+        "survival"
+      ],
+      "origin": "workshop-original"
+    },
+    {
+      "id": "snake",
+      "path": "assets/examples/snake.lua",
+      "title": "网格贪吃蛇",
+      "when": "网格蛇身、不能反向、节拍移动、空格生成目标",
+      "keywords": [
+        "贪吃蛇",
+        "蛇",
+        "snake"
+      ],
+      "origin": "workshop-original"
+    },
+    {
+      "id": "platform",
+      "path": "assets/examples/platform.lua",
+      "title": "平台跳跃",
+      "when": "重力、跳跃、分轴平台碰撞、落地与终点",
+      "keywords": [
+        "平台跳",
+        "横版",
+        "跳跃",
+        "跳一跳",
+        "platformer",
+        "platform game",
+        "jump"
+      ],
+      "origin": "workshop-original"
+    },
+    {
+      "id": "sokoban",
+      "path": "assets/examples/sokoban.lua",
+      "title": "网格推箱子",
+      "when": "箱子后方检测、目标格、分步移动、撤销",
+      "keywords": [
+        "推箱",
+        "sokoban",
+        "box puzzle"
+      ],
+      "origin": "workshop-adaptation",
+      "community_source": "sokoban"
+    },
+    {
+      "id": "raycaster",
+      "path": "assets/examples/raycaster.lua",
+      "title": "第一人称迷宫",
+      "when": "二维地图的 DDA 墙面投影、碰撞和终点",
+      "keywords": [
+        "第一人称",
+        "迷宫3d",
+        "3d迷宫",
+        "三维迷宫",
+        "射线",
+        "raycast",
+        "raycaster",
+        "raycasting",
+        "fps",
+        "3d",
+        "三维",
+        "立体"
+      ],
+      "origin": "workshop-adaptation",
+      "community_source": "raycaster"
+    },
+    {
+      "id": "mesh3d",
+      "path": "assets/examples/mesh3d.lua",
+      "title": "三维立方体隧道",
+      "when": "真实三维顶点、透视、近裁剪、躲避障碍",
+      "keywords": [
+        "多边形",
+        "立方体",
+        "线框",
+        "隧道",
+        "mesh",
+        "polygon",
+        "wireframe",
+        "3d飞行",
+        "三维飞行",
+        "三维顶点",
+        "近裁剪",
+        "透视投影"
+      ],
+      "origin": "workshop-original"
+    }
+  ]
+}

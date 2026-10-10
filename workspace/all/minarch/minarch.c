@@ -5,6 +5,9 @@
 
 #include "notification.h"
 #include "ra_integration.h"
+#ifdef HAS_CHEEVOS
+#include "ra_consoles.h"
+#endif
 
 #include "ma_internal.h"
 #include "ma_cheats.h"
@@ -189,7 +192,17 @@ int main(int argc , char* argv[]) {
 	// Initialize RetroAchievements after core.init() but before Core_load()
 	// Set up memory accessors for achievement memory reading
 	RA_setMemoryAccessors(core.get_memory_data, core.get_memory_size);
+#ifdef HAS_CHEEVOS
+	// Unsupported systems must not start login or connectivity workers:
+	// shutdown would otherwise wait for their network timeouts.
+	if (RA_isConsoleSupported(core.tag)) {
+		RA_init();
+	} else {
+		LOG_info("[RA] Skipping unsupported console '%s'\n", core.tag);
+	}
+#else
 	RA_init();
+#endif
 
 	// TODO: find a better place to do this
 	// mixing static and loaded data is messy
