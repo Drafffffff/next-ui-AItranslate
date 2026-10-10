@@ -244,6 +244,10 @@ function App(){
  const footerRows=createMemo<[string,string][][]>(previous=>{
   const rows=rawFooterRows();
   if(!busy()&&page()!=='connections'&&rows.length&&rows[0].length<6&&!rows[0].some(a=>a[0]==='L+R'))rows[0]=[...rows[0],['L+R','连接']];
+  // Browse, primary actions, auxiliary tools/settings, destructive actions, back/exit.
+  // Classify by role: B deletes on main but returns on other pages.
+  const category=([key,label]:[string,string])=>key==='B'?(label==='删除'?4:5):key==='MENU'?5:['↑↓','←→','L/R'].includes(key)?0:['A','X','L3','R3'].includes(key)?1:key==='Y'?2:3;
+  for(const actions of rows)actions.sort((a,b)=>category(a)-category(b));
   return reuseActionRows(rows,previous);
  },[]);
  function Label(p:{children:JSX.Element;size?:number;color?:string;width?:number}){const size=p.size||30;return <Text style={{fontSlot:size===54?23:size===40?22:21,textAlign:0,textColor:p.color||ink,width:p.width||912,height:size+20,lineHeight:size+16}}>{p.children}</Text>;}

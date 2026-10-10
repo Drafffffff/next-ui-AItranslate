@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/godbus/dbus/v5"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -101,8 +103,20 @@ func (m *Mic) saveHosts() error {
 }
 
 // Caller holds mu. Discovery registers candidates, never grants keyboard control.
+func (m *Mic) logHostHandshake(reason string) {
+	// Record stages only, never names, addresses, tokens, text or audio. Repeated
+	// rejected reconnects must not grow the SD card log every three seconds.
+	now := time.Now()
+	if m.lastHostLog == reason && now.Sub(m.lastHostLogAt) < 30*time.Second {
+		return
+	}
+	m.lastHostLog, m.lastHostLogAt = reason, now
+	log.Printf("BLE receiver handshake: %s (discovering=%t, known=%d)", reason, m.state.Hosts.Discovering, len(m.state.Hosts.Known))
+}
+
 func (m *Mic) acceptHost(h Host) bool {
 	if !validHost(h) {
+		m.logHostHandshake(fmt.Sprintf("invalid_receiver_identity(id_bytes=%d,id_valid=%t,name_bytes=%d,name_controls=%t)", len(h.ID), hostID.MatchString(h.ID), len(h.Name), strings.ContainsFunc(h.Name, unicode.IsControl)))
 		return m.state.Hosts.Selected == "" && !m.state.Hosts.Discovering && h.ID == ""
 	}
 	before := m.state.Hosts
@@ -114,16 +128,25 @@ func (m *Mic) acceptHost(h Host) bool {
 	}
 	if !known {
 		if !m.state.Hosts.Discovering && m.state.Hosts.Selected != "" {
+			m.logHostHandshake("new_receiver_requires_discovery")
 			return false
 		}
 		if len(m.state.Hosts.Known) >= 12 {
+			m.logHostHandshake("receiver_list_full")
 			return false
 		}
 		m.state.Hosts.Known = append(m.state.Hosts.Known, h)
 		if m.saveHosts() != nil {
 			m.state.Hosts = before
+			m.logHostHandshake("receiver_preferences_save_failed")
 			return false
 		}
+		m.logHostHandshake("receiver_registered")
+	}
+	if m.state.Hosts.Discovering {
+		m.logHostHandshake("discovery_waiting_for_selection")
+	} else if m.state.Hosts.Selected != h.ID {
+		m.logHostHandshake("receiver_not_selected")
 	}
 	return !m.state.Hosts.Discovering && m.state.Hosts.Selected == h.ID
 }
